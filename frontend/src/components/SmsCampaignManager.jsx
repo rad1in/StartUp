@@ -2,14 +2,17 @@ import { useEffect, useState } from 'react';
 import api from '../services/api';
 import Card from './Card';
 import Button from './Button';
+import { useLanguage } from '../context/LanguageContext';
 
-const STATUS_LABEL = {
-  PENDING: 'در انتظار تایید ادمین',
-  APPROVED: 'تایید شده — در حال ارسال',
-  REJECTED: 'رد شده',
-  SENT: 'ارسال شد',
-  FAILED: 'ارسال ناموفق',
-};
+function getStatusLabels(t) {
+  return {
+    PENDING: t('components.smsCampaignManager.statusPending'),
+    APPROVED: t('components.smsCampaignManager.statusApproved'),
+    REJECTED: t('components.smsCampaignManager.statusRejected'),
+    SENT: t('components.smsCampaignManager.statusSent'),
+    FAILED: t('components.smsCampaignManager.statusFailed'),
+  };
+}
 const STATUS_COLOR = {
   PENDING: 'bg-yellow-100 text-yellow-800',
   APPROVED: 'bg-blue-100 text-blue-800',
@@ -19,6 +22,8 @@ const STATUS_COLOR = {
 };
 
 export default function SmsCampaignManager({ venueId }) {
+  const { t } = useLanguage();
+  const STATUS_LABEL = getStatusLabels(t);
   const [credit, setCredit] = useState(0);
   const [campaigns, setCampaigns] = useState([]);
   const [form, setForm] = useState({ title: '', message: '', alsoSendEmail: false });
@@ -53,10 +58,10 @@ export default function SmsCampaignManager({ venueId }) {
     try {
       await api.post(`/venues/${venueId}/sms-campaigns`, form);
       setForm({ title: '', message: '', alsoSendEmail: false });
-      setMsg('کمپین ثبت شد و برای تایید ادمین ارسال شد.');
+      setMsg(t('components.smsCampaignManager.campaignSubmitted'));
       refresh();
     } catch (err) {
-      setMsg(err.response?.data?.message || 'خطا در ثبت کمپین');
+      setMsg(err.response?.data?.message || t('components.smsCampaignManager.createError'));
     }
   }
 
@@ -71,25 +76,25 @@ export default function SmsCampaignManager({ venueId }) {
       if (data.success) {
         setCredit(data.balance);
         setTopUpAmount('');
-        setMsg('اعتبار پیامکی شارژ شد.');
+        setMsg(t('components.smsCampaignManager.creditToppedUp'));
       } else if (data.redirectUrl) {
         window.location.href = data.redirectUrl;
       }
     } catch (err) {
-      setMsg(err.response?.data?.message || 'خطا در شارژ اعتبار');
+      setMsg(err.response?.data?.message || t('components.smsCampaignManager.topUpError'));
     }
   }
 
   return (
     <Card>
-      <h3 className="font-semibold text-gray-800 mb-1">ارسال پیامک تبلیغاتی به مشتریان</h3>
+      <h3 className="font-semibold text-gray-800 mb-1">{t('components.smsCampaignManager.title')}</h3>
       <p className="text-xs text-gray-500 mb-3">
-        متن شما بعد از تایید ادمین برای همه مشتریانی که از این کافه سفارش داده‌اند ارسال می‌شود. هزینه هر پیامک بر اساس پلن شما محاسبه می‌شود.
+        {t('components.smsCampaignManager.description')}
       </p>
 
       <div className="flex items-center justify-between bg-primary-50 rounded-lg px-4 py-3 mb-4">
-        <span className="text-sm text-gray-700">اعتبار پیامکی فعلی</span>
-        <span className="font-bold text-primary-800">{Number(credit).toLocaleString('fa-IR')} تومان</span>
+        <span className="text-sm text-gray-700">{t('components.smsCampaignManager.currentCredit')}</span>
+        <span className="font-bold text-primary-800">{Number(credit).toLocaleString('fa-IR')} {t('common.toman')}</span>
       </div>
 
       <div className="flex gap-2 mb-4">
@@ -98,12 +103,12 @@ export default function SmsCampaignManager({ venueId }) {
           min="1000"
           step="1000"
           className="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1"
-          placeholder="مبلغ شارژ (تومان)"
+          placeholder={t('components.smsCampaignManager.topUpPlaceholder')}
           value={topUpAmount}
           onChange={(e) => setTopUpAmount(e.target.value)}
         />
         <Button type="button" variant="secondary" onClick={topUp} disabled={!topUpAmount}>
-          شارژ اعتبار
+          {t('components.smsCampaignManager.topUpButton')}
         </Button>
       </div>
       {paymentMethods.length > 1 && (
@@ -126,7 +131,7 @@ export default function SmsCampaignManager({ venueId }) {
       <form onSubmit={createCampaign} className="space-y-2 mb-4">
         <input
           className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"
-          placeholder="عنوان کمپین (اگه ایمیل هم بفرستید، موضوع ایمیل هم همینه)"
+          placeholder={t('components.smsCampaignManager.titlePlaceholder')}
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
         />
@@ -134,7 +139,7 @@ export default function SmsCampaignManager({ venueId }) {
           className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"
           rows={3}
           maxLength={500}
-          placeholder="متن پیامک..."
+          placeholder={t('components.smsCampaignManager.messagePlaceholder')}
           value={form.message}
           onChange={(e) => setForm({ ...form, message: e.target.value })}
         />
@@ -144,17 +149,17 @@ export default function SmsCampaignManager({ venueId }) {
             checked={form.alsoSendEmail}
             onChange={(e) => setForm({ ...form, alsoSendEmail: e.target.checked })}
           />
-          همین متن به ایمیل مشتریانی که ایمیل دارند هم ارسال شود (رایگان، هزینه‌ای اضافه ندارد)
+          {t('components.smsCampaignManager.alsoSendEmailLabel')}
         </label>
         <Button type="submit" className="w-full">
-          ثبت کمپین برای تایید ادمین
+          {t('components.smsCampaignManager.submitCampaign')}
         </Button>
       </form>
 
       {msg && <p className="text-sm text-ink font-medium mb-3">{msg}</p>}
 
       <div className="space-y-2">
-        {campaigns.length === 0 && <p className="text-sm text-gray-400">هنوز کمپینی ثبت نشده است.</p>}
+        {campaigns.length === 0 && <p className="text-sm text-gray-400">{t('components.smsCampaignManager.empty')}</p>}
         {campaigns.map((c) => (
           <Card key={c.id} className="bg-gray-50">
             <div className="flex items-center justify-between">
@@ -163,8 +168,8 @@ export default function SmsCampaignManager({ venueId }) {
             </div>
             <p className="text-sm text-gray-600 mt-1">{c.message}</p>
             <p className="text-xs text-gray-400 mt-1">
-              گیرندگان: {c.recipientCount.toLocaleString('fa-IR')} — هزینه: {Number(c.totalCost).toLocaleString('fa-IR')} تومان
-              {c.status === 'REJECTED' && c.rejectionReason && ` — دلیل رد: ${c.rejectionReason}`}
+              {t('components.smsCampaignManager.recipientsLabel')} {c.recipientCount.toLocaleString('fa-IR')} — {t('components.smsCampaignManager.costLabel')} {Number(c.totalCost).toLocaleString('fa-IR')} {t('common.toman')}
+              {c.status === 'REJECTED' && c.rejectionReason && ` — ${t('components.smsCampaignManager.rejectionReasonLabel')} ${c.rejectionReason}`}
             </p>
           </Card>
         ))}

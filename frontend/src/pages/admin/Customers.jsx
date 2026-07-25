@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Ban, Users, ArrowUpDown, CheckSquare, Square } from 'lucide-react';
 import api from '../../services/api';
+import { useLanguage } from '../../context/LanguageContext';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import EmptyState from '../../components/EmptyState';
@@ -11,6 +12,7 @@ import { useToast } from '../../context/ToastContext';
 import { useDensity } from '../../context/DensityContext';
 
 export default function Customers() {
+  const { t } = useLanguage();
   const confirm = useConfirm();
   const toast = useToast();
   const { dense } = useDensity();
@@ -38,7 +40,7 @@ export default function Customers() {
 
   async function toggleSuspension(customer) {
     const action = customer.isSuspended ? 'reactivate' : 'suspend';
-    const reason = action === 'suspend' ? window.prompt('دلیل مسدودسازی (اختیاری):') || undefined : undefined;
+    const reason = action === 'suspend' ? window.prompt(t('admin.customers.suspendReasonPrompt')) || undefined : undefined;
     await api.patch(`/admin/customers/${customer.id}/${action}`, { reason });
     refresh();
   }
@@ -72,12 +74,12 @@ export default function Customers() {
 
   async function bulkSuspend(suspend) {
     if (selected.size === 0) return;
-    const label = suspend ? 'مسدود' : 'فعال';
-    if (!(await confirm(`${selected.size} مشتری انتخاب‌شده ${label} شوند؟`, { danger: suspend }))) return;
+    const label = suspend ? t('admin.customers.suspendedLabel') : t('admin.customers.activeLabel');
+    if (!(await confirm(`${selected.size} ${t('admin.customers.bulkConfirmMiddle')} ${label} ${t('admin.customers.bulkConfirmSuffix')}`, { danger: suspend }))) return;
     await Promise.all(
       [...selected].map((id) => api.patch(`/admin/customers/${id}/${suspend ? 'suspend' : 'reactivate'}`, {}))
     );
-    toast.success(`${selected.size} مشتری ${label} شدند.`);
+    toast.success(`${selected.size} ${t('admin.customers.bulkResultMiddle')} ${label} ${t('admin.customers.bulkResultSuffix')}`);
     refresh();
   }
 
@@ -98,7 +100,7 @@ export default function Customers() {
         <div className="grid sm:grid-cols-3 gap-3">
           <input
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
-            placeholder="جستجوی نام یا ایمیل..."
+            placeholder={t('admin.customers.searchPlaceholder')}
             value={filters.search}
             onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
           />
@@ -107,27 +109,27 @@ export default function Customers() {
             value={filters.isSuspended}
             onChange={(e) => setFilters((f) => ({ ...f, isSuspended: e.target.value }))}
           >
-            <option value="">همه مشتریان</option>
-            <option value="false">فعال</option>
-            <option value="true">مسدود شده</option>
+            <option value="">{t('admin.customers.allCustomers')}</option>
+            <option value="false">{t('common.active')}</option>
+            <option value="true">{t('admin.customers.suspendedLabel')}</option>
           </select>
-          <Button onClick={refresh}>اعمال فیلتر</Button>
+          <Button onClick={refresh}>{t('admin.customers.applyFilter')}</Button>
         </div>
       </Card>
 
       <div className="flex items-center justify-between flex-wrap gap-2 px-1">
         <button type="button" onClick={toggleSelectAll} className="flex items-center gap-1.5 text-xs text-ink/50 hover:text-ink">
           {selected.size > 0 && selected.size === sorted.length ? <CheckSquare size={14} /> : <Square size={14} />}
-          {selected.size > 0 ? `${selected.size.toLocaleString('fa-IR')} انتخاب شده` : 'انتخاب همه'}
+          {selected.size > 0 ? `${selected.size.toLocaleString('fa-IR')} ${t('admin.customers.selectedCount')}` : t('admin.customers.selectAll')}
         </button>
         <div className="flex items-center gap-3">
-          <SortHeader label="نام" sortKey="name" />
-          <SortHeader label="امتیاز وفاداری" sortKey="loyaltyPoints" />
+          <SortHeader label={t('common.name')} sortKey="name" />
+          <SortHeader label={t('admin.customers.loyaltyPointsSort')} sortKey="loyaltyPoints" />
         </div>
         {selected.size > 0 && (
           <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => bulkSuspend(false)}>فعال‌سازی گروهی</Button>
-            <Button variant="danger" onClick={() => bulkSuspend(true)}>مسدودسازی گروهی</Button>
+            <Button variant="ghost" onClick={() => bulkSuspend(false)}>{t('admin.customers.bulkActivate')}</Button>
+            <Button variant="danger" onClick={() => bulkSuspend(true)}>{t('admin.customers.bulkSuspend')}</Button>
           </div>
         )}
       </div>
@@ -135,7 +137,7 @@ export default function Customers() {
       {loading ? (
         <SkeletonRows rows={5} />
       ) : sorted.length === 0 ? (
-        <EmptyState icon={Users} title="مشتری‌ای یافت نشد" hint="فیلترها را تغییر دهید یا جستجوی دیگری امتحان کنید." />
+        <EmptyState icon={Users} title={t('admin.customers.noCustomersFound')} hint={t('admin.customers.noCustomersHint')} />
       ) : (
         <div className={dense ? 'space-y-1.5' : 'space-y-3'}>
           {sorted.map((customer) => (
@@ -153,18 +155,18 @@ export default function Customers() {
                       {customer.name}
                     </Link>
                     {!!customer.isSuspended && (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold border-2 border-primary-800 text-ink"><Ban size={11} />مسدود</span>
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold border-2 border-primary-800 text-ink"><Ban size={11} />{t('admin.customers.suspendedLabel')}</span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500">{customer.email} — {customer.loyaltyPoints} امتیاز</p>
+                  <p className="text-xs text-gray-500">{customer.email} — {customer.loyaltyPoints} {t('admin.customerDetail.points')}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Link to={`/admin/customers/${customer.id}`}>
-                  <Button variant="ghost">جزئیات</Button>
+                  <Button variant="ghost">{t('common.details')}</Button>
                 </Link>
                 <Button variant={customer.isSuspended ? 'primary' : 'danger'} onClick={() => toggleSuspension(customer)}>
-                  {customer.isSuspended ? 'فعال‌سازی مجدد' : 'مسدودسازی'}
+                  {customer.isSuspended ? t('admin.customerDetail.reactivate') : t('admin.customerDetail.suspend')}
                 </Button>
               </div>
             </Card>

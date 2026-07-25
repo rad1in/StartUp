@@ -93,7 +93,7 @@ export default function ApiKeysManager({ venueId }) {
               <p className="text-xs text-ink/40" dir="ltr">{k.keyPrefix}••••••••</p>
             </div>
             {k.revokedAt ? (
-              <span className="text-xs text-red-500 font-bold">باطل‌شده</span>
+              <span className="text-xs text-red-500 font-bold">{t('components.apiKeysManager.revoked')}</span>
             ) : (
               <button type="button" onClick={() => revoke(k)} className="text-ink/40 hover:text-red-600">
                 <Trash2 size={15} />
@@ -101,7 +101,7 @@ export default function ApiKeysManager({ venueId }) {
             )}
           </div>
         ))}
-        {keys.length === 0 && <p className="text-xs text-ink/40">هنوز کلیدی نساخته‌اید.</p>}
+        {keys.length === 0 && <p className="text-xs text-ink/40">{t('components.apiKeysManager.empty')}</p>}
       </div>
     </Card>
   );

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Ban, CheckCircle2 } from 'lucide-react';
 import api from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 // "Closed today" switch — an instant, reversible way to stop new orders
 // without touching the weekly opening-hours schedule (e.g. ran out of stock,
 // short-staffed). Blocks POST /orders on the backend the moment it's on.
 export default function TemporaryClosureToggle({ venue, venueId, onChange }) {
+  const { t } = useLanguage();
   const [busy, setBusy] = useState(false);
   const closed = Boolean(venue?.isTemporarilyClosed);
 
@@ -14,7 +16,7 @@ export default function TemporaryClosureToggle({ venue, venueId, onChange }) {
     try {
       let reason = null;
       if (!closed) {
-        reason = window.prompt('دلیل تعطیلی موقت (اختیاری):', '') || null;
+        reason = window.prompt(t('components.temporaryClosureToggle.reasonPrompt'), '') || null;
       }
       const { data } = await api.patch(`/venues/${venueId}/temporary-closure`, {
         isTemporarilyClosed: !closed,

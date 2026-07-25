@@ -4,24 +4,32 @@ import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import { useVenueSocket } from '../../hooks/useSocket';
 import { useVenuePermissions } from '../../hooks/useVenuePermissions';
+import { useLanguage } from '../../context/LanguageContext';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { OrderStatusBadge, PaymentStatusBadge } from '../../components/OrderStatusBadge';
 
 const NEXT_STATUS = { PENDING: 'PREPARING', PREPARING: 'READY', READY: 'SERVED' };
-const NEXT_LABEL = {
-  PENDING: 'شروع آماده‌سازی',
-  PREPARING: 'آماده شد',
-  READY: 'علامت‌گذاری به‌عنوان سرو شده',
-};
-const COLUMNS = [
-  { key: 'PENDING', label: 'جدید' },
-  { key: 'PREPARING', label: 'در حال آماده‌سازی' },
-  { key: 'READY', label: 'آماده سرو' },
-  { key: 'SERVED', label: 'سرو شده' },
-];
+
+function getNextLabel(t) {
+  return {
+    PENDING: t('venue.orders.startPreparing'),
+    PREPARING: t('venue.orders.markReady'),
+    READY: t('venue.orders.markServed'),
+  };
+}
+
+function getColumns(t) {
+  return [
+    { key: 'PENDING', label: t('venue.orders.columnNew') },
+    { key: 'PREPARING', label: t('venue.orders.columnPreparing') },
+    { key: 'READY', label: t('venue.orders.columnReady') },
+    { key: 'SERVED', label: t('venue.orders.columnServed') },
+  ];
+}
 
 export default function Orders() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const { has } = useVenuePermissions();
   const venueId = user?.venueId;
@@ -31,6 +39,8 @@ export default function Orders() {
   const [activity, setActivity] = useState([]);
   const [discountForm, setDiscountForm] = useState({ discountAmount: '', discountReason: '' });
   const [waiterCalls, setWaiterCalls] = useState([]);
+  const NEXT_LABEL = getNextLabel(t);
+  const COLUMNS = getColumns(t);
 
   async function refresh() {
     if (!venueId) return;
@@ -71,7 +81,7 @@ export default function Orders() {
   }
 
   async function voidOrder(order) {
-    const reason = window.prompt('دلیل لغو/استرداد سفارش را وارد کنید:');
+    const reason = window.prompt(t('venue.orders.voidReasonPrompt'));
     if (reason === null) return;
     await api.post(`/orders/${order.id}/void`, { reason });
   }
@@ -105,7 +115,7 @@ export default function Orders() {
     await api.patch(`/orders/${order.id}/items`, { items: newItems });
   }
 
-  if (!venueId) return <p className="text-gray-500">این حساب کاربری به مجموعه‌ای متصل نیست.</p>;
+  if (!venueId) return <p className="text-gray-500">{t('common.noVenueLinked')}</p>;
   const canManage = has('orders.manage');
 
   return (
@@ -120,12 +130,12 @@ export default function Orders() {
               <div className="flex items-center gap-2 text-amber-800">
                 <BellRing size={18} className="shrink-0 animate-pulse" />
                 <p className="text-sm font-bold">
-                  میز {call.tableNumber} درخواست کمک دارد
+                  {t('common.table')} {call.tableNumber} {t('venue.orders.callingForHelp')}
                   {call.note ? ` — ${call.note}` : ''}
                 </p>
               </div>
               <Button variant="secondary" onClick={() => resolveWaiterCall(call)}>
-                رسیدگی شد
+                {t('venue.orders.handled')}
               </Button>
             </div>
           ))}
@@ -139,7 +149,7 @@ export default function Orders() {
             value={filters.status}
             onChange={(e) => setFilters({ ...filters, status: e.target.value })}
           >
-            <option value="">همه وضعیت‌ها</option>
+            <option value="">{t('venue.orders.allStatuses')}</option>
             {[...COLUMNS.map((c) => c.key), 'CANCELLED'].map((s) => (
               <option key={s} value={s}>
                 {s}
@@ -172,19 +182,19 @@ export default function Orders() {
                   <Card key={order.id}>
                     <div className="flex items-center justify-between mb-2">
                       <p className="font-medium text-gray-800 text-sm">
-                        {order.table ? `میز ${order.table.tableNumber}` : order.isPickup ? 'پیک‌آپ' : 'آنلاین'}
+                        {order.table ? `${t('common.table')} ${order.table.tableNumber}` : order.isPickup ? t('common.pickup') : t('common.online')}
                       </p>
                       <PaymentStatusBadge status={order.paymentStatus} />
                     </div>
                     <ul className="text-xs text-gray-500 mb-2">
                       {order.items.map((item) => (
                         <li key={item.id}>
-                          {item.menuItem?.name || item.combo?.name} — {item.quantity} عدد
+                          {item.menuItem?.name || item.combo?.name} — {item.quantity} {t('venue.orders.unitCount')}
                         </li>
                       ))}
                     </ul>
                     <p className="text-sm font-bold text-primary-700 mb-2">
-                      {Number(order.totalAmount).toLocaleString('fa-IR')} تومان
+                      {Number(order.totalAmount).toLocaleString('fa-IR')} {t('common.toman')}
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {canManage && NEXT_STATUS[order.status] && (
@@ -194,11 +204,11 @@ export default function Orders() {
                       )}
                       {canManage && order.status !== 'CANCELLED' && (
                         <Button variant="danger" onClick={() => voidOrder(order)}>
-                          لغو/استرداد
+                          {t('venue.orders.voidRefund')}
                         </Button>
                       )}
                       <Button variant="ghost" onClick={() => toggleExpand(order)}>
-                        جزئیات
+                        {t('venue.orders.details')}
                       </Button>
                     </div>
 
@@ -206,7 +216,7 @@ export default function Orders() {
                       <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
                         {order.paymentStatus === 'PENDING' && canManage && (
                           <div>
-                            <p className="text-xs font-semibold text-gray-600 mb-1">ویرایش اقلام</p>
+                            <p className="text-xs font-semibold text-gray-600 mb-1">{t('venue.orders.editItems')}</p>
                             {order.items.map((item) => (
                               <div key={item.id} className="flex items-center justify-between text-xs mb-1">
                                 <span>{item.menuItem?.name || item.combo?.name}</span>
@@ -228,34 +238,34 @@ export default function Orders() {
                               </div>
                             ))}
 
-                            <p className="text-xs font-semibold text-gray-600 mt-2 mb-1">تخفیف دستی</p>
+                            <p className="text-xs font-semibold text-gray-600 mt-2 mb-1">{t('venue.orders.manualDiscount')}</p>
                             <div className="flex gap-1">
                               <input
                                 type="number"
                                 className="w-20 border border-gray-300 rounded px-2 py-1 text-xs"
-                                placeholder="مبلغ"
+                                placeholder={t('venue.orders.amountPlaceholder')}
                                 value={discountForm.discountAmount}
                                 onChange={(e) => setDiscountForm({ ...discountForm, discountAmount: e.target.value })}
                               />
                               <input
                                 className="flex-1 border border-gray-300 rounded px-2 py-1 text-xs"
-                                placeholder="دلیل تخفیف"
+                                placeholder={t('venue.orders.discountReasonPlaceholder')}
                                 value={discountForm.discountReason}
                                 onChange={(e) => setDiscountForm({ ...discountForm, discountReason: e.target.value })}
                               />
                               <Button variant="secondary" onClick={() => applyDiscount(order)}>
-                                ثبت
+                                {t('common.submit')}
                               </Button>
                             </div>
                           </div>
                         )}
 
                         <div>
-                          <p className="text-xs font-semibold text-gray-600 mb-1">تاریخچه فعالیت</p>
-                          {activity.length === 0 && <p className="text-xs text-gray-400">فعالیتی ثبت نشده است.</p>}
+                          <p className="text-xs font-semibold text-gray-600 mb-1">{t('venue.orders.activityHistory')}</p>
+                          {activity.length === 0 && <p className="text-xs text-gray-400">{t('venue.orders.noActivityYet')}</p>}
                           {activity.map((entry) => (
                             <p key={entry.id} className="text-xs text-gray-500">
-                              {entry.userName || 'سیستم'} — {entry.action} —{' '}
+                              {entry.userName || t('venue.orders.system')} — {entry.action} —{' '}
                               {new Date(entry.createdAt).toLocaleString('fa-IR')}
                             </p>
                           ))}

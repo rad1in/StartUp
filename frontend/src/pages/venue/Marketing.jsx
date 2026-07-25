@@ -61,10 +61,10 @@ export default function Marketing() {
   async function sendPromo(coupon) {
     setNotifyMessage('');
     const { data } = await api.post(`/coupons/venue/${venueId}/${coupon.id}/notify`);
-    setNotifyMessage(`اعلان برای ${data.notifiedCount} مشتری ارسال شد.`);
+    setNotifyMessage(`${t('venue.marketing.notificationSentPrefix')} ${data.notifiedCount} ${t('venue.marketing.notificationSentSuffix')}`);
   }
 
-  if (!venueId) return <p className="text-gray-500">این حساب کاربری به مجموعه‌ای متصل نیست.</p>;
+  if (!venueId) return <p className="text-gray-500">{t('common.noVenueLinked')}</p>;
 
   return (
     <div className="space-y-6">
@@ -75,11 +75,11 @@ export default function Marketing() {
       <SmsCampaignManager venueId={venueId} />
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">ساخت کد تخفیف جدید</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('venue.marketing.createNewCoupon')}</h3>
         <form onSubmit={createCoupon} className="grid sm:grid-cols-2 gap-2">
           <input
             className="border border-gray-300 rounded-lg px-3 py-2"
-            placeholder="کد تخفیف (مثلاً SUMMER20)"
+            placeholder={t('venue.marketing.couponCodePlaceholder')}
             value={form.code}
             onChange={(e) => setForm({ ...form, code: e.target.value })}
           />
@@ -88,27 +88,27 @@ export default function Marketing() {
             value={form.discountType}
             onChange={(e) => setForm({ ...form, discountType: e.target.value })}
           >
-            <option value="PERCENT">درصدی</option>
-            <option value="FIXED">مبلغ ثابت</option>
+            <option value="PERCENT">{t('venue.crm.percentage')}</option>
+            <option value="FIXED">{t('venue.crm.fixedAmount')}</option>
           </select>
           <input
             type="number"
             className="border border-gray-300 rounded-lg px-3 py-2"
-            placeholder={form.discountType === 'PERCENT' ? 'درصد تخفیف' : 'مبلغ تخفیف (تومان)'}
+            placeholder={form.discountType === 'PERCENT' ? t('venue.marketing.discountPercent') : t('venue.marketing.discountAmount')}
             value={form.discountValue}
             onChange={(e) => setForm({ ...form, discountValue: e.target.value })}
           />
           <input
             type="number"
             className="border border-gray-300 rounded-lg px-3 py-2"
-            placeholder="حداکثر تعداد استفاده (اختیاری)"
+            placeholder={t('venue.marketing.maxRedemptionsOptional')}
             value={form.maxRedemptions}
             onChange={(e) => setForm({ ...form, maxRedemptions: e.target.value })}
           />
           <input
             type="number"
             className="border border-gray-300 rounded-lg px-3 py-2"
-            placeholder="حداقل مبلغ سفارش (اختیاری)"
+            placeholder={t('venue.marketing.minOrderAmountOptional')}
             value={form.minOrderAmount}
             onChange={(e) => setForm({ ...form, minOrderAmount: e.target.value })}
           />
@@ -119,7 +119,7 @@ export default function Marketing() {
             onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
           />
           <Button type="submit" className="sm:col-span-2">
-            ساخت کد تخفیف
+            {t('venue.marketing.createCouponCode')}
           </Button>
         </form>
       </Card>
@@ -136,27 +136,27 @@ export default function Marketing() {
                   coupon.isActive ? 'bg-primary-800 text-white' : 'bg-gray-200 text-ink/50'
                 }`}
               >
-                {coupon.isActive ? 'فعال' : 'غیرفعال'}
+                {coupon.isActive ? t('common.active') : t('common.inactive')}
               </span>
             </div>
             <p className="text-sm text-gray-600 mt-1">
               {coupon.discountType === 'PERCENT'
-                ? `${coupon.discountValue}٪ تخفیف`
-                : `${Number(coupon.discountValue).toLocaleString('fa-IR')} تومان تخفیف`}
+                ? `${coupon.discountValue}٪ ${t('venue.marketing.discountSuffix')}`
+                : `${Number(coupon.discountValue).toLocaleString('fa-IR')} ${t('common.toman')} ${t('venue.marketing.discountSuffix')}`}
             </p>
             <p className="text-xs text-gray-400">
-              استفاده‌شده: {coupon.redeemedCount}
-              {coupon.maxRedemptions ? ` از ${coupon.maxRedemptions}` : ''}
+              {t('venue.marketing.redeemedLabel')}: {coupon.redeemedCount}
+              {coupon.maxRedemptions ? ` ${t('venue.marketing.ofMax')} ${coupon.maxRedemptions}` : ''}
             </p>
             <div className="flex flex-wrap gap-2 mt-3">
               <Button variant="secondary" onClick={() => sendPromo(coupon)}>
-                ارسال اعلان تخفیف
+                {t('venue.marketing.sendPromoNotification')}
               </Button>
               <Button variant="ghost" onClick={() => toggleActive(coupon)}>
-                {coupon.isActive ? 'غیرفعال کردن' : 'فعال کردن'}
+                {coupon.isActive ? t('venue.marketing.deactivate') : t('venue.marketing.activate')}
               </Button>
               <Button variant="danger" onClick={() => removeCoupon(coupon)}>
-                حذف
+                {t('common.delete')}
               </Button>
             </div>
           </Card>

@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import api from '../services/api';
 import Card from './Card';
 import Button from './Button';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function PunchCardManager({ venueId }) {
+  const { t } = useLanguage();
   const [plans, setPlans] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
   const [form, setForm] = useState({ name: '', menuItemId: '', totalCredits: '', price: '' });
@@ -40,14 +42,14 @@ export default function PunchCardManager({ venueId }) {
 
   return (
     <Card>
-      <h3 className="font-semibold text-gray-800 mb-1">بسته‌های پیش‌پرداخت (کارت پانچ)</h3>
+      <h3 className="font-semibold text-gray-800 mb-1">{t('components.punchCardManager.title')}</h3>
       <p className="text-xs text-gray-500 mb-3">
-        مثلاً «۱۰ تا قهوه بخر، پول ۸ تا رو بده» — مشتری از قبل پول می‌دهد و نقدینگی فوری به شما می‌رسد.
+        {t('components.punchCardManager.description')}
       </p>
       <form onSubmit={createPlan} className="grid sm:grid-cols-2 gap-2 mb-4">
         <input
           className="border border-gray-300 rounded-lg px-3 py-2 sm:col-span-2"
-          placeholder="نام بسته (مثلاً «۱۰ قهوه به قیمت ۸ تا»)"
+          placeholder={t('components.punchCardManager.namePlaceholder')}
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
         />
@@ -56,29 +58,29 @@ export default function PunchCardManager({ venueId }) {
           value={form.menuItemId}
           onChange={(e) => setForm({ ...form, menuItemId: e.target.value })}
         >
-          <option value="">آیتم منو را انتخاب کنید</option>
+          <option value="">{t('components.punchCardManager.selectMenuItem')}</option>
           {menuItems.map((item) => (
             <option key={item.id} value={item.id}>
-              {item.name} — {Number(item.price).toLocaleString('fa-IR')} تومان
+              {item.name} — {Number(item.price).toLocaleString('fa-IR')} {t('common.toman')}
             </option>
           ))}
         </select>
         <input
           type="number"
           className="border border-gray-300 rounded-lg px-3 py-2"
-          placeholder="تعداد کل اعتبار (مثلاً ۱۰)"
+          placeholder={t('components.punchCardManager.totalCreditsPlaceholder')}
           value={form.totalCredits}
           onChange={(e) => setForm({ ...form, totalCredits: e.target.value })}
         />
         <input
           type="number"
           className="border border-gray-300 rounded-lg px-3 py-2"
-          placeholder="قیمت کل بسته (تومان)"
+          placeholder={t('components.punchCardManager.pricePlaceholder')}
           value={form.price}
           onChange={(e) => setForm({ ...form, price: e.target.value })}
         />
         <Button type="submit" className="sm:col-span-2">
-          ساخت بسته جدید
+          {t('components.punchCardManager.createPlan')}
         </Button>
       </form>
 
@@ -92,18 +94,18 @@ export default function PunchCardManager({ venueId }) {
                   plan.isActive ? 'bg-primary-800 text-white' : 'bg-gray-200 text-ink/50'
                 }`}
               >
-                {plan.isActive ? 'فعال' : 'غیرفعال'}
+                {plan.isActive ? t('common.active') : t('common.inactive')}
               </span>
             </div>
             <p className="text-sm text-gray-600 mt-1">
-              {plan.menuItemName} — {plan.totalCredits} عدد به قیمت {Number(plan.price).toLocaleString('fa-IR')} تومان
+              {plan.menuItemName} — {plan.totalCredits} {t('components.punchCardManager.unitsSuffix')} {t('components.punchCardManager.atPriceOf')} {Number(plan.price).toLocaleString('fa-IR')} {t('common.toman')}
             </p>
             <Button variant="ghost" onClick={() => toggleActive(plan)} className="mt-2">
-              {plan.isActive ? 'غیرفعال کردن' : 'فعال کردن'}
+              {plan.isActive ? t('components.punchCardManager.deactivateAction') : t('components.punchCardManager.activateAction')}
             </Button>
           </Card>
         ))}
-        {plans.length === 0 && <p className="text-sm text-gray-400">هنوز بسته‌ای نساخته‌اید.</p>}
+        {plans.length === 0 && <p className="text-sm text-gray-400">{t('components.punchCardManager.empty')}</p>}
       </div>
     </Card>
   );

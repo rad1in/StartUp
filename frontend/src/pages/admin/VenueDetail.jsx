@@ -9,8 +9,10 @@ import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
 import Breadcrumb from '../../components/Breadcrumb';
 import { SkeletonRows } from '../../components/SkeletonBlock';
+import { useLanguage } from '../../context/LanguageContext';
 
 function ApprovalStages({ venueId, onVenueChanged }) {
+  const { t } = useLanguage();
   const confirm = useConfirm();
   const toast = useToast();
   const [stages, setStages] = useState(null);
@@ -28,7 +30,7 @@ function ApprovalStages({ venueId, onVenueChanged }) {
   }, [venueId]);
 
   async function act(stageKey, status) {
-    if (status === 'REJECTED' && !(await confirm('این مرحله رد شود؟ وضعیت مجموعه به «رد شده» تغییر می‌کند.', { danger: true }))) return;
+    if (status === 'REJECTED' && !(await confirm(t('admin.venueDetail.confirmRejectStage'), { danger: true }))) return;
     setBusyKey(stageKey);
     try {
       await api.patch(`/admin/venues/${venueId}/approval-stages/${stageKey}`, {
@@ -37,9 +39,9 @@ function ApprovalStages({ venueId, onVenueChanged }) {
       });
       await refresh();
       onVenueChanged?.();
-      toast.success(status === 'COMPLETED' ? 'مرحله تایید شد.' : 'مرحله رد شد.');
+      toast.success(status === 'COMPLETED' ? t('admin.venueDetail.stageApproved') : t('admin.venueDetail.stageRejected'));
     } catch (err) {
-      toast.error(err.response?.data?.message || 'به‌روزرسانی مرحله ناموفق بود.');
+      toast.error(err.response?.data?.message || t('admin.venueDetail.stageUpdateFailed'));
     } finally {
       setBusyKey(null);
     }
@@ -49,7 +51,7 @@ function ApprovalStages({ venueId, onVenueChanged }) {
 
   return (
     <Card>
-      <h3 className="font-semibold text-gray-800 mb-3">جریان تایید ثبت‌نام</h3>
+      <h3 className="font-semibold text-gray-800 mb-3">{t('admin.venueDetail.registrationApprovalFlow')}</h3>
       <div className="space-y-3">
         {stages.map((stage, i) => {
           const isBlocked = stage.status === 'PENDING' && i > 0 && stages[i - 1].status !== 'COMPLETED';
@@ -68,12 +70,12 @@ function ApprovalStages({ venueId, onVenueChanged }) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-800">{stage.label}</p>
-                {stage.note && <p className="text-xs text-gray-500 mt-0.5">یادداشت: {stage.note}</p>}
+                {stage.note && <p className="text-xs text-gray-500 mt-0.5">{t('admin.venueDetail.noteLabel')}: {stage.note}</p>}
                 {stage.status === 'PENDING' && !isBlocked && (
                   <div className="flex items-center gap-2 mt-2">
                     <input
                       className="flex-1 border border-gray-300 rounded-lg px-2 py-1 text-xs"
-                      placeholder="یادداشت (اختیاری)"
+                      placeholder={t('admin.venueDetail.noteOptionalPlaceholder')}
                       value={noteDrafts[stage.stageKey] || ''}
                       onChange={(e) => setNoteDrafts((prev) => ({ ...prev, [stage.stageKey]: e.target.value }))}
                     />
@@ -83,7 +85,7 @@ function ApprovalStages({ venueId, onVenueChanged }) {
                       onClick={() => act(stage.stageKey, 'COMPLETED')}
                       className="text-xs font-bold text-green-700 border border-green-200 rounded-lg px-2 py-1 hover:bg-green-50"
                     >
-                      تایید
+                      {t('admin.venueDetail.approveWord')}
                     </button>
                     <button
                       type="button"
@@ -91,14 +93,14 @@ function ApprovalStages({ venueId, onVenueChanged }) {
                       onClick={() => act(stage.stageKey, 'REJECTED')}
                       className="text-xs font-bold text-red-700 border border-red-200 rounded-lg px-2 py-1 hover:bg-red-50"
                     >
-                      رد
+                      {t('admin.venueDetail.rejectWord')}
                     </button>
                   </div>
                 )}
                 {isBlocked && (
                   <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
                     <Clock size={11} />
-                    در انتظار تکمیل مرحله قبلی
+                    {t('admin.venueDetail.waitingForPreviousStage')}
                   </p>
                 )}
               </div>
@@ -111,6 +113,7 @@ function ApprovalStages({ venueId, onVenueChanged }) {
 }
 
 export default function VenueDetail() {
+  const { t } = useLanguage();
   const { venueId } = useParams();
   const navigate = useNavigate();
   const { user, impersonate } = useAuth();
@@ -133,13 +136,13 @@ export default function VenueDetail() {
   }, [venueId]);
 
   async function handleImpersonate() {
-    if (!(await confirm(`وارد پنل مالک «${venue.name}» شوید؟ این اقدام در گزارش رویدادها ثبت می‌شود.`))) return;
+    if (!(await confirm(`${t('admin.venueDetail.confirmImpersonatePrefix')} «${venue.name}» ${t('admin.venueDetail.confirmImpersonateSuffix')}`))) return;
     setImpersonating(true);
     try {
       await impersonate(venueId);
       navigate('/venue');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'جانشینی با خطا مواجه شد.');
+      toast.error(err.response?.data?.message || t('admin.venueDetail.impersonateFailed'));
     } finally {
       setImpersonating(false);
     }
@@ -148,7 +151,7 @@ export default function VenueDetail() {
   if (!venue) {
     return (
       <div>
-        <Breadcrumb items={[{ label: 'مجموعه‌ها', to: '/admin/venues' }, { label: 'در حال بارگذاری...' }]} />
+        <Breadcrumb items={[{ label: t('admin.venueDetail.venuesBreadcrumb'), to: '/admin/venues' }, { label: t('common.loading') }]} />
         <SkeletonRows rows={5} />
       </div>
     );
@@ -156,10 +159,10 @@ export default function VenueDetail() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb items={[{ label: 'مجموعه‌ها', to: '/admin/venues' }, { label: venue.name }]} />
+      <Breadcrumb items={[{ label: t('admin.venueDetail.venuesBreadcrumb'), to: '/admin/venues' }, { label: venue.name }]} />
       <div className="flex items-center justify-between flex-wrap gap-2">
         <Link to="/admin/venues" className="text-primary-700 text-sm hover:underline">
-          <span className="flex items-center gap-1"><ArrowRight size={14} />بازگشت به فهرست مجموعه‌ها</span>
+          <span className="flex items-center gap-1"><ArrowRight size={14} />{t('admin.venueDetail.backToVenueList')}</span>
         </Link>
         {user?.role === 'SUPER_ADMIN' && (
           <button
@@ -168,7 +171,7 @@ export default function VenueDetail() {
             className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-full bg-surface-2/60 text-primary-800 border border-primary-200 hover:bg-primary-800 hover:text-white transition-all active:scale-95"
           >
             <UserCog size={14} />
-            {impersonating ? 'در حال ورود…' : 'ورود به پنل مالک (پشتیبانی)'}
+            {impersonating ? t('admin.venueDetail.loggingIn') : t('admin.venueDetail.loginToOwnerPanelSupport')}
           </button>
         )}
       </div>
@@ -177,12 +180,12 @@ export default function VenueDetail() {
         <h2 className="text-lg font-bold text-gray-800">{venue.name}</h2>
         <p className="text-sm text-gray-500 mt-1">{venue.description}</p>
         <div className="grid sm:grid-cols-3 gap-3 mt-3 text-sm">
-          <p><span className="text-gray-500">آدرس:</span> {venue.address}</p>
-          <p><span className="text-gray-500">شهر:</span> {venue.city || '—'}</p>
-          <p><span className="text-gray-500">وضعیت:</span> {venue.status}</p>
-          <p><span className="text-gray-500">پلن اشتراک:</span> {venue.subscriptionTier}</p>
-          <p><span className="text-gray-500">نرخ کارمزد:</span> {Number(venue.commissionRate).toFixed(0)}٪</p>
-          <p><span className="text-gray-500">مختصات:</span> {venue.lat}, {venue.lng}</p>
+          <p><span className="text-gray-500">{t('admin.venueDetail.addressLabel')}:</span> {venue.address}</p>
+          <p><span className="text-gray-500">{t('admin.venueDetail.cityLabel')}:</span> {venue.city || '—'}</p>
+          <p><span className="text-gray-500">{t('common.status')}:</span> {venue.status}</p>
+          <p><span className="text-gray-500">{t('admin.venueDetail.subscriptionPlanLabel')}:</span> {venue.subscriptionTier}</p>
+          <p><span className="text-gray-500">{t('admin.venueDetail.commissionRateLabel')}:</span> {Number(venue.commissionRate).toFixed(0)}٪</p>
+          <p><span className="text-gray-500">{t('admin.venueDetail.coordinatesLabel')}:</span> {venue.lat}, {venue.lng}</p>
         </div>
       </Card>
 
@@ -191,63 +194,63 @@ export default function VenueDetail() {
       {summary && (
         <div className="grid sm:grid-cols-4 gap-3">
           <Card>
-            <p className="text-xs text-gray-500">سفارش‌ها (ماه اخیر)</p>
+            <p className="text-xs text-gray-500">{t('admin.venueDetail.ordersLastMonth')}</p>
             <p className="text-xl font-bold text-gray-800">{summary.orderCount}</p>
           </Card>
           <Card>
-            <p className="text-xs text-gray-500">فروش کل</p>
-            <p className="text-xl font-bold text-gray-800">{summary.totalRevenue.toLocaleString('fa-IR')} تومان</p>
+            <p className="text-xs text-gray-500">{t('admin.venueDetail.totalSales')}</p>
+            <p className="text-xl font-bold text-gray-800">{summary.totalRevenue.toLocaleString('fa-IR')} {t('common.toman')}</p>
           </Card>
           <Card>
-            <p className="text-xs text-gray-500">کارمزد پلتفرم</p>
-            <p className="text-xl font-bold text-gray-800">{summary.totalCommission.toLocaleString('fa-IR')} تومان</p>
+            <p className="text-xs text-gray-500">{t('admin.venueDetail.platformCommission')}</p>
+            <p className="text-xl font-bold text-gray-800">{summary.totalCommission.toLocaleString('fa-IR')} {t('common.toman')}</p>
           </Card>
           <Card>
-            <p className="text-xs text-gray-500">خالص دریافتی مجموعه</p>
-            <p className="text-xl font-bold text-primary-700">{summary.netRevenue.toLocaleString('fa-IR')} تومان</p>
+            <p className="text-xs text-gray-500">{t('admin.venueDetail.venueNetRevenue')}</p>
+            <p className="text-xl font-bold text-primary-700">{summary.netRevenue.toLocaleString('fa-IR')} {t('common.toman')}</p>
           </Card>
         </div>
       )}
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">منو</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('admin.venueDetail.menuTitle')}</h3>
         <div className="grid sm:grid-cols-2 gap-2">
           {venue.menuItems.map((item) => (
             <div key={item.id} className="flex items-center justify-between text-sm border-b border-gray-100 pb-1">
               <span>{item.name}</span>
-              <span className="text-gray-500">{Number(item.price).toLocaleString('fa-IR')} تومان</span>
+              <span className="text-gray-500">{Number(item.price).toLocaleString('fa-IR')} {t('common.toman')}</span>
             </div>
           ))}
-          {venue.menuItems.length === 0 && <p className="text-gray-500 text-sm">آیتمی ثبت نشده است.</p>}
+          {venue.menuItems.length === 0 && <p className="text-gray-500 text-sm">{t('admin.venueDetail.noItemsRegistered')}</p>}
         </div>
       </Card>
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">میزها</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('admin.venueDetail.tablesTitle')}</h3>
         <div className="flex flex-wrap gap-2">
           {venue.tables.map((table) => (
             <span key={table.id} className="px-2 py-1 rounded-lg bg-gray-100 text-xs text-gray-700">
-              میز {table.tableNumber} {table.isActive ? '' : '(غیرفعال)'}
+              {t('common.table')} {table.tableNumber} {table.isActive ? '' : `(${t('common.inactive')})`}
             </span>
           ))}
-          {venue.tables.length === 0 && <p className="text-gray-500 text-sm">میزی ثبت نشده است.</p>}
+          {venue.tables.length === 0 && <p className="text-gray-500 text-sm">{t('admin.venueDetail.noTablesRegistered')}</p>}
         </div>
       </Card>
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">آخرین سفارش‌ها</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('admin.venueDetail.recentOrders')}</h3>
         <div className="space-y-2">
           {orders.map((order) => (
             <div key={order.id} className="flex items-center justify-between text-sm border-b border-gray-100 pb-1">
-              <span>{order.table ? `میز ${order.table.tableNumber}` : order.isPickup ? 'پیک‌آپ' : 'سفارش آنلاین'}</span>
-              <span className="text-gray-500">{Number(order.totalAmount).toLocaleString('fa-IR')} تومان</span>
+              <span>{order.table ? `${t('common.table')} ${order.table.tableNumber}` : order.isPickup ? t('common.pickup') : t('common.onlineOrder')}</span>
+              <span className="text-gray-500">{Number(order.totalAmount).toLocaleString('fa-IR')} {t('common.toman')}</span>
               <div className="flex gap-2">
                 <OrderStatusBadge status={order.status} />
                 <PaymentStatusBadge status={order.paymentStatus} />
               </div>
             </div>
           ))}
-          {orders.length === 0 && <p className="text-gray-500 text-sm">سفارشی ثبت نشده است.</p>}
+          {orders.length === 0 && <p className="text-gray-500 text-sm">{t('admin.venueDetail.noOrdersRegistered')}</p>}
         </div>
       </Card>
     </div>

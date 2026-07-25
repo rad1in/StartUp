@@ -5,14 +5,19 @@ import Card from './Card';
 import Button from './Button';
 import { useConfirm } from '../context/ConfirmContext';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 
-const EVENT_LABELS = {
-  'order.created': 'ثبت سفارش جدید',
-  'order.statusChanged': 'تغییر وضعیت سفارش',
-  'order.voided': 'لغو سفارش',
-};
+function getEventLabels(t) {
+  return {
+    'order.created': t('components.webhooksManager.eventOrderCreated'),
+    'order.statusChanged': t('components.webhooksManager.eventOrderStatusChanged'),
+    'order.voided': t('components.webhooksManager.eventOrderVoided'),
+  };
+}
 
 export default function WebhooksManager({ venueId }) {
+  const { t } = useLanguage();
+  const EVENT_LABELS = getEventLabels(t);
   const confirm = useConfirm();
   const toast = useToast();
   const [webhooks, setWebhooks] = useState([]);
@@ -50,7 +55,7 @@ export default function WebhooksManager({ venueId }) {
       setSelectedEvents([]);
       refresh();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'ساخت وب‌هوک ناموفق بود.');
+      toast.error(err.response?.data?.message || t('components.webhooksManager.createError'));
     } finally {
       setCreating(false);
     }
@@ -62,7 +67,7 @@ export default function WebhooksManager({ venueId }) {
   }
 
   async function removeWebhook(hook) {
-    if (!(await confirm('این وب‌هوک حذف شود؟', { danger: true }))) return;
+    if (!(await confirm(t('components.webhooksManager.deleteConfirm'), { danger: true }))) return;
     await api.delete(`/venues/${venueId}/webhooks/${hook.id}`);
     refresh();
   }
@@ -71,8 +76,8 @@ export default function WebhooksManager({ venueId }) {
     setTestingId(hook.id);
     try {
       const { data } = await api.post(`/venues/${venueId}/webhooks/${hook.id}/test`);
-      if (data.ok) toast.success('ارسال آزمایشی موفق بود.');
-      else toast.error(`ارسال آزمایشی ناموفق بود: ${data.error || `HTTP ${data.status}`}`);
+      if (data.ok) toast.success(t('components.webhooksManager.testSuccess'));
+      else toast.error(`${t('components.webhooksManager.testFailPrefix')} ${data.error || `HTTP ${data.status}`}`);
       refresh();
     } finally {
       setTestingId(null);
@@ -82,7 +87,7 @@ export default function WebhooksManager({ venueId }) {
   function copySecret() {
     navigator.clipboard?.writeText(freshSecret);
     setCopied(true);
-    toast.success('کلید مخفی کپی شد.');
+    toast.success(t('components.webhooksManager.secretCopied'));
     setTimeout(() => setCopied(false), 2000);
   }
 
@@ -90,17 +95,16 @@ export default function WebhooksManager({ venueId }) {
     <Card>
       <h3 className="font-bold text-ink text-sm mb-1 flex items-center gap-1.5">
         <Webhook size={15} />
-        وب‌هوک‌ها
+        {t('components.webhooksManager.title')}
       </h3>
       <p className="text-xs text-ink/45 mb-3">
-        با ثبت آدرس یک سرویس بیرونی (POS، سیستم آشپزخانه و…)، رویدادهای سفارش برای آن به‌صورت خودکار و امضاشده (HMAC) ارسال
-        می‌شود.
+        {t('components.webhooksManager.description')}
       </p>
 
       {freshSecret && (
         <div className="bg-accent-50 border border-accent-200 rounded-xl p-3 mb-3">
           <p className="text-xs font-bold text-accent-800 mb-1.5">
-            کلید مخفی برای بررسی امضا فقط یک‌بار نمایش داده می‌شود — همین حالا کپی کنید:
+            {t('components.webhooksManager.secretOneTimeWarning')}
           </p>
           <div className="flex items-center gap-2">
             <code className="flex-1 text-xs bg-white/60 rounded-lg px-2 py-1.5 overflow-x-auto" dir="ltr">
@@ -135,7 +139,7 @@ export default function WebhooksManager({ venueId }) {
           ))}
         </div>
         <Button type="submit" disabled={creating || !url.trim() || selectedEvents.length === 0}>
-          {creating ? 'در حال ساخت...' : 'افزودن وب‌هوک'}
+          {creating ? t('components.webhooksManager.creating') : t('components.webhooksManager.addWebhook')}
         </Button>
       </form>
 
@@ -151,7 +155,7 @@ export default function WebhooksManager({ venueId }) {
                   <Send size={14} />
                 </button>
                 <button type="button" onClick={() => toggleActive(w)} className={`text-xs font-bold ${w.isActive ? 'text-green-600' : 'text-ink/30'}`}>
-                  {w.isActive ? 'فعال' : 'غیرفعال'}
+                  {w.isActive ? t('common.active') : t('common.inactive')}
                 </button>
                 <button type="button" onClick={() => removeWebhook(w)} className="text-ink/40 hover:text-red-600">
                   <Trash2 size={15} />
@@ -166,13 +170,13 @@ export default function WebhooksManager({ venueId }) {
               ))}
               {w.lastStatus && (
                 <span className={`text-[10px] rounded-full px-2 py-0.5 ${w.lastStatus === 'SUCCESS' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                  آخرین ارسال: {w.lastStatus === 'SUCCESS' ? 'موفق' : 'ناموفق'}
+                  {t('components.webhooksManager.lastDeliveryPrefix')} {w.lastStatus === 'SUCCESS' ? t('common.success') : t('components.webhooksManager.deliveryFailed')}
                 </span>
               )}
             </div>
           </div>
         ))}
-        {webhooks.length === 0 && <p className="text-xs text-ink/40">هنوز وب‌هوکی ثبت نشده است.</p>}
+        {webhooks.length === 0 && <p className="text-xs text-ink/40">{t('components.webhooksManager.empty')}</p>}
       </div>
     </Card>
   );

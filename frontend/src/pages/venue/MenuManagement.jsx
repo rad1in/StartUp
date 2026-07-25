@@ -4,6 +4,7 @@ import { Circle, ImagePlus, Upload } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../context/ToastContext';
+import { useLanguage } from '../../context/LanguageContext';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { resolveImageUrl } from '../../components/VenueCards';
@@ -11,6 +12,7 @@ import { resolveImageUrl } from '../../components/VenueCards';
 const IMPORT_TEMPLATE = 'category,name,description,price,isAvailable\nنوشیدنی گرم,اسپرسو,یک شات اسپرسو تازه,60000,true\n';
 
 export default function MenuManagement() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const venueId = user?.venueId;
   const toast = useToast();
@@ -128,10 +130,10 @@ export default function MenuManagement() {
       await api.post(`/menu/${venueId}/items/${itemId}/image`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      toast.success('عکس آیتم منو بروزرسانی شد.');
+      toast.success(t('venue.menuManagement.itemImageUpdated'));
       refresh();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'آپلود عکس ناموفق بود.');
+      toast.error(err.response?.data?.message || t('venue.menuManagement.imageUploadFailed'));
     } finally {
       setUploadingImageId(null);
       setImageTargetItemId(null);
@@ -163,58 +165,57 @@ export default function MenuManagement() {
       const { data } = await api.post(`/menu/${venueId}/items/import`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      if (data.created > 0) toast.success(`${data.created.toLocaleString('fa-IR')} آیتم منو با موفقیت افزوده شد.`);
+      if (data.created > 0) toast.success(`${data.created.toLocaleString('fa-IR')} ${t('venue.menuManagement.itemsAddedSuccess')}`);
       if (data.errors.length > 0) {
-        toast.error(`${data.errors.length.toLocaleString('fa-IR')} ردیف با خطا مواجه شد: ${data.errors.slice(0, 3).join(' | ')}`, 8000);
+        toast.error(`${data.errors.length.toLocaleString('fa-IR')} ${t('venue.menuManagement.rowsFailedPrefix')}: ${data.errors.slice(0, 3).join(' | ')}`, 8000);
       }
-      if (data.created === 0 && data.errors.length === 0) toast.info('هیچ ردیف معتبری در فایل یافت نشد.');
+      if (data.created === 0 && data.errors.length === 0) toast.info(t('venue.menuManagement.noValidRowsFound'));
       refresh();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'ورود گروهی آیتم‌های منو ناموفق بود.');
+      toast.error(err.response?.data?.message || t('venue.menuManagement.bulkImportFailed'));
     } finally {
       setImporting(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   }
 
-  if (!venueId) return <p className="text-gray-500">این حساب کاربری به مجموعه‌ای متصل نیست.</p>;
+  if (!venueId) return <p className="text-gray-500">{t('common.noVenueLinked')}</p>;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-end gap-2">
         <Link to="/venue/combos">
-          <Button variant="secondary">مدیریت کمبوها</Button>
+          <Button variant="secondary">{t('venue.menuManagement.manageCombos')}</Button>
         </Link>
       </div>
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">ورود گروهی آیتم‌های منو (CSV)</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('venue.menuManagement.bulkImportTitle')}</h3>
         <p className="text-xs text-gray-500 mb-3">
-          فایل CSV با ستون‌های category، name، description، price و isAvailable آپلود کنید. دسته‌بندی‌های جدید به‌صورت خودکار
-          ساخته می‌شوند.
+          {t('venue.menuManagement.bulkImportDesc')}
         </p>
         <div className="flex flex-wrap gap-2 items-center">
           <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleImportFile} />
           <Button variant="secondary" onClick={() => fileInputRef.current?.click()} disabled={importing}>
             <Upload size={15} className="inline ml-1" />
-            {importing ? 'در حال ورود...' : 'انتخاب و آپلود فایل CSV'}
+            {importing ? t('venue.menuManagement.importing') : t('venue.menuManagement.selectAndUploadCsv')}
           </Button>
           <button type="button" onClick={downloadTemplate} className="text-xs text-primary-700 hover:underline">
-            دانلود نمونه فایل
+            {t('venue.menuManagement.downloadSampleFile')}
           </button>
         </div>
       </Card>
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">افزودن دسته‌بندی جدید</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('venue.menuManagement.addNewCategory')}</h3>
         <form onSubmit={addCategory} className="flex gap-2 mb-3">
           <input
             className="flex-1 border border-gray-300 rounded-lg px-3 py-2"
-            placeholder="نام دسته‌بندی"
+            placeholder={t('venue.menuManagement.categoryNamePlaceholder')}
             value={newCategory}
             onChange={(e) => setNewCategory(e.target.value)}
           />
-          <Button type="submit">افزودن</Button>
+          <Button type="submit">{t('common.add')}</Button>
         </form>
         <div className="flex flex-wrap gap-2">
           {categories.map((c) => (
@@ -224,26 +225,26 @@ export default function MenuManagement() {
                 c.isHidden ? 'bg-gray-200 text-gray-500' : 'bg-primary-100 text-primary-700'
               }`}
               onClick={() => toggleCategoryHidden(c)}
-              title="کلیک برای نمایش/مخفی‌سازی"
+              title={t('venue.menuManagement.clickToShowHide')}
             >
-              {c.name} {c.isHidden ? '(مخفی)' : ''}
+              {c.name} {c.isHidden ? `(${t('venue.menuManagement.hidden')})` : ''}
             </span>
           ))}
         </div>
       </Card>
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">افزودن آیتم منو</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('venue.menuManagement.addMenuItem')}</h3>
         <form onSubmit={addItem} className="grid sm:grid-cols-2 gap-2">
           <input
             className="border border-gray-300 rounded-lg px-3 py-2"
-            placeholder="نام آیتم"
+            placeholder={t('venue.menuManagement.itemNamePlaceholder')}
             value={newItem.name}
             onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
           />
           <input
             className="border border-gray-300 rounded-lg px-3 py-2"
-            placeholder="قیمت (تومان)"
+            placeholder={t('venue.menuManagement.pricePlaceholder')}
             type="number"
             value={newItem.price}
             onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
@@ -253,7 +254,7 @@ export default function MenuManagement() {
             value={newItem.categoryId}
             onChange={(e) => setNewItem({ ...newItem, categoryId: e.target.value })}
           >
-            <option value="">انتخاب دسته‌بندی</option>
+            <option value="">{t('venue.menuManagement.selectCategory')}</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -262,19 +263,19 @@ export default function MenuManagement() {
           </select>
           <input
             className="border border-gray-300 rounded-lg px-3 py-2"
-            placeholder="توضیحات (اختیاری)"
+            placeholder={t('venue.menuManagement.descriptionOptional')}
             value={newItem.description}
             onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
           />
           <input
             className="border border-gray-300 rounded-lg px-3 py-2"
-            placeholder="برچسب‌ها (مثلاً تند، گیاهی) با کاما جدا کنید"
+            placeholder={t('venue.menuManagement.tagsPlaceholder')}
             value={newItem.tags}
             onChange={(e) => setNewItem({ ...newItem, tags: e.target.value })}
           />
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-xs text-gray-500">ساعت شروع نمایش</label>
+              <label className="text-xs text-gray-500">{t('venue.menuManagement.displayStartTime')}</label>
               <input
                 type="time"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2"
@@ -283,7 +284,7 @@ export default function MenuManagement() {
               />
             </div>
             <div>
-              <label className="text-xs text-gray-500">ساعت پایان نمایش</label>
+              <label className="text-xs text-gray-500">{t('venue.menuManagement.displayEndTime')}</label>
               <input
                 type="time"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2"
@@ -293,7 +294,7 @@ export default function MenuManagement() {
             </div>
           </div>
           <Button type="submit" className="sm:col-span-2">
-            افزودن آیتم
+            {t('venue.menuManagement.addItem')}
           </Button>
         </form>
       </Card>
@@ -301,23 +302,23 @@ export default function MenuManagement() {
       {selectedIds.size > 0 && (
         <Card className="bg-primary-50 border-primary-200">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm text-gray-700">{selectedIds.size} آیتم انتخاب شده</span>
+            <span className="text-sm text-gray-700">{selectedIds.size} {t('venue.menuManagement.itemsSelected')}</span>
             <Button variant="secondary" onClick={() => bulkEnable(true)}>
-              فعال‌سازی گروهی
+              {t('venue.menuManagement.bulkEnable')}
             </Button>
             <Button variant="secondary" onClick={() => bulkEnable(false)}>
-              غیرفعال‌سازی گروهی
+              {t('venue.menuManagement.bulkDisable')}
             </Button>
             <input
               type="number"
               step="0.01"
               className="w-28 border border-gray-300 rounded-lg px-2 py-1 text-sm"
-              placeholder="ضریب قیمت (مثلاً 1.1)"
+              placeholder={t('venue.menuManagement.priceMultiplierPlaceholder')}
               value={bulkPriceMultiplier}
               onChange={(e) => setBulkPriceMultiplier(e.target.value)}
             />
             <Button variant="secondary" onClick={bulkPrice}>
-              اعمال تغییر قیمت گروهی
+              {t('venue.menuManagement.applyBulkPriceChange')}
             </Button>
           </div>
         </Card>
@@ -332,7 +333,7 @@ export default function MenuManagement() {
       />
 
       <div>
-        <h3 className="font-semibold text-gray-800 mb-3">آیتم‌های منو</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('venue.menuManagement.menuItems')}</h3>
         <div className="grid sm:grid-cols-2 gap-3">
           {items.map((item) => (
             <Card key={item.id}>
@@ -343,7 +344,7 @@ export default function MenuManagement() {
                   onClick={() => openImagePicker(item)}
                   disabled={uploadingImageId === item.id}
                   className="shrink-0 w-14 h-14 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center"
-                  title="آپلود/تغییر عکس آیتم"
+                  title={t('venue.menuManagement.uploadChangeItemImage')}
                 >
                   {item.imageUrl ? (
                     <img src={resolveImageUrl(item.imageUrl)} alt={item.name} className="w-full h-full object-cover" />
@@ -353,11 +354,11 @@ export default function MenuManagement() {
                 </button>
                 <div className="flex-1">
                   <p className="font-medium text-gray-800">{item.name}</p>
-                  <p className="text-sm text-gray-500">{Number(item.price).toLocaleString('fa-IR')} تومان</p>
-                  {item.tags && <p className="text-xs text-gray-400 mt-1">برچسب‌ها: {item.tags}</p>}
+                  <p className="text-sm text-gray-500">{Number(item.price).toLocaleString('fa-IR')} {t('common.toman')}</p>
+                  {item.tags && <p className="text-xs text-gray-400 mt-1">{t('venue.menuManagement.tagsLabel')}: {item.tags}</p>}
                   {(item.scheduleStart || item.scheduleEnd) && (
                     <p className="text-xs text-gray-400">
-                      نمایش: {item.scheduleStart || '—'} تا {item.scheduleEnd || '—'}
+                      {t('venue.menuManagement.displayLabel')}: {item.scheduleStart || '—'} {t('venue.accounting.dateRangeTo')} {item.scheduleEnd || '—'}
                     </p>
                   )}
                 </div>
@@ -368,30 +369,30 @@ export default function MenuManagement() {
                   onClick={() => openImagePicker(item)}
                   disabled={uploadingImageId === item.id}
                 >
-                  {uploadingImageId === item.id ? 'در حال آپلود...' : item.imageUrl ? 'تغییر عکس' : 'افزودن عکس'}
+                  {uploadingImageId === item.id ? t('venue.menuManagement.uploading') : item.imageUrl ? t('venue.menuManagement.changeImage') : t('venue.menuManagement.addImage')}
                 </Button>
                 <Button variant="secondary" onClick={() => toggleAvailability(item)}>
-                  {item.isAvailable ? 'غیرفعال کردن' : 'فعال کردن'}
+                  {item.isAvailable ? t('venue.marketing.deactivate') : t('venue.marketing.activate')}
                 </Button>
                 <Button variant="ghost" onClick={() => toggleVariants(item)}>
-                  متغیرها
+                  {t('venue.menuManagement.variants')}
                 </Button>
                 <Button variant="danger" onClick={() => removeItem(item)}>
-                  حذف
+                  {t('common.delete')}
                 </Button>
               </div>
 
               {expandedItemId === item.id && (
                 <div className="mt-3 pt-3 border-t border-gray-100">
                   <p className="text-sm text-gray-600">
-                    برای مدیریت گروه‌های سفارشی‌سازی و اتصال آن‌ها به این آیتم، به{' '}
-                    <Link to="/venue/modifier-groups" className="text-primary-700 underline">صفحه سفارشی‌سازی</Link>{' '}
-                    مراجعه کنید.
+                    {t('venue.menuManagement.modifierGroupsInfoPrefix')}{' '}
+                    <Link to="/venue/modifier-groups" className="text-primary-700 underline">{t('venue.menuManagement.modifierGroupsInfoLink')}</Link>{' '}
+                    {t('venue.menuManagement.modifierGroupsInfoSuffix')}
                   </p>
                   {(item.modifierGroups || []).length > 0 && (
                     <ul className="mt-2 space-y-1 text-xs text-gray-500">
                       {item.modifierGroups.map((g) => (
-                        <li key={g.id} className="flex items-center gap-1"><Circle size={6} fill="currentColor" />{g.name} ({g.options?.length || 0} گزینه)</li>
+                        <li key={g.id} className="flex items-center gap-1"><Circle size={6} fill="currentColor" />{g.name} ({g.options?.length || 0} {t('venue.menuManagement.optionsCount')})</li>
                       ))}
                     </ul>
                   )}

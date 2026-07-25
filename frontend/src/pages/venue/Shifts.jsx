@@ -4,10 +4,12 @@ import { useAuth } from '../../hooks/useAuth';
 import { useVenuePermissions } from '../../hooks/useVenuePermissions';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
+import { useLanguage } from '../../context/LanguageContext';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 
 export default function Shifts() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const venueId = user?.venueId;
   const { has, isOwner, loading: permsLoading } = useVenuePermissions();
@@ -36,21 +38,21 @@ export default function Shifts() {
   async function createShift(e) {
     e.preventDefault();
     if (!form.userId || !form.scheduledStart || !form.scheduledEnd) {
-      toast.error('کارمند و بازه زمانی شیفت را مشخص کنید.');
+      toast.error(t('venue.shifts.specifyStaffAndTimeRange'));
       return;
     }
     try {
       await api.post(`/venues/${venueId}/shifts`, form);
       setForm({ userId: '', scheduledStart: '', scheduledEnd: '', note: '' });
-      toast.success('شیفت ثبت شد.');
+      toast.success(t('venue.shifts.shiftRecorded'));
       refresh();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'ثبت شیفت ناموفق بود.');
+      toast.error(err.response?.data?.message || t('venue.shifts.shiftRecordFailed'));
     }
   }
 
   async function removeShift(shift) {
-    if (!(await confirm('این شیفت حذف شود؟', { danger: true }))) return;
+    if (!(await confirm(t('venue.shifts.confirmDeleteShift'), { danger: true }))) return;
     await api.delete(`/venues/${venueId}/shifts/${shift.id}`);
     refresh();
   }
@@ -58,25 +60,25 @@ export default function Shifts() {
   async function clockIn(shift) {
     try {
       await api.post(`/venues/${venueId}/shifts/${shift.id}/clock-in`);
-      toast.success('ورود شما ثبت شد.');
+      toast.success(t('venue.shifts.clockInRecorded'));
       refresh();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'ثبت ورود ناموفق بود.');
+      toast.error(err.response?.data?.message || t('venue.shifts.clockInFailed'));
     }
   }
 
   async function clockOut(shift) {
     try {
       await api.post(`/venues/${venueId}/shifts/${shift.id}/clock-out`);
-      toast.success('خروج شما ثبت شد.');
+      toast.success(t('venue.shifts.clockOutRecorded'));
       refresh();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'ثبت خروج ناموفق بود.');
+      toast.error(err.response?.data?.message || t('venue.shifts.clockOutFailed'));
     }
   }
 
-  if (!venueId) return <p className="text-gray-500">این حساب کاربری به مجموعه‌ای متصل نیست.</p>;
-  if (permsLoading || !shifts) return <p className="text-gray-500">در حال بارگذاری شیفت‌ها...</p>;
+  if (!venueId) return <p className="text-gray-500">{t('common.noVenueLinked')}</p>;
+  if (permsLoading || !shifts) return <p className="text-gray-500">{t('venue.shifts.loadingShifts')}</p>;
 
   const myShifts = shifts.filter((s) => s.userId === user.id);
 
@@ -84,7 +86,7 @@ export default function Shifts() {
     <div className="space-y-6">
       {canManage && (
         <Card>
-          <h3 className="font-semibold text-gray-800 mb-3">ثبت شیفت جدید</h3>
+          <h3 className="font-semibold text-gray-800 mb-3">{t('venue.shifts.recordNewShift')}</h3>
           <form onSubmit={createShift} className="space-y-2">
             <div className="grid sm:grid-cols-2 gap-2">
               <select
@@ -92,7 +94,7 @@ export default function Shifts() {
                 value={form.userId}
                 onChange={(e) => setForm({ ...form, userId: e.target.value })}
               >
-                <option value="">انتخاب کارمند</option>
+                <option value="">{t('venue.shifts.selectStaffMember')}</option>
                 {staff.map((member) => (
                   <option key={member.id} value={member.id}>
                     {member.name}
@@ -101,7 +103,7 @@ export default function Shifts() {
               </select>
               <input
                 className="border border-gray-300 rounded-lg px-3 py-2"
-                placeholder="یادداشت (اختیاری)"
+                placeholder={t('venue.inventory.notePlaceholder')}
                 value={form.note}
                 onChange={(e) => setForm({ ...form, note: e.target.value })}
               />
@@ -118,34 +120,34 @@ export default function Shifts() {
                 onChange={(e) => setForm({ ...form, scheduledEnd: e.target.value })}
               />
             </div>
-            <Button type="submit">ثبت شیفت</Button>
+            <Button type="submit">{t('venue.shifts.recordShift')}</Button>
           </form>
         </Card>
       )}
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">شیفت‌های من</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('venue.shifts.myShifts')}</h3>
         <div className="space-y-2">
-          {myShifts.length === 0 && <p className="text-gray-500 text-sm">شیفتی برای شما ثبت نشده است.</p>}
+          {myShifts.length === 0 && <p className="text-gray-500 text-sm">{t('venue.shifts.noShiftsForYou')}</p>}
           {myShifts.map((shift) => (
             <div key={shift.id} className="flex items-center justify-between border-b border-gray-100 pb-2">
               <div>
                 <p className="text-sm text-gray-800">
-                  {new Date(shift.scheduledStart).toLocaleString('fa-IR')} تا {new Date(shift.scheduledEnd).toLocaleString('fa-IR')}
+                  {new Date(shift.scheduledStart).toLocaleString('fa-IR')} {t('venue.accounting.dateRangeTo')} {new Date(shift.scheduledEnd).toLocaleString('fa-IR')}
                 </p>
                 {shift.note && <p className="text-xs text-gray-500">{shift.note}</p>}
                 <p className="text-xs text-gray-400">
-                  {shift.clockInAt ? `ورود: ${new Date(shift.clockInAt).toLocaleTimeString('fa-IR')}` : 'ورود ثبت نشده'}
-                  {shift.clockOutAt ? ` — خروج: ${new Date(shift.clockOutAt).toLocaleTimeString('fa-IR')}` : ''}
+                  {shift.clockInAt ? `${t('venue.shifts.clockInLabel')}: ${new Date(shift.clockInAt).toLocaleTimeString('fa-IR')}` : t('venue.shifts.clockInNotRecorded')}
+                  {shift.clockOutAt ? ` — ${t('venue.shifts.clockOutLabel')}: ${new Date(shift.clockOutAt).toLocaleTimeString('fa-IR')}` : ''}
                 </p>
               </div>
               <div className="flex gap-2">
                 {!shift.clockInAt && (
-                  <Button onClick={() => clockIn(shift)}>ثبت ورود</Button>
+                  <Button onClick={() => clockIn(shift)}>{t('venue.shifts.clockIn')}</Button>
                 )}
                 {shift.clockInAt && !shift.clockOutAt && (
                   <Button variant="secondary" onClick={() => clockOut(shift)}>
-                    ثبت خروج
+                    {t('venue.shifts.clockOut')}
                   </Button>
                 )}
               </div>
@@ -156,23 +158,23 @@ export default function Shifts() {
 
       {canManage && (
         <Card>
-          <h3 className="font-semibold text-gray-800 mb-3">همه شیفت‌های مجموعه</h3>
+          <h3 className="font-semibold text-gray-800 mb-3">{t('venue.shifts.allVenueShifts')}</h3>
           <div className="space-y-2">
-            {shifts.length === 0 && <p className="text-gray-500 text-sm">شیفتی ثبت نشده است.</p>}
+            {shifts.length === 0 && <p className="text-gray-500 text-sm">{t('venue.shifts.noShiftsRecorded')}</p>}
             {shifts.map((shift) => (
               <div key={shift.id} className="flex items-center justify-between border-b border-gray-100 pb-2">
                 <div>
                   <p className="text-sm font-medium text-gray-800">{shift.userName}</p>
                   <p className="text-xs text-gray-500">
-                    {new Date(shift.scheduledStart).toLocaleString('fa-IR')} تا {new Date(shift.scheduledEnd).toLocaleString('fa-IR')}
+                    {new Date(shift.scheduledStart).toLocaleString('fa-IR')} {t('venue.accounting.dateRangeTo')} {new Date(shift.scheduledEnd).toLocaleString('fa-IR')}
                   </p>
                   <p className="text-xs text-gray-400">
-                    {shift.clockInAt ? `ورود: ${new Date(shift.clockInAt).toLocaleTimeString('fa-IR')}` : 'ورود ثبت نشده'}
-                    {shift.clockOutAt ? ` — خروج: ${new Date(shift.clockOutAt).toLocaleTimeString('fa-IR')}` : ''}
+                    {shift.clockInAt ? `${t('venue.shifts.clockInLabel')}: ${new Date(shift.clockInAt).toLocaleTimeString('fa-IR')}` : t('venue.shifts.clockInNotRecorded')}
+                    {shift.clockOutAt ? ` — ${t('venue.shifts.clockOutLabel')}: ${new Date(shift.clockOutAt).toLocaleTimeString('fa-IR')}` : ''}
                   </p>
                 </div>
                 <Button variant="danger" onClick={() => removeShift(shift)}>
-                  حذف
+                  {t('common.delete')}
                 </Button>
               </div>
             ))}

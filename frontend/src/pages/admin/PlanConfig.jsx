@@ -157,7 +157,7 @@ export default function PlanConfig() {
           </button>
           {expandedTier === plan.tier && (
             <div className="mt-4 pt-4 border-t">
-              <PlanEditor plan={plan} onSave={() => { setMsg(`${t('admin.planConfig.planUpdated')} ${plan.name}`); load(); }} />
+              <PlanEditor plan={plan} onSave={() => { setMsg(`${t('admin.planConfig.planUpdatedPrefix')} ${plan.name} ${t('admin.planConfig.planUpdatedSuffix')}`); load(); }} />
             </div>
           )}
         </Card>

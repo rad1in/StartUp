@@ -5,22 +5,23 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
-
-const PERMISSION_LABELS = {
-  'venues.manage': 'مدیریت مجموعه‌ها',
-  'customers.manage': 'مدیریت مشتریان',
-  'billing.manage': 'مدیریت مالی و صورتحساب',
-  'settings.manage': 'مدیریت تنظیمات',
-  'reports.view': 'مشاهده گزارش‌ها',
-  'security.manage': 'مدیریت امنیت',
-  'staff.manage': 'مدیریت کارمندان پلتفرم',
-  'content.manage': 'مدیریت محتوا',
-  'integrations.manage': 'مدیریت یکپارچه‌سازی‌ها',
-};
-
-const roleLabels = { SUPER_ADMIN: 'مدیر کل', SUPPORT_STAFF: 'پشتیبانی', FINANCE_STAFF: 'مالی' };
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function PlatformStaff() {
+  const { t } = useLanguage();
+  const PERMISSION_LABELS = {
+    'venues.manage': t('admin.platformStaff.permVenuesManage'),
+    'customers.manage': t('admin.platformStaff.permCustomersManage'),
+    'billing.manage': t('admin.platformStaff.permBillingManage'),
+    'settings.manage': t('admin.platformStaff.permSettingsManage'),
+    'reports.view': t('admin.platformStaff.permReportsView'),
+    'security.manage': t('admin.platformStaff.permSecurityManage'),
+    'staff.manage': t('admin.platformStaff.permStaffManage'),
+    'content.manage': t('admin.platformStaff.permContentManage'),
+    'integrations.manage': t('admin.platformStaff.permIntegrationsManage'),
+  };
+  const roleLabels = { SUPER_ADMIN: t('admin.platformStaff.roleSuperAdmin'), SUPPORT_STAFF: t('admin.platformStaff.roleSupportStaff'), FINANCE_STAFF: t('admin.platformStaff.roleFinanceStaff') };
+
   const confirm = useConfirm();
   const toast = useToast();
   const [catalogue, setCatalogue] = useState([]);
@@ -57,7 +58,7 @@ export default function PlatformStaff() {
     try {
       await api.post('/admin/roles', roleForm);
       setRoleForm({ name: '', permissions: [] });
-      toast.success('نقش ساخته شد.');
+      toast.success(t('admin.platformStaff.roleCreated'));
       refresh();
     } finally {
       setSavingRole(false);
@@ -65,7 +66,7 @@ export default function PlatformStaff() {
   }
 
   async function deleteRole(role) {
-    if (!(await confirm(`نقش «${role.name}» حذف شود؟`, { danger: true }))) return;
+    if (!(await confirm(`${t('admin.platformStaff.confirmDeleteRolePrefix')} «${role.name}» ${t('admin.platformStaff.confirmDeleteRoleSuffix')}`, { danger: true }))) return;
     await api.delete(`/admin/roles/${role.id}`);
     refresh();
   }
@@ -73,7 +74,7 @@ export default function PlatformStaff() {
   async function applyRole(member, roleId) {
     if (!roleId) return;
     await api.post(`/admin/roles/${roleId}/apply/${member.id}`);
-    toast.success(`نقش روی «${member.name}» اعمال شد.`);
+    toast.success(`${t('admin.platformStaff.roleAppliedPrefix')} «${member.name}» ${t('admin.platformStaff.roleAppliedSuffix')}`);
     refresh();
   }
 
@@ -108,7 +109,7 @@ export default function PlatformStaff() {
   }
 
   async function removeStaff(member) {
-    if (!(await confirm(`دسترسی «${member.name}» به پنل مدیریت حذف شود؟`, { danger: true }))) return;
+    if (!(await confirm(`${t('admin.platformStaff.confirmRemoveAccessPrefix')} «${member.name}» ${t('admin.platformStaff.confirmRemoveAccessSuffix')}`, { danger: true }))) return;
     await api.delete(`/admin/staff/${member.id}`);
     refresh();
   }
@@ -116,7 +117,7 @@ export default function PlatformStaff() {
   return (
     <div className="space-y-6">
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2"><Shield size={16} />نقش‌های سفارشی</h3>
+        <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2"><Shield size={16} />{t('admin.platformStaff.customRoles')}</h3>
         <div className="flex flex-wrap gap-2 mb-3">
           {roles.map((role) => (
             <span key={role.id} className="inline-flex items-center gap-1.5 chip-gold">
@@ -126,12 +127,12 @@ export default function PlatformStaff() {
               </button>
             </span>
           ))}
-          {roles.length === 0 && <p className="text-xs text-ink/40">هنوز نقشی نساخته‌اید.</p>}
+          {roles.length === 0 && <p className="text-xs text-ink/40">{t('admin.platformStaff.noRolesYet')}</p>}
         </div>
         <form onSubmit={createRole} className="space-y-2">
           <input
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-64"
-            placeholder="نام نقش (مثلاً «پشتیبانی ارشد»)"
+            placeholder={t('admin.platformStaff.roleNamePlaceholder')}
             value={roleForm.name}
             onChange={(e) => setRoleForm((f) => ({ ...f, name: e.target.value }))}
           />
@@ -156,38 +157,38 @@ export default function PlatformStaff() {
             ))}
           </div>
           <Button type="submit" disabled={savingRole || !roleForm.name.trim()}>
-            {savingRole ? 'در حال ذخیره...' : 'ساخت نقش'}
+            {savingRole ? t('admin.platformStaff.savingRole') : t('admin.platformStaff.createRole')}
           </Button>
         </form>
       </Card>
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">افزودن عضو جدید تیم مدیریت</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('admin.platformStaff.addNewTeamMember')}</h3>
         <form onSubmit={createStaff} className="space-y-2">
           <div className="grid sm:grid-cols-2 gap-2">
             <input
               className="border border-gray-300 rounded-lg px-3 py-2"
-              placeholder="نام و نام خانوادگی"
+              placeholder={t('admin.platformStaff.fullNamePlaceholder')}
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
             <input
               type="email"
               className="border border-gray-300 rounded-lg px-3 py-2"
-              placeholder="ایمیل"
+              placeholder={t('common.email')}
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
             <input
               className="border border-gray-300 rounded-lg px-3 py-2"
-              placeholder="شماره موبایل (اختیاری)"
+              placeholder={t('admin.platformStaff.mobilePlaceholderOptional')}
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
             />
             <input
               type="password"
               className="border border-gray-300 rounded-lg px-3 py-2"
-              placeholder="رمز عبور اولیه"
+              placeholder={t('admin.platformStaff.initialPasswordPlaceholder')}
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
             />
@@ -204,7 +205,7 @@ export default function PlatformStaff() {
             </select>
           </div>
           <div>
-            <p className="text-sm text-gray-600 mb-2">دسترسی‌ها (خالی = پیش‌فرض نقش):</p>
+            <p className="text-sm text-gray-600 mb-2">{t('admin.platformStaff.permissionsEmptyDefault')}</p>
             <div className="flex flex-wrap gap-2">
               {catalogue.map((permission) => (
                 <label
@@ -226,7 +227,7 @@ export default function PlatformStaff() {
               ))}
             </div>
           </div>
-          <Button type="submit">افزودن عضو</Button>
+          <Button type="submit">{t('admin.platformStaff.addMember')}</Button>
         </form>
       </Card>
 
@@ -246,20 +247,20 @@ export default function PlatformStaff() {
                       defaultValue=""
                       onChange={(e) => applyRole(member, e.target.value)}
                     >
-                      <option value="" disabled>اعمال نقش...</option>
+                      <option value="" disabled>{t('admin.platformStaff.applyRoleEllipsis')}</option>
                       {roles.map((role) => (
                         <option key={role.id} value={role.id}>{role.name}</option>
                       ))}
                     </select>
                   )}
                   <Button variant="danger" onClick={() => removeStaff(member)}>
-                    حذف دسترسی
+                    {t('admin.platformStaff.removeAccess')}
                   </Button>
                 </div>
               )}
             </div>
             {member.role === 'SUPER_ADMIN' ? (
-              <p className="text-xs text-primary-700">دسترسی کامل به تمام بخش‌ها</p>
+              <p className="text-xs text-primary-700">{t('admin.platformStaff.fullAccessAllSections')}</p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {catalogue.map((permission) => (

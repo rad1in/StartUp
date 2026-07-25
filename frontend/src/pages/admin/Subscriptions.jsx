@@ -3,6 +3,7 @@ import { Sparkles, Users, Wallet, Percent, TrendingUp } from 'lucide-react';
 import api from '../../services/api';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
+import { useLanguage } from '../../context/LanguageContext';
 
 function StatCard({ icon: Icon, label, value }) {
   return (
@@ -19,6 +20,7 @@ function StatCard({ icon: Icon, label, value }) {
 }
 
 export default function Subscriptions() {
+  const { t } = useLanguage();
   const [plan, setPlan] = useState(null);
   const [stats, setStats] = useState(null);
   const [list, setList] = useState([]);
@@ -51,7 +53,7 @@ export default function Subscriptions() {
     setMsg('');
     try {
       await api.patch('/subscription/admin/plan', { price: Number(priceInput) });
-      setMsg('ذخیره شد.');
+      setMsg(t('admin.subscriptions.saved'));
       await refresh();
     } finally {
       setSaving(false);
@@ -82,7 +84,7 @@ export default function Subscriptions() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-xl font-black text-ink flex items-center gap-2">
           <Sparkles size={20} className="text-accent-600" />
-          اشتراک تخفیف مشتریان
+          {t('admin.subscriptions.title')}
         </h1>
         <button
           type="button"
@@ -90,23 +92,23 @@ export default function Subscriptions() {
           disabled={saving}
           className={`chip-gold ${!plan.enabled ? 'opacity-50' : ''}`}
         >
-          {plan.enabled ? 'فعال — کلیک برای غیرفعال کردن' : 'غیرفعال — کلیک برای فعال کردن'}
+          {plan.enabled ? t('admin.subscriptions.enabledClickToDisable') : t('admin.subscriptions.disabledClickToEnable')}
         </button>
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard icon={Users} label="مشترکین فعال" value={stats.activeSubscribers.toLocaleString('fa-IR')} />
-        <StatCard icon={Wallet} label="درآمد کل اشتراک" value={`${stats.totalRevenue.toLocaleString('fa-IR')} ت`} />
-        <StatCard icon={TrendingUp} label="تعداد فروش کل" value={stats.totalSubscriptionsSold.toLocaleString('fa-IR')} />
+        <StatCard icon={Users} label={t('admin.subscriptions.activeSubscribers')} value={stats.activeSubscribers.toLocaleString('fa-IR')} />
+        <StatCard icon={Wallet} label={t('admin.subscriptions.totalSubscriptionRevenue')} value={`${stats.totalRevenue.toLocaleString('fa-IR')} ${t('admin.subscriptions.tomanAbbr')}`} />
+        <StatCard icon={TrendingUp} label={t('admin.subscriptions.totalSalesCount')} value={stats.totalSubscriptionsSold.toLocaleString('fa-IR')} />
         <StatCard
           icon={Percent}
-          label="میانگین تخفیف داده‌شده"
+          label={t('admin.subscriptions.averageDiscountGiven')}
           value={`${stats.averageDiscountPercent.toLocaleString('fa-IR')}٪`}
         />
       </div>
 
       <Card>
-        <h2 className="font-bold text-ink mb-3">قیمت اشتراک (۳۰ روزه)</h2>
+        <h2 className="font-bold text-ink mb-3">{t('admin.subscriptions.subscriptionPrice30Days')}</h2>
         <form onSubmit={savePlan} className="flex items-center gap-3 flex-wrap">
           <input
             type="number"
@@ -116,29 +118,29 @@ export default function Subscriptions() {
             value={priceInput}
             onChange={(e) => setPriceInput(e.target.value)}
           />
-          <span className="text-sm text-ink/50">تومان</span>
+          <span className="text-sm text-ink/50">{t('common.toman')}</span>
           <Button type="submit" disabled={saving}>
-            {saving ? 'در حال ذخیره...' : 'ذخیره'}
+            {saving ? t('admin.subscriptions.saving') : t('common.save')}
           </Button>
           {msg && <span className="text-sm text-green-600">{msg}</span>}
         </form>
       </Card>
 
       <Card className="p-0 overflow-hidden">
-        <h2 className="font-bold text-ink px-4 pt-4 mb-3">آخرین مشترکین</h2>
+        <h2 className="font-bold text-ink px-4 pt-4 mb-3">{t('admin.subscriptions.latestSubscribers')}</h2>
         {list.length === 0 ? (
-          <p className="text-sm text-ink/40 px-4 pb-4">هنوز کسی اشتراک نخریده است.</p>
+          <p className="text-sm text-ink/40 px-4 pb-4">{t('admin.subscriptions.noOneSubscribedYet')}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-right text-xs text-ink/40 border-b border-ink/10">
-                  <th className="px-4 py-2 font-medium">مشتری</th>
-                  <th className="px-4 py-2 font-medium">وضعیت</th>
-                  <th className="px-4 py-2 font-medium">مبلغ</th>
-                  <th className="px-4 py-2 font-medium">تخفیف‌های بزرگ</th>
-                  <th className="px-4 py-2 font-medium">شروع</th>
-                  <th className="px-4 py-2 font-medium">پایان</th>
+                  <th className="px-4 py-2 font-medium">{t('admin.subscriptions.customerColumn')}</th>
+                  <th className="px-4 py-2 font-medium">{t('common.status')}</th>
+                  <th className="px-4 py-2 font-medium">{t('admin.subscriptions.amountColumn')}</th>
+                  <th className="px-4 py-2 font-medium">{t('admin.subscriptions.bigDiscountsColumn')}</th>
+                  <th className="px-4 py-2 font-medium">{t('admin.subscriptions.startColumn')}</th>
+                  <th className="px-4 py-2 font-medium">{t('admin.subscriptions.endColumn')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -156,10 +158,10 @@ export default function Subscriptions() {
                             : 'bg-gray-100 text-gray-500'
                         }`}
                       >
-                        {s.status === 'ACTIVE' ? 'فعال' : s.status === 'EXPIRED' ? 'منقضی' : 'لغوشده'}
+                        {s.status === 'ACTIVE' ? t('common.active') : s.status === 'EXPIRED' ? t('admin.subscriptions.expired') : t('admin.subscriptions.cancelled')}
                       </span>
                     </td>
-                    <td className="px-4 py-2.5 text-ink/70">{Number(s.pricePaid).toLocaleString('fa-IR')} ت</td>
+                    <td className="px-4 py-2.5 text-ink/70">{Number(s.pricePaid).toLocaleString('fa-IR')} {t('admin.subscriptions.tomanAbbr')}</td>
                     <td className="px-4 py-2.5 text-ink/70">{s.highDiscountCount}</td>
                     <td className="px-4 py-2.5 text-ink/50 text-xs">
                       {new Date(s.startsAt).toLocaleDateString('fa-IR')}

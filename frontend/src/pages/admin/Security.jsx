@@ -3,8 +3,10 @@ import api from '../../services/api';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { useConfirm } from '../../context/ConfirmContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function Security() {
+  const { t } = useLanguage();
   const confirm = useConfirm();
   const [health, setHealth] = useState(null);
   const [search, setSearch] = useState('');
@@ -34,7 +36,7 @@ export default function Security() {
   }
 
   async function forceLogout(user) {
-    if (!(await confirm(`تمام نشست‌های «${user.name}» خاتمه یابد؟`, { danger: true }))) return;
+    if (!(await confirm(`${t('admin.security.confirmForceLogoutPrefix')} «${user.name}» ${t('admin.security.confirmForceLogoutSuffix')}`, { danger: true }))) return;
     await api.post(`/admin/users/${user.id}/force-logout`);
     if (selectedUser?.id === user.id) viewSessions(user);
   }
@@ -44,30 +46,30 @@ export default function Security() {
       {health && (
         <div className="grid sm:grid-cols-3 gap-3">
           <Card>
-            <p className="text-xs text-gray-500">خطاهای API (۲۴ ساعت اخیر)</p>
+            <p className="text-xs text-gray-500">{t('admin.security.apiErrorsLast24h')}</p>
             <p className="text-xl font-bold text-gray-800">{health.apiErrorsLast24h.toLocaleString('fa-IR')}</p>
           </Card>
           <Card>
-            <p className="text-xs text-gray-500">نرخ شکست پرداخت</p>
+            <p className="text-xs text-gray-500">{t('admin.security.failedPaymentRate')}</p>
             <p className="text-xl font-bold text-gray-800">{(health.failedPaymentRate * 100).toFixed(1)}٪</p>
           </Card>
           <Card>
-            <p className="text-xs text-gray-500">اتصالات زنده (WebSocket)</p>
+            <p className="text-xs text-gray-500">{t('admin.security.liveConnectionsWebsocket')}</p>
             <p className="text-xl font-bold text-primary-700">{health.connectedSockets.toLocaleString('fa-IR')}</p>
           </Card>
         </div>
       )}
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">جستجوی کاربر و خروج اجباری</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('admin.security.userSearchAndForceLogout')}</h3>
         <div className="flex gap-2 mb-3">
           <input
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1"
-            placeholder="نام یا ایمیل کاربر..."
+            placeholder={t('admin.security.nameOrEmailPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <Button onClick={searchUsers}>جستجو</Button>
+          <Button onClick={searchUsers}>{t('common.search')}</Button>
         </div>
         <div className="space-y-2">
           {users.map((user) => (
@@ -75,10 +77,10 @@ export default function Security() {
               <span>{user.name} ({user.email})</span>
               <div className="flex gap-2">
                 <Button variant="ghost" onClick={() => viewSessions(user)}>
-                  مشاهده نشست‌ها
+                  {t('admin.security.viewSessions')}
                 </Button>
                 <Button variant="danger" onClick={() => forceLogout(user)}>
-                  خروج اجباری
+                  {t('admin.security.forceLogout')}
                 </Button>
               </div>
             </div>
@@ -88,15 +90,15 @@ export default function Security() {
 
       {selectedUser && (
         <Card>
-          <h3 className="font-semibold text-gray-800 mb-3">نشست‌های فعال {selectedUser.name}</h3>
+          <h3 className="font-semibold text-gray-800 mb-3">{t('admin.security.activeSessionsFor')} {selectedUser.name}</h3>
           <div className="space-y-2">
             {sessions.map((session) => (
               <div key={session.id} className="text-sm border-b border-gray-100 pb-1">
-                <p className="text-gray-700">{session.userAgent || 'دستگاه نامشخص'} — {session.ip || '—'}</p>
-                <p className="text-xs text-gray-400">آخرین استفاده: {new Date(session.lastUsedAt).toLocaleString('fa-IR')}</p>
+                <p className="text-gray-700">{session.userAgent || t('admin.security.unknownDevice')} — {session.ip || '—'}</p>
+                <p className="text-xs text-gray-400">{t('admin.security.lastUsed')}: {new Date(session.lastUsedAt).toLocaleString('fa-IR')}</p>
               </div>
             ))}
-            {sessions.length === 0 && <p className="text-gray-500 text-sm">نشست فعالی یافت نشد.</p>}
+            {sessions.length === 0 && <p className="text-gray-500 text-sm">{t('admin.security.noActiveSessionsFound')}</p>}
           </div>
         </Card>
       )}

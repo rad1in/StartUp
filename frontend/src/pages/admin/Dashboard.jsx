@@ -1,17 +1,10 @@
 import { useEffect, useState } from 'react';
 import api from '../../services/api';
 import { useAdminSocket } from '../../hooks/useSocket';
+import { useLanguage } from '../../context/LanguageContext';
 import Card from '../../components/Card';
 import { Settings2, Eye, EyeOff, ArrowUp, ArrowDown, X } from 'lucide-react';
 
-const WIDGET_LABELS = {
-  kpis: 'شاخص‌های کلیدی',
-  gmv: 'گردش مالی کل (GMV)',
-  growth: 'روند رشد ۳۰ روز اخیر',
-  liveFeed: 'فید زنده رویدادها',
-  recentOrders: 'آخرین سفارش‌ها',
-  recentVenues: 'آخرین مجموعه‌های ثبت‌شده',
-};
 const DEFAULT_WIDGET_ORDER = ['kpis', 'gmv', 'growth', 'liveFeed', 'recentOrders', 'recentVenues'];
 const STORAGE_KEY = 'admin.dashboard.widgets';
 
@@ -30,7 +23,8 @@ function loadWidgetPrefs() {
 }
 
 function GrowthChart({ series, color, label }) {
-  if (series.length === 0) return <p className="text-gray-500 text-sm">داده‌ای برای نمایش وجود ندارد.</p>;
+  const { t } = useLanguage();
+  if (series.length === 0) return <p className="text-gray-500 text-sm">{t('common.noDataToShow')}</p>;
   const max = Math.max(...series.map((d) => d.count), 1);
   const width = 500;
   const height = 120;
@@ -55,17 +49,28 @@ function GrowthChart({ series, color, label }) {
   );
 }
 
-function timeAgo(dateStr) {
-  const diffMs = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return 'همین الان';
-  if (mins < 60) return `${mins} دقیقه پیش`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours} ساعت پیش`;
-  return `${Math.floor(hours / 24)} روز پیش`;
-}
-
 export default function Dashboard() {
+  const { t } = useLanguage();
+
+  const WIDGET_LABELS = {
+    kpis: t('admin.dashboard.widgetKpis'),
+    gmv: t('admin.dashboard.widgetGmv'),
+    growth: t('admin.dashboard.widgetGrowth'),
+    liveFeed: t('admin.dashboard.widgetLiveFeed'),
+    recentOrders: t('admin.dashboard.widgetRecentOrders'),
+    recentVenues: t('admin.dashboard.widgetRecentVenues'),
+  };
+
+  function timeAgo(dateStr) {
+    const diffMs = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return t('admin.dashboard.justNow');
+    if (mins < 60) return `${mins} ${t('admin.dashboard.minutesAgo')}`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours} ${t('admin.dashboard.hoursAgo')}`;
+    return `${Math.floor(hours / 24)} ${t('admin.dashboard.daysAgo')}`;
+  }
+
   const [data, setData] = useState(null);
   const [liveFeed, setLiveFeed] = useState([]);
   const [widgetPrefs, setWidgetPrefs] = useState(loadWidgetPrefs);
@@ -105,16 +110,16 @@ export default function Dashboard() {
 
   useAdminSocket({
     'order:new': (order) =>
-      setLiveFeed((prev) => [{ type: 'order', text: `سفارش جدید در ${order.venue?.name || 'یک مجموعه'}`, at: new Date().toISOString() }, ...prev].slice(0, 15)),
+      setLiveFeed((prev) => [{ type: 'order', text: `${t('admin.dashboard.newOrderPrefix')} ${order.venue?.name || t('admin.dashboard.aVenue')}`, at: new Date().toISOString() }, ...prev].slice(0, 15)),
     'venue:registered': (venue) =>
-      setLiveFeed((prev) => [{ type: 'venue', text: `ثبت‌نام مجموعه جدید: ${venue.name}`, at: new Date().toISOString() }, ...prev].slice(0, 15)),
+      setLiveFeed((prev) => [{ type: 'venue', text: `${t('admin.dashboard.newVenueRegisteredPrefix')}: ${venue.name}`, at: new Date().toISOString() }, ...prev].slice(0, 15)),
     'venue:statusChanged': (venue) =>
-      setLiveFeed((prev) => [{ type: 'venue', text: `تغییر وضعیت مجموعه ${venue.name} به ${venue.status}`, at: new Date().toISOString() }, ...prev].slice(0, 15)),
+      setLiveFeed((prev) => [{ type: 'venue', text: `${t('admin.dashboard.venueStatusChangedPrefix')} ${venue.name} ${t('admin.dashboard.venueStatusChangedMiddle')} ${venue.status}`, at: new Date().toISOString() }, ...prev].slice(0, 15)),
     'subscription:changed': (venue) =>
-      setLiveFeed((prev) => [{ type: 'venue', text: `تغییر پلن اشتراک مجموعه ${venue.name}`, at: new Date().toISOString() }, ...prev].slice(0, 15)),
+      setLiveFeed((prev) => [{ type: 'venue', text: `${t('admin.dashboard.subscriptionChangedPrefix')} ${venue.name}`, at: new Date().toISOString() }, ...prev].slice(0, 15)),
   });
 
-  if (!data) return <p className="text-gray-500">در حال بارگذاری داشبورد...</p>;
+  if (!data) return <p className="text-gray-500">{t('admin.dashboard.loadingDashboard')}</p>;
 
   const { kpis, growth, feed } = data;
 
@@ -122,47 +127,47 @@ export default function Dashboard() {
     kpis: (
       <div className="grid sm:grid-cols-4 gap-3">
         <Card>
-          <p className="text-xs text-gray-500">مجموعه‌های فعال</p>
+          <p className="text-xs text-gray-500">{t('admin.dashboard.kpiActiveVenues')}</p>
           <p className="text-xl font-bold text-gray-800">{kpis.venueCount.toLocaleString('fa-IR')}</p>
         </Card>
         <Card>
-          <p className="text-xs text-gray-500">تعداد مشتریان</p>
+          <p className="text-xs text-gray-500">{t('admin.dashboard.kpiCustomerCount')}</p>
           <p className="text-xl font-bold text-gray-800">{kpis.customerCount.toLocaleString('fa-IR')}</p>
         </Card>
         <Card>
-          <p className="text-xs text-gray-500">سفارش‌های امروز / هفته / ماه</p>
+          <p className="text-xs text-gray-500">{t('admin.dashboard.kpiOrdersTodayWeekMonth')}</p>
           <p className="text-xl font-bold text-gray-800">
             {kpis.ordersToday.toLocaleString('fa-IR')} / {kpis.ordersWeek.toLocaleString('fa-IR')} /{' '}
             {kpis.ordersMonth.toLocaleString('fa-IR')}
           </p>
         </Card>
         <Card>
-          <p className="text-xs text-gray-500">کارمزد کل پلتفرم</p>
-          <p className="text-xl font-bold text-primary-700">{kpis.totalCommission.toLocaleString('fa-IR')} تومان</p>
+          <p className="text-xs text-gray-500">{t('admin.dashboard.kpiTotalCommission')}</p>
+          <p className="text-xl font-bold text-primary-700">{kpis.totalCommission.toLocaleString('fa-IR')} {t('common.toman')}</p>
         </Card>
       </div>
     ),
     gmv: (
       <Card>
-        <p className="text-xs text-gray-500 mb-2">گردش مالی کل (GMV)</p>
-        <p className="text-2xl font-bold text-gray-800">{kpis.gmv.toLocaleString('fa-IR')} تومان</p>
+        <p className="text-xs text-gray-500 mb-2">{t('admin.dashboard.widgetGmv')}</p>
+        <p className="text-2xl font-bold text-gray-800">{kpis.gmv.toLocaleString('fa-IR')} {t('common.toman')}</p>
       </Card>
     ),
     growth: (
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">روند رشد ۳۰ روز اخیر</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('admin.dashboard.widgetGrowth')}</h3>
         <div className="grid sm:grid-cols-3 gap-4">
-          <GrowthChart series={growth.venueSignups} color="#1D1B16" label="ثبت‌نام مجموعه‌ها" />
-          <GrowthChart series={growth.customerSignups} color="#6C6960" label="ثبت‌نام مشتریان" />
-          <GrowthChart series={growth.orderVolume} color="#A9A496" label="حجم سفارش‌ها" />
+          <GrowthChart series={growth.venueSignups} color="#1D1B16" label={t('admin.dashboard.venueSignups')} />
+          <GrowthChart series={growth.customerSignups} color="#6C6960" label={t('admin.dashboard.customerSignups')} />
+          <GrowthChart series={growth.orderVolume} color="#A9A496" label={t('admin.dashboard.orderVolume')} />
         </div>
       </Card>
     ),
     liveFeed: (
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">فید زنده رویدادها</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('admin.dashboard.widgetLiveFeed')}</h3>
         <div className="space-y-2 max-h-72 overflow-y-auto">
-          {liveFeed.length === 0 && <p className="text-gray-500 text-sm">رویداد زنده‌ای دریافت نشده است.</p>}
+          {liveFeed.length === 0 && <p className="text-gray-500 text-sm">{t('admin.dashboard.noLiveEvents')}</p>}
           {liveFeed.map((item, i) => (
             <div key={i} className="text-sm flex items-center justify-between border-b border-gray-100 pb-1">
               <span className="text-gray-700">{item.text}</span>
@@ -174,12 +179,12 @@ export default function Dashboard() {
     ),
     recentOrders: (
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">آخرین سفارش‌ها</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('admin.dashboard.widgetRecentOrders')}</h3>
         <div className="space-y-2">
           {feed.recentOrders.slice(0, 8).map((order) => (
             <div key={order.id} className="text-sm flex items-center justify-between border-b border-gray-100 pb-1">
               <span className="text-gray-700">{order.venueName}</span>
-              <span className="text-gray-500">{Number(order.totalAmount).toLocaleString('fa-IR')} تومان</span>
+              <span className="text-gray-500">{Number(order.totalAmount).toLocaleString('fa-IR')} {t('common.toman')}</span>
             </div>
           ))}
         </div>
@@ -187,7 +192,7 @@ export default function Dashboard() {
     ),
     recentVenues: (
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">آخرین مجموعه‌های ثبت‌شده</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('admin.dashboard.widgetRecentVenues')}</h3>
         <div className="space-y-2">
           {feed.recentVenues.slice(0, 8).map((venue) => (
             <div key={venue.id} className="text-sm flex items-center justify-between border-b border-gray-100 pb-1">
@@ -200,9 +205,8 @@ export default function Dashboard() {
     ),
   };
 
-  const pairedRow = { liveFeed: 'recentOrders' };
-  const skip = new Set();
   const visibleOrder = widgetPrefs.order.filter((k) => isVisible(k));
+  const skip = new Set();
 
   return (
     <div className="space-y-6">
@@ -213,7 +217,7 @@ export default function Dashboard() {
           className="flex items-center gap-1.5 text-xs font-medium text-ink/60 border border-ink/10 rounded-lg px-3 py-1.5 hover:bg-ink/5"
         >
           <Settings2 size={14} />
-          شخصی‌سازی داشبورد
+          {t('admin.dashboard.customizeDashboard')}
         </button>
       </div>
 
@@ -231,13 +235,13 @@ export default function Dashboard() {
         return <div key={key}>{widgetNodes[key]}</div>;
       })}
 
-      {visibleOrder.length === 0 && <p className="text-gray-500 text-sm">همه ویجت‌ها مخفی شده‌اند. از دکمه شخصی‌سازی برای نمایش استفاده کنید.</p>}
+      {visibleOrder.length === 0 && <p className="text-gray-500 text-sm">{t('admin.dashboard.allWidgetsHidden')}</p>}
 
       {customizing && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setCustomizing(false)}>
           <div className="glass-strong rounded-2xl shadow-lift w-full max-w-sm p-4 animate-pop-in" dir="rtl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-black text-ink">شخصی‌سازی داشبورد</h3>
+              <h3 className="font-black text-ink">{t('admin.dashboard.customizeDashboard')}</h3>
               <button type="button" onClick={() => setCustomizing(false)} className="text-ink/40 hover:text-ink">
                 <X size={18} />
               </button>
@@ -266,7 +270,7 @@ export default function Dashboard() {
               ))}
             </div>
             <button type="button" onClick={resetWidgets} className="mt-3 text-xs text-primary-700 hover:underline">
-              بازنشانی به حالت پیش‌فرض
+              {t('admin.dashboard.resetToDefault')}
             </button>
           </div>
         </div>

@@ -3,8 +3,7 @@ import { AlertTriangle } from 'lucide-react';
 import api from '../../services/api';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
-
-const tierLabels = { FREE: 'رایگان', PRO: 'حرفه‌ای', ULTRA: 'حرفه‌ای‌پلاس' };
+import { useLanguage } from '../../context/LanguageContext';
 
 async function downloadCsv(endpoint, filename, format = 'csv') {
   const mime = format === 'xlsx' ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/csv';
@@ -33,6 +32,8 @@ function ExportButtons({ endpoint, filename }) {
 }
 
 export default function Reports() {
+  const { t } = useLanguage();
+  const tierLabels = { FREE: t('admin.reports.tierFree'), PRO: t('admin.reports.tierPro'), ULTRA: t('admin.reports.tierUltra') };
   const [revenueByVenue, setRevenueByVenue] = useState([]);
   const [revenueByRegion, setRevenueByRegion] = useState([]);
   const [commissionByTier, setCommissionByTier] = useState([]);
@@ -53,14 +54,14 @@ export default function Reports() {
     <div className="space-y-6">
       <Card>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-gray-800">درآمد به تفکیک مجموعه</h3>
+          <h3 className="font-semibold text-gray-800">{t('admin.reports.revenueByVenue')}</h3>
           <ExportButtons endpoint="/admin/reports/revenue-by-venue" filename="revenue-by-venue.csv" />
         </div>
         <div className="space-y-2">
           {revenueByVenue.slice(0, 10).map((row) => (
             <div key={row.venueId} className="flex items-center justify-between text-sm border-b border-gray-100 pb-1">
               <span>{row.venueName}</span>
-              <span className="text-gray-500">{row.revenue.toLocaleString('fa-IR')} تومان</span>
+              <span className="text-gray-500">{row.revenue.toLocaleString('fa-IR')} {t('common.toman')}</span>
             </div>
           ))}
         </div>
@@ -68,38 +69,38 @@ export default function Reports() {
 
       <Card>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-gray-800">درآمد به تفکیک منطقه</h3>
+          <h3 className="font-semibold text-gray-800">{t('admin.reports.revenueByRegion')}</h3>
           <ExportButtons endpoint="/admin/reports/revenue-by-region" filename="revenue-by-region.csv" />
         </div>
         <div className="space-y-2">
           {revenueByRegion.map((row) => (
             <div key={row.city} className="flex items-center justify-between text-sm border-b border-gray-100 pb-1">
               <span>{row.city}</span>
-              <span className="text-gray-500">{row.revenue.toLocaleString('fa-IR')} تومان</span>
+              <span className="text-gray-500">{row.revenue.toLocaleString('fa-IR')} {t('common.toman')}</span>
             </div>
           ))}
         </div>
       </Card>
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">کارمزد به تفکیک پلن</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('admin.reports.commissionByTier')}</h3>
         <div className="space-y-2">
           {commissionByTier.map((row) => (
             <div key={row.tier} className="flex items-center justify-between text-sm border-b border-gray-100 pb-1">
               <span>{tierLabels[row.tier] || row.tier}</span>
-              <span className="text-gray-500">{row.commission.toLocaleString('fa-IR')} تومان — {row.orderCount} سفارش</span>
+              <span className="text-gray-500">{row.commission.toLocaleString('fa-IR')} {t('common.toman')} — {row.orderCount} {t('admin.reports.ordersWord')}</span>
             </div>
           ))}
         </div>
       </Card>
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">پرفروش‌ترین مجموعه‌ها</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('admin.reports.topSellingVenues')}</h3>
         <div className="space-y-2">
           {topVenues.map((row, i) => (
             <div key={row.venueId} className="flex items-center justify-between text-sm border-b border-gray-100 pb-1">
               <span>{i + 1}. {row.venueName}</span>
-              <span className="text-gray-500">{row.revenue.toLocaleString('fa-IR')} تومان</span>
+              <span className="text-gray-500">{row.revenue.toLocaleString('fa-IR')} {t('common.toman')}</span>
             </div>
           ))}
         </div>
@@ -107,16 +108,16 @@ export default function Reports() {
 
       {retention && (
         <Card>
-          <h3 className="font-semibold text-gray-800 mb-3">نرخ بازگشت مشتریان</h3>
+          <h3 className="font-semibold text-gray-800 mb-3">{t('admin.reports.customerRetentionRate')}</h3>
           <p className="text-sm text-gray-700">
-            {retention.repeatCustomers.toLocaleString('fa-IR')} از {retention.totalCustomers.toLocaleString('fa-IR')}{' '}
-            مشتری بیش از یک سفارش موفق ثبت کرده‌اند ({(retention.retentionRate * 100).toFixed(1)}٪)
+            {retention.repeatCustomers.toLocaleString('fa-IR')} {t('admin.reports.outOf')} {retention.totalCustomers.toLocaleString('fa-IR')}{' '}
+            {t('admin.reports.customersWithMoreThanOneOrder')} ({(retention.retentionRate * 100).toFixed(1)}٪)
           </p>
         </Card>
       )}
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">هشدارهای تقلب احتمالی</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('admin.reports.potentialFraudAlerts')}</h3>
         <div className="space-y-2">
           {fraudFlags.map((flag) => (
             <div key={flag.venueId} className="flex items-center justify-between text-sm border-b border-gray-100 pb-1">
@@ -124,7 +125,7 @@ export default function Reports() {
               <span className="inline-flex items-center gap-1 text-ink text-xs font-bold"><AlertTriangle size={12} />{flag.flags.join('، ')}</span>
             </div>
           ))}
-          {fraudFlags.length === 0 && <p className="text-gray-500 text-sm">موردی برای بررسی یافت نشد.</p>}
+          {fraudFlags.length === 0 && <p className="text-gray-500 text-sm">{t('admin.reports.noItemsToReview')}</p>}
         </div>
       </Card>
     </div>

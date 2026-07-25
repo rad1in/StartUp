@@ -2,19 +2,24 @@ import { useEffect, useState } from 'react';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import { useConfirm } from '../../context/ConfirmContext';
+import { useLanguage } from '../../context/LanguageContext';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 
-const TYPE_LABELS = {
-  SINGLE_SELECT: 'انتخاب تکی',
-  MULTI_SELECT: 'انتخاب چندتایی',
-  TOGGLE_REMOVE: 'حذف افزودنی',
-};
+function getTypeLabels(t) {
+  return {
+    SINGLE_SELECT: t('venue.modifierGroups.typeSingleSelect'),
+    MULTI_SELECT: t('venue.modifierGroups.typeMultiSelect'),
+    TOGGLE_REMOVE: t('venue.modifierGroups.typeToggleRemove'),
+  };
+}
 
 export default function ModifierGroups() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const venueId = user?.venueId;
   const confirm = useConfirm();
+  const TYPE_LABELS = getTypeLabels(t);
 
   const [groups, setGroups] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
@@ -49,21 +54,21 @@ export default function ModifierGroups() {
   }
 
   async function deleteGroup(groupId) {
-    if (!(await confirm('این گروه و تمام گزینه‌هایش حذف می‌شوند. ادامه دهید؟', { danger: true }))) return;
+    if (!(await confirm(t('venue.modifierGroups.confirmDeleteGroup'), { danger: true }))) return;
     await api.delete(`/menu/${venueId}/modifier-groups/${groupId}`);
     refresh();
   }
 
-  if (!venueId) return <p className="text-gray-500">این حساب کاربری به مجموعه‌ای متصل نیست.</p>;
+  if (!venueId) return <p className="text-gray-500">{t('common.noVenueLinked')}</p>;
 
   return (
     <div className="space-y-6">
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">افزودن گروه سفارشی‌سازی</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('venue.modifierGroups.addModifierGroup')}</h3>
         <form onSubmit={createGroup} className="grid sm:grid-cols-2 gap-2">
           <input
             className="border border-gray-300 rounded-lg px-3 py-2"
-            placeholder="نام گروه (مثلاً اندازه)"
+            placeholder={t('venue.modifierGroups.groupNamePlaceholder')}
             value={newGroup.name}
             onChange={(e) => setNewGroup({ ...newGroup, name: e.target.value })}
           />
@@ -81,7 +86,7 @@ export default function ModifierGroups() {
               type="number"
               min={0}
               className="w-24 border border-gray-300 rounded-lg px-3 py-2"
-              placeholder="حداقل"
+              placeholder={t('venue.modifierGroups.minPlaceholder')}
               value={newGroup.minSelections}
               onChange={(e) => setNewGroup({ ...newGroup, minSelections: e.target.value })}
             />
@@ -89,7 +94,7 @@ export default function ModifierGroups() {
               type="number"
               min={0}
               className="w-24 border border-gray-300 rounded-lg px-3 py-2"
-              placeholder="حداکثر (خالی = نامحدود)"
+              placeholder={t('venue.modifierGroups.maxPlaceholder')}
               value={newGroup.maxSelections}
               onChange={(e) => setNewGroup({ ...newGroup, maxSelections: e.target.value })}
             />
@@ -100,9 +105,9 @@ export default function ModifierGroups() {
               checked={newGroup.isRequired}
               onChange={(e) => setNewGroup({ ...newGroup, isRequired: e.target.checked })}
             />
-            الزامی
+            {t('venue.modifierGroups.required')}
           </label>
-          <Button type="submit" className="sm:col-span-2">افزودن گروه</Button>
+          <Button type="submit" className="sm:col-span-2">{t('venue.modifierGroups.addGroup')}</Button>
         </form>
       </Card>
 
@@ -125,6 +130,8 @@ export default function ModifierGroups() {
 }
 
 function ModifierGroupCard({ group, venueId, menuItems, expanded, onToggle, onDelete, onRefresh }) {
+  const { t } = useLanguage();
+  const TYPE_LABELS = getTypeLabels(t);
   const [newOption, setNewOption] = useState({ name: '', priceAdjustment: '', isDefault: false });
   const [attachedItemIds, setAttachedItemIds] = useState(null);
 
@@ -180,23 +187,23 @@ function ModifierGroupCard({ group, venueId, menuItems, expanded, onToggle, onDe
           <p className="font-medium text-gray-800">{group.name}</p>
           <p className="text-xs text-gray-500 mt-0.5">
             {TYPE_LABELS[group.type]}
-            {group.isRequired ? ' — الزامی' : ''}
-            {group.minSelections > 0 ? ` — حداقل ${group.minSelections}` : ''}
-            {group.maxSelections !== null ? ` — حداکثر ${group.maxSelections}` : ''}
+            {group.isRequired ? ` — ${t('venue.modifierGroups.required')}` : ''}
+            {group.minSelections > 0 ? ` — ${t('venue.modifierGroups.minLabel')} ${group.minSelections}` : ''}
+            {group.maxSelections !== null ? ` — ${t('venue.modifierGroups.maxLabel')} ${group.maxSelections}` : ''}
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="secondary" onClick={onToggle}>
-            {expanded ? 'بستن' : 'مدیریت'}
+            {expanded ? t('common.close') : t('venue.modifierGroups.manage')}
           </Button>
-          <Button variant="danger" onClick={onDelete}>حذف</Button>
+          <Button variant="danger" onClick={onDelete}>{t('common.delete')}</Button>
         </div>
       </div>
 
       {expanded && (
         <div className="mt-4 pt-4 border-t border-gray-100 space-y-4">
           <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">گزینه‌ها</p>
+            <p className="text-sm font-medium text-gray-700 mb-2">{t('venue.modifierGroups.options')}</p>
             <ul className="space-y-1 mb-3">
               {(group.options || []).map((opt) => (
                 <li key={opt.id} className="flex items-center justify-between text-sm bg-gray-50 rounded-lg px-3 py-1.5">
@@ -205,36 +212,36 @@ function ModifierGroupCard({ group, venueId, menuItems, expanded, onToggle, onDe
                     {Number(opt.priceAdjustment) !== 0 && (
                       <span className="text-primary-700 mr-2">+{Number(opt.priceAdjustment).toLocaleString('fa-IR')}</span>
                     )}
-                    {!!opt.isDefault && <span className="text-xs text-gray-400 mr-2">(پیش‌فرض)</span>}
+                    {!!opt.isDefault && <span className="text-xs text-gray-400 mr-2">({t('venue.modifierGroups.default')})</span>}
                   </span>
-                  <button className="text-xs text-ink/50 hover:text-ink" onClick={() => deleteOption(opt.id)}>حذف</button>
+                  <button className="text-xs text-ink/50 hover:text-ink" onClick={() => deleteOption(opt.id)}>{t('common.delete')}</button>
                 </li>
               ))}
             </ul>
             <form onSubmit={addOption} className="flex gap-2">
               <input
                 className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
-                placeholder="نام گزینه"
+                placeholder={t('venue.modifierGroups.optionNamePlaceholder')}
                 value={newOption.name}
                 onChange={(e) => setNewOption({ ...newOption, name: e.target.value })}
               />
               <input
                 type="number"
                 className="w-28 border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
-                placeholder="افزایش قیمت"
+                placeholder={t('venue.modifierGroups.priceIncreasePlaceholder')}
                 value={newOption.priceAdjustment}
                 onChange={(e) => setNewOption({ ...newOption, priceAdjustment: e.target.value })}
               />
               <label className="flex items-center gap-1 text-xs text-gray-600">
                 <input type="checkbox" checked={newOption.isDefault} onChange={(e) => setNewOption({ ...newOption, isDefault: e.target.checked })} />
-                پیش‌فرض
+                {t('venue.modifierGroups.default')}
               </label>
-              <Button type="submit" variant="secondary">افزودن</Button>
+              <Button type="submit" variant="secondary">{t('common.add')}</Button>
             </form>
           </div>
 
           <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">اتصال به آیتم‌های منو</p>
+            <p className="text-sm font-medium text-gray-700 mb-2">{t('venue.modifierGroups.attachToMenuItems')}</p>
             <div className="grid sm:grid-cols-2 gap-2">
               {menuItems.map((item) => (
                 <label key={item.id} className="flex items-center gap-2 text-sm cursor-pointer">

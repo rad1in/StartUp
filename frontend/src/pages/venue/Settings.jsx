@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { CheckCircle } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
+import { useLanguage } from '../../context/LanguageContext';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import LocationPicker from '../../components/LocationPicker';
@@ -15,13 +16,23 @@ import WebhooksManager from '../../components/WebhooksManager';
 
 const FILE_BASE_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:4000';
 
-const TIER_LABELS = { FREE: 'رایگان (۵٪ کارمزد)', PRO: 'حرفه‌ای (۲٪ کارمزد)', ULTRA: 'حرفه‌ای‌پلاس (۱٪ کارمزد)' };
-const NOTIFICATION_CATEGORIES = [
-  { key: 'NEW_ORDER', label: 'سفارش جدید' },
-  { key: 'LOW_REVIEW', label: 'نظر با امتیاز پایین' },
-];
+function getTierLabels(t) {
+  return {
+    FREE: t('venue.settings.tierFree'),
+    PRO: t('venue.settings.tierPro'),
+    ULTRA: t('venue.settings.tierUltra'),
+  };
+}
+
+function getNotificationCategories(t) {
+  return [
+    { key: 'NEW_ORDER', label: t('venue.settings.notifNewOrder') },
+    { key: 'LOW_REVIEW', label: t('venue.settings.notifLowReview') },
+  ];
+}
 
 export default function Settings() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const venueId = user?.venueId;
   const [venue, setVenue] = useState(null);
@@ -34,6 +45,8 @@ export default function Settings() {
   const [saved, setSaved] = useState(false);
   const [taxForm, setTaxForm] = useState({ economicCode: '', legalName: '', nationalId: '', postalCode: '' });
   const [taxSaved, setTaxSaved] = useState(false);
+  const TIER_LABELS = getTierLabels(t);
+  const NOTIFICATION_CATEGORIES = getNotificationCategories(t);
 
   async function refresh() {
     const [{ data: v }, { data: prefs }, { data: requests }] = await Promise.all([
@@ -78,7 +91,7 @@ export default function Settings() {
     }
     const tags = form.tags
       .split(/[،,]/)
-      .map((t) => t.trim())
+      .map((tag) => tag.trim())
       .filter(Boolean);
     await api.patch(`/venues/${venueId}`, {
       ...form,
@@ -126,7 +139,7 @@ export default function Settings() {
     refresh();
   }
 
-  if (!venueId || !venue || !form) return <Loader text="در حال بارگذاری تنظیمات" />;
+  if (!venueId || !venue || !form) return <Loader text={t('venue.settings.loadingSettings')} />;
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -134,79 +147,79 @@ export default function Settings() {
       <PickupToggle venue={venue} venueId={venueId} onChange={setVenue} />
 
       <Card>
-        <h3 className="font-bold text-ink mb-3">لوگو و تصویر کاور</h3>
+        <h3 className="font-bold text-ink mb-3">{t('venue.settings.logoAndCoverImage')}</h3>
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
               {venue.logoUrl && (
-                <img src={`${FILE_BASE_URL}${venue.logoUrl}`} alt="لوگو" className="w-12 h-12 rounded-xl object-cover shadow-soft" />
+                <img src={`${FILE_BASE_URL}${venue.logoUrl}`} alt={t('venue.settings.logo')} className="w-12 h-12 rounded-xl object-cover shadow-soft" />
               )}
-              <p className="text-sm font-bold text-ink">لوگو</p>
+              <p className="text-sm font-bold text-ink">{t('venue.settings.logo')}</p>
             </div>
-            <FileUpload label="لوگو را اینجا رها کنید" file={logoFile} onSelect={setLogoFile} />
+            <FileUpload label={t('venue.settings.dropLogoHere')} file={logoFile} onSelect={setLogoFile} />
             <Button className="mt-2 w-full" onClick={uploadLogo} disabled={!logoFile}>
-              آپلود لوگو
+              {t('venue.settings.uploadLogo')}
             </Button>
           </div>
           <div>
             <div className="flex items-center gap-2 mb-2">
               {venue.coverImageUrl && (
-                <img src={`${FILE_BASE_URL}${venue.coverImageUrl}`} alt="کاور" className="w-20 h-12 rounded-xl object-cover shadow-soft" />
+                <img src={`${FILE_BASE_URL}${venue.coverImageUrl}`} alt={t('venue.settings.coverImage')} className="w-20 h-12 rounded-xl object-cover shadow-soft" />
               )}
-              <p className="text-sm font-bold text-ink">تصویر کاور</p>
+              <p className="text-sm font-bold text-ink">{t('venue.settings.coverImage')}</p>
             </div>
-            <FileUpload label="تصویر کاور را اینجا رها کنید" file={coverFile} onSelect={setCoverFile} />
+            <FileUpload label={t('venue.settings.dropCoverHere')} file={coverFile} onSelect={setCoverFile} />
             <Button className="mt-2 w-full" onClick={uploadCover} disabled={!coverFile}>
-              آپلود کاور
+              {t('venue.settings.uploadCover')}
             </Button>
           </div>
         </div>
       </Card>
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">اطلاعات مجموعه</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('venue.settings.venueInfo')}</h3>
         <form onSubmit={saveProfile} className="space-y-3">
           <input
             className="w-full border border-gray-300 rounded-lg px-3 py-2"
-            placeholder="نام مجموعه"
+            placeholder={t('venue.settings.venueNamePlaceholder')}
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
           <textarea
             className="w-full border border-gray-300 rounded-lg px-3 py-2"
-            placeholder="توضیحات"
+            placeholder={t('venue.settings.descriptionPlaceholder')}
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
           <input
             className="w-full border border-gray-300 rounded-lg px-3 py-2"
-            placeholder="آدرس"
+            placeholder={t('venue.settings.addressPlaceholder')}
             value={form.address}
             onChange={(e) => setForm({ ...form, address: e.target.value })}
           />
           <input
             className="w-full border border-gray-300 rounded-lg px-3 py-2"
-            placeholder="نوع مجموعه (مثلاً کافه، فست‌فود)"
+            placeholder={t('venue.settings.venueTypePlaceholder')}
             value={form.cuisineType}
             onChange={(e) => setForm({ ...form, cuisineType: e.target.value })}
           />
           <input
             className="w-full border border-gray-300 rounded-lg px-3 py-2"
-            placeholder="محله (مثلاً ولیعصر)"
+            placeholder={t('venue.settings.neighborhoodPlaceholder')}
             value={form.neighborhood}
             onChange={(e) => setForm({ ...form, neighborhood: e.target.value })}
           />
           <div>
             <input
               className="w-full border border-gray-300 rounded-lg px-3 py-2"
-              placeholder="ویژگی‌ها، با «،» جدا کنید (مثلاً فضای باز، کتاب‌محور)"
+              placeholder={t('venue.settings.tagsPlaceholder')}
               value={form.tags}
               onChange={(e) => setForm({ ...form, tags: e.target.value })}
             />
-            <p className="text-xs text-ink/50 mt-1">این ویژگی‌ها به‌صورت برچسب روی کارت مجموعه شما در صفحه اصلی نمایش داده می‌شوند.</p>
+            <p className="text-xs text-ink/50 mt-1">{t('venue.settings.tagsHelperText')}</p>
           </div>
           <div className="border border-gray-200 rounded-xl px-3 py-2 bg-gray-50/50">
-            <p className="text-sm text-gray-600 mb-2 font-medium">ساعات کاری</p>
+            <p className="text-sm text-gray-600 mb-2 font-medium">{t('venue.settings.openingHours')}</p>
             <OpeningHoursEditor
               value={form.openingHours}
               onChange={(val) => setForm({ ...form, openingHours: val })}
@@ -214,7 +227,7 @@ export default function Settings() {
           </div>
 
           <div>
-            <p className="text-sm text-gray-600 mb-2">موقعیت مجموعه روی نقشه</p>
+            <p className="text-sm text-gray-600 mb-2">{t('venue.settings.venueLocationOnMap')}</p>
             <LocationPicker
               lat={form.lat}
               lng={form.lng}
@@ -230,55 +243,55 @@ export default function Settings() {
             />
             <p className="text-xs text-gray-400 mt-1">
               {form.lat && form.lng
-                ? `مختصات: ${Number(form.lat).toFixed(6)}, ${Number(form.lng).toFixed(6)}`
-                : 'هنوز موقعیتی انتخاب نشده'}
+                ? `${t('venue.settings.coordinatesLabel')}: ${Number(form.lat).toFixed(6)}, ${Number(form.lng).toFixed(6)}`
+                : t('venue.settings.noLocationSelectedYet')}
             </p>
           </div>
 
-          {saved && <p className="flex items-center gap-1 text-ink font-medium text-sm"><CheckCircle size={14} />تغییرات ذخیره شد.</p>}
-          <Button type="submit">ذخیره تغییرات</Button>
+          {saved && <p className="flex items-center gap-1 text-ink font-medium text-sm"><CheckCircle size={14} />{t('venue.settings.changesSaved')}</p>}
+          <Button type="submit">{t('venue.settings.saveChanges')}</Button>
         </form>
       </Card>
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-1">اطلاعات مالیاتی</h3>
+        <h3 className="font-semibold text-gray-800 mb-1">{t('venue.settings.taxInfo')}</h3>
         <p className="text-xs text-gray-500 mb-3">
-          با تکمیل کد اقتصادی، برای هر سفارش موفق به‌صورت خودکار فاکتور رسمی (طبق ساختار استاندارد سامانه مودیان) صادر می‌شود.
+          {t('venue.settings.taxInfoDesc')}
         </p>
         <form onSubmit={saveTaxInfo} className="grid sm:grid-cols-2 gap-2">
           <input
             className="border border-gray-300 rounded-lg px-3 py-2"
-            placeholder="کد اقتصادی"
+            placeholder={t('venue.settings.economicCodePlaceholder')}
             value={taxForm.economicCode}
             onChange={(e) => setTaxForm({ ...taxForm, economicCode: e.target.value })}
           />
           <input
             className="border border-gray-300 rounded-lg px-3 py-2"
-            placeholder="نام حقوقی (اختیاری — در صورت خالی بودن، نام کافه استفاده می‌شود)"
+            placeholder={t('venue.settings.legalNamePlaceholder')}
             value={taxForm.legalName}
             onChange={(e) => setTaxForm({ ...taxForm, legalName: e.target.value })}
           />
           <input
             className="border border-gray-300 rounded-lg px-3 py-2"
-            placeholder="شناسه ملی / کد ملی"
+            placeholder={t('venue.settings.nationalIdPlaceholder')}
             value={taxForm.nationalId}
             onChange={(e) => setTaxForm({ ...taxForm, nationalId: e.target.value })}
           />
           <input
             className="border border-gray-300 rounded-lg px-3 py-2"
-            placeholder="کد پستی"
+            placeholder={t('venue.settings.postalCodePlaceholder')}
             value={taxForm.postalCode}
             onChange={(e) => setTaxForm({ ...taxForm, postalCode: e.target.value })}
           />
-          {taxSaved && <p className="sm:col-span-2 flex items-center gap-1 text-ink font-medium text-sm"><CheckCircle size={14} />ذخیره شد.</p>}
-          <Button type="submit" className="sm:col-span-2">ذخیره اطلاعات مالیاتی</Button>
+          {taxSaved && <p className="sm:col-span-2 flex items-center gap-1 text-ink font-medium text-sm"><CheckCircle size={14} />{t('common.success')}.</p>}
+          <Button type="submit" className="sm:col-span-2">{t('venue.settings.saveTaxInfo')}</Button>
         </form>
       </Card>
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">پلن اشتراک</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('venue.settings.subscriptionPlan')}</h3>
         <p className="text-sm text-gray-600 mb-3">
-          پلن فعلی: <span className="font-bold text-primary-700">{TIER_LABELS[venue.subscriptionTier]}</span>
+          {t('venue.settings.currentPlan')}: <span className="font-bold text-primary-700">{TIER_LABELS[venue.subscriptionTier]}</span>
         </p>
         <div className="flex gap-2 items-center">
           <select
@@ -293,14 +306,14 @@ export default function Settings() {
             ))}
           </select>
           <Button variant="secondary" onClick={requestUpgrade}>
-            درخواست تغییر پلن
+            {t('venue.settings.requestPlanChange')}
           </Button>
         </div>
         {subscriptionRequests.length > 0 && (
           <div className="mt-3 space-y-1">
             {subscriptionRequests.map((req) => (
               <p key={req.id} className="text-xs text-gray-500">
-                درخواست پلن {TIER_LABELS[req.requestedTier]} — وضعیت: {req.status}
+                {t('venue.settings.planRequest')} {TIER_LABELS[req.requestedTier]} — {t('common.status')}: {req.status}
               </p>
             ))}
           </div>
@@ -308,7 +321,7 @@ export default function Settings() {
       </Card>
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">تنظیمات اعلان</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('venue.settings.notificationSettings')}</h3>
         <div className="space-y-2">
           {NOTIFICATION_CATEGORIES.map((category) => {
             const pref = preferences.find((p) => p.category === category.key);

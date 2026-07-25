@@ -5,10 +5,12 @@ import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import { useVenuePermissions } from '../../hooks/useVenuePermissions';
 import { useConfirm } from '../../context/ConfirmContext';
+import { useLanguage } from '../../context/LanguageContext';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 
 export default function Tables() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const { has } = useVenuePermissions();
   const confirm = useConfirm();
@@ -36,14 +38,14 @@ export default function Tables() {
   }
 
   async function renameTable(table) {
-    const tableNumber = window.prompt('شماره/نام جدید میز:', table.tableNumber);
+    const tableNumber = window.prompt(t('venue.tables.newTableNumberPrompt'), table.tableNumber);
     if (!tableNumber) return;
     await api.patch(`/venues/${venueId}/tables/${table.id}`, { tableNumber });
     refresh();
   }
 
   async function removeTable(table) {
-    if (!(await confirm('این میز حذف شود؟', { danger: true }))) return;
+    if (!(await confirm(t('venue.tables.confirmDeleteTable'), { danger: true }))) return;
     await api.delete(`/venues/${venueId}/tables/${table.id}`);
     refresh();
   }
@@ -84,7 +86,7 @@ export default function Tables() {
     setTimeout(() => setCopiedId((id) => (id === table.id ? null : id)), 1800);
   }
 
-  if (!venueId) return <p className="text-gray-500">این حساب کاربری به مجموعه‌ای متصل نیست.</p>;
+  if (!venueId) return <p className="text-gray-500">{t('common.noVenueLinked')}</p>;
   const canManage = has('settings.manage');
 
   return (
@@ -93,25 +95,25 @@ export default function Tables() {
         <Card>
           <h3 className="font-semibold text-ink mb-3 flex items-center gap-2">
             <Armchair size={18} className="text-accent-600" />
-            افزودن میز جدید
+            {t('venue.tables.addNewTable')}
           </h3>
           <form onSubmit={addTable} className="flex gap-2">
             <input
               className="glass-input flex-1 rounded-xl px-3 py-2"
-              placeholder="شماره یا نام میز"
+              placeholder={t('venue.tables.tableNumberOrNamePlaceholder')}
               value={newTableNumber}
               onChange={(e) => setNewTableNumber(e.target.value)}
             />
             <button type="submit" className="btn-gold px-5">
               <Plus size={16} />
-              افزودن
+              {t('common.add')}
             </button>
           </form>
         </Card>
       )}
 
       {tables.length === 0 && (
-        <p className="text-ink/50 text-sm text-center py-8">هنوز میزی ثبت نشده است.</p>
+        <p className="text-ink/50 text-sm text-center py-8">{t('venue.tables.noTablesYet')}</p>
       )}
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -122,7 +124,7 @@ export default function Tables() {
                 <span className="w-9 h-9 rounded-xl bg-primary-100 text-primary-700 flex items-center justify-center">
                   <Armchair size={18} />
                 </span>
-                <p className="font-extrabold text-ink">میز {table.tableNumber}</p>
+                <p className="font-extrabold text-ink">{t('common.table')} {table.tableNumber}</p>
               </div>
               <span
                 className={`text-[11px] font-bold px-2 py-1 rounded-full ${
@@ -131,7 +133,7 @@ export default function Tables() {
                     : 'bg-gray-100 text-ink/45 border border-gray-200'
                 }`}
               >
-                {table.isActive ? 'فعال' : 'آزاد'}
+                {table.isActive ? t('venue.tables.occupied') : t('venue.tables.free')}
               </span>
             </div>
 
@@ -141,7 +143,7 @@ export default function Tables() {
                 className="flex items-center justify-center gap-1.5 text-xs font-bold py-2 rounded-xl bg-primary-800 text-white hover:bg-primary-900 transition-colors active:scale-95"
               >
                 <QrCode size={14} />
-                دانلود QR
+                {t('venue.tables.downloadQr')}
               </button>
               <button
                 onClick={() => copyLink(table)}
@@ -152,7 +154,7 @@ export default function Tables() {
                 }`}
               >
                 {copiedId === table.id ? <Check size={14} /> : <Link2 size={14} />}
-                {copiedId === table.id ? 'کپی شد!' : 'کپی لینک'}
+                {copiedId === table.id ? t('venue.tables.copied') : t('venue.tables.copyLink')}
               </button>
 
               <Link
@@ -162,7 +164,7 @@ export default function Tables() {
                 className="flex items-center justify-center gap-1.5 text-xs font-bold py-2 rounded-xl bg-surface-2/60 text-accent-700 border border-accent-200/70 hover:bg-accent-500 hover:text-white hover:border-accent-500 transition-all active:scale-95"
               >
                 <Printer size={14} />
-                پوستر چاپی
+                {t('venue.tables.printablePoster')}
               </Link>
 
               {canManage && (
@@ -172,14 +174,14 @@ export default function Tables() {
                     className="flex items-center justify-center gap-1.5 text-xs font-bold py-2 rounded-xl bg-surface-2/60 text-ink/70 border border-black/10 hover:border-accent-300 hover:text-ink transition-all active:scale-95"
                   >
                     <Pencil size={14} />
-                    ویرایش
+                    {t('common.edit')}
                   </button>
                   <button
                     onClick={() => removeTable(table)}
                     className="flex items-center justify-center gap-1.5 text-xs font-bold py-2 rounded-xl bg-surface-2/60 text-red-600 border border-red-200 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all active:scale-95"
                   >
                     <Trash2 size={14} />
-                    حذف
+                    {t('common.delete')}
                   </button>
                 </>
               )}

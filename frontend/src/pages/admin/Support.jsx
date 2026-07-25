@@ -6,11 +6,13 @@ import Button from '../../components/Button';
 import EmptyState from '../../components/EmptyState';
 import { resolveImageUrl } from '../../components/VenueCards';
 import { useAuth } from '../../hooks/useAuth';
-
-const DEPARTMENT_LABEL = { MANAGEMENT: 'مدیریت', SALES: 'فروش', TECHNICAL: 'فنی' };
-const STATUS_LABEL = { OPEN: 'در حال بررسی', RESOLVED: 'حل‌شده' };
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function AdminSupport() {
+  const { t } = useLanguage();
+  const DEPARTMENT_LABEL = { MANAGEMENT: t('admin.support.deptManagement'), SALES: t('admin.support.deptSales'), TECHNICAL: t('admin.support.deptTechnical') };
+  const STATUS_LABEL = { OPEN: t('admin.support.statusOpen'), RESOLVED: t('admin.support.statusResolved') };
+
   const { user } = useAuth();
   const [tickets, setTickets] = useState([]);
   const [filters, setFilters] = useState({ department: '', status: '' });
@@ -77,7 +79,7 @@ export default function AdminSupport() {
             onChange={(e) => setFilters((f) => ({ ...f, department: e.target.value }))}
             className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
           >
-            <option value="">همه واحدها</option>
+            <option value="">{t('admin.support.allDepartments')}</option>
             {Object.entries(DEPARTMENT_LABEL).map(([k, v]) => (
               <option key={k} value={k}>
                 {v}
@@ -89,7 +91,7 @@ export default function AdminSupport() {
             onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))}
             className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
           >
-            <option value="">همه وضعیت‌ها</option>
+            <option value="">{t('admin.support.allStatuses')}</option>
             {Object.entries(STATUS_LABEL).map(([k, v]) => (
               <option key={k} value={k}>
                 {v}
@@ -99,33 +101,33 @@ export default function AdminSupport() {
         </div>
 
         <div className="space-y-1.5">
-          {tickets.map((t) => (
+          {tickets.map((tk) => (
             <button
-              key={t.id}
-              onClick={() => setSelectedId(t.id)}
+              key={tk.id}
+              onClick={() => setSelectedId(tk.id)}
               className={`w-full text-right p-3 rounded-lg border transition-colors ${
-                selectedId === t.id ? 'border-primary-400 bg-primary-50' : 'border-gray-200 bg-white hover:bg-gray-50'
+                selectedId === tk.id ? 'border-primary-400 bg-primary-50' : 'border-gray-200 bg-white hover:bg-gray-50'
               }`}
             >
               <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                 <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
-                  {DEPARTMENT_LABEL[t.department]}
+                  {DEPARTMENT_LABEL[tk.department]}
                 </span>
                 <span
                   className={`px-1.5 py-0.5 rounded text-xs ${
-                    t.status === 'OPEN' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                    tk.status === 'OPEN' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
                   }`}
                 >
-                  {STATUS_LABEL[t.status]}
+                  {STATUS_LABEL[tk.status]}
                 </span>
               </div>
-              <p className="text-sm font-medium text-gray-800 truncate">{t.subject}</p>
+              <p className="text-sm font-medium text-gray-800 truncate">{tk.subject}</p>
               <p className="text-xs text-gray-400 mt-0.5">
-                {t.customerName} — {new Date(t.createdAt).toLocaleDateString('fa-IR')}
+                {tk.customerName} — {new Date(tk.createdAt).toLocaleDateString('fa-IR')}
               </p>
             </button>
           ))}
-          {tickets.length === 0 && <EmptyState icon={Clock} title="تیکتی یافت نشد" />}
+          {tickets.length === 0 && <EmptyState icon={Clock} title={t('admin.support.noTicketsFound')} />}
         </div>
       </div>
 
@@ -141,7 +143,7 @@ export default function AdminSupport() {
               </div>
               {ticket.status === 'OPEN' && (
                 <Button variant="secondary" onClick={resolveTicket}>
-                  <CheckCircle size={14} className="ml-1 inline" /> علامت‌گذاری حل‌شده
+                  <CheckCircle size={14} className="ml-1 inline" /> {t('admin.support.markResolved')}
                 </Button>
               )}
             </div>
@@ -184,7 +186,7 @@ export default function AdminSupport() {
                 <textarea
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                   rows={2}
-                  placeholder="پاسخ خود را بنویسید..."
+                  placeholder={t('admin.support.writeYourReplyPlaceholder')}
                   value={reply}
                   onChange={(e) => setReply(e.target.value)}
                 />
@@ -192,7 +194,7 @@ export default function AdminSupport() {
                   <div className="flex items-center gap-3">
                     <label className="flex items-center gap-1 text-xs text-gray-500 cursor-pointer">
                       <Paperclip size={14} />
-                      ضمیمه
+                      {t('admin.support.attachment')}
                       <input
                         type="file"
                         multiple
@@ -201,14 +203,14 @@ export default function AdminSupport() {
                         onChange={(e) => setFiles(Array.from(e.target.files).slice(0, 3))}
                       />
                     </label>
-                    {files.length > 0 && <span className="text-xs text-gray-400">{files.length} فایل</span>}
+                    {files.length > 0 && <span className="text-xs text-gray-400">{files.length} {t('admin.support.fileWord')}</span>}
                     <label className="flex items-center gap-1 text-xs text-gray-500 cursor-pointer">
                       <input type="checkbox" checked={confidential} onChange={(e) => setConfidential(e.target.checked)} />
-                      <Lock size={12} className={confidential ? 'text-primary-700' : 'text-gray-400'} /> محرمانه
+                      <Lock size={12} className={confidential ? 'text-primary-700' : 'text-gray-400'} /> {t('admin.support.confidential')}
                     </label>
                   </div>
                   <Button type="submit" disabled={sending}>
-                    {sending ? 'در حال ارسال...' : 'ارسال'}
+                    {sending ? t('admin.support.sending') : t('admin.internalTickets.send')}
                   </Button>
                 </div>
               </form>
@@ -216,7 +218,7 @@ export default function AdminSupport() {
           </Card>
         ) : (
           <div className="flex items-center justify-center h-64 text-gray-400 text-sm">
-            یک تیکت انتخاب کنید تا جزئیات نمایش داده شود.
+            {t('admin.internalTickets.selectTicketHint')}
           </div>
         )}
       </div>

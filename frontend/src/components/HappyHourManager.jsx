@@ -2,16 +2,21 @@ import { useEffect, useState } from 'react';
 import { Clock3, Plus, Trash2, Zap } from 'lucide-react';
 import api from '../services/api';
 import { useConfirm } from '../context/ConfirmContext';
+import { useLanguage } from '../context/LanguageContext';
 
-const DAYS = [
-  { value: 6, label: 'شنبه' },
-  { value: 0, label: 'یکشنبه' },
-  { value: 1, label: 'دوشنبه' },
-  { value: 2, label: 'سه‌شنبه' },
-  { value: 3, label: 'چهارشنبه' },
-  { value: 4, label: 'پنجشنبه' },
-  { value: 5, label: 'جمعه' },
+const DAY_DEFS = [
+  { value: 6, key: 'Sat' },
+  { value: 0, key: 'Sun' },
+  { value: 1, key: 'Mon' },
+  { value: 2, key: 'Tue' },
+  { value: 3, key: 'Wed' },
+  { value: 4, key: 'Thu' },
+  { value: 5, key: 'Fri' },
 ];
+
+function getDays(t) {
+  return DAY_DEFS.map((d) => ({ value: d.value, label: t(`components.happyHourManager.day${d.key}`) }));
+}
 
 const emptyForm = { name: '', daysOfWeek: [], startTime: '15:00', endTime: '18:00', discountPercent: 15 };
 
@@ -19,6 +24,8 @@ const emptyForm = { name: '', daysOfWeek: [], startTime: '15:00', endTime: '18:0
 // 15:00-18:00 on quiet weekdays." Applied server-side at order time; this UI
 // is pure CRUD over HappyHourRule.
 export default function HappyHourManager({ venueId }) {
+  const { t } = useLanguage();
+  const DAYS = getDays(t);
   const confirm = useConfirm();
   const [rules, setRules] = useState([]);
   const [form, setForm] = useState(emptyForm);
@@ -64,15 +71,15 @@ export default function HappyHourManager({ venueId }) {
   }
 
   async function removeRule(rule) {
-    if (!(await confirm('این قانون ساعت شاد حذف شود؟', { danger: true }))) return;
+    if (!(await confirm(t('components.happyHourManager.deleteConfirm'), { danger: true }))) return;
     await api.delete(`/venues/${venueId}/happy-hour/${rule.id}`);
     refresh();
   }
 
   function dayLabels(daysOfWeek) {
-    if (!daysOfWeek) return 'همه روزها';
+    if (!daysOfWeek) return t('components.happyHourManager.allDays');
     const set = new Set(daysOfWeek.split(',').map(Number));
-    return DAYS.filter((d) => set.has(d.value)).map((d) => d.label).join('، ');
+    return DAYS.filter((d) => set.has(d.value)).map((d) => d.label).join(t('components.happyHourManager.listSeparator'));
   }
 
   return (
@@ -80,18 +87,18 @@ export default function HappyHourManager({ venueId }) {
       <div className="card-luxe p-5">
         <h3 className="font-extrabold text-ink mb-1 flex items-center gap-2">
           <Zap size={17} className="text-accent-600" />
-          ساعت شاد جدید
+          {t('components.happyHourManager.newRuleTitle')}
         </h3>
-        <p className="text-xs text-ink/45 mb-4">تخفیف درصدی خودکار در بازه‌ی زمانی مشخص — بدون نیاز به کد تخفیف.</p>
+        <p className="text-xs text-ink/45 mb-4">{t('components.happyHourManager.newRuleDescription')}</p>
         <form onSubmit={createRule} className="grid sm:grid-cols-2 gap-3">
           <input
             className="glass-input rounded-xl px-3 py-2 text-sm sm:col-span-2"
-            placeholder="نام (مثلاً: بعدازظهر آرام)"
+            placeholder={t('components.happyHourManager.namePlaceholder')}
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
           <div>
-            <label className="block text-xs font-bold text-ink/50 mb-1">از ساعت</label>
+            <label className="block text-xs font-bold text-ink/50 mb-1">{t('components.happyHourManager.fromTime')}</label>
             <input
               type="time"
               className="glass-input rounded-xl px-3 py-2 text-sm w-full"
@@ -100,7 +107,7 @@ export default function HappyHourManager({ venueId }) {
             />
           </div>
           <div>
-            <label className="block text-xs font-bold text-ink/50 mb-1">تا ساعت</label>
+            <label className="block text-xs font-bold text-ink/50 mb-1">{t('components.happyHourManager.toTime')}</label>
             <input
               type="time"
               className="glass-input rounded-xl px-3 py-2 text-sm w-full"
@@ -109,7 +116,7 @@ export default function HappyHourManager({ venueId }) {
             />
           </div>
           <div className="sm:col-span-2">
-            <label className="block text-xs font-bold text-ink/50 mb-1">روزهای هفته (خالی = همه روزها)</label>
+            <label className="block text-xs font-bold text-ink/50 mb-1">{t('components.happyHourManager.daysOfWeekLabel')}</label>
             <div className="flex flex-wrap gap-1.5">
               {DAYS.map((d) => (
                 <button
@@ -128,7 +135,7 @@ export default function HappyHourManager({ venueId }) {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-bold text-ink/50 mb-1">درصد تخفیف</label>
+            <label className="block text-xs font-bold text-ink/50 mb-1">{t('components.happyHourManager.discountPercentLabel')}</label>
             <input
               type="number"
               min={1}
@@ -140,7 +147,7 @@ export default function HappyHourManager({ venueId }) {
           </div>
           <button type="submit" disabled={saving} className="btn-gold sm:col-span-2 py-2.5 text-sm mt-1">
             <Plus size={16} />
-            {saving ? 'در حال ساخت…' : 'ساخت ساعت شاد'}
+            {saving ? t('components.happyHourManager.creating') : t('components.happyHourManager.createRule')}
           </button>
         </form>
       </div>
@@ -171,19 +178,19 @@ export default function HappyHourManager({ venueId }) {
                   rule.isActive ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-ink/50 hover:bg-gray-200'
                 }`}
               >
-                {rule.isActive ? 'فعال' : 'غیرفعال'}
+                {rule.isActive ? t('common.active') : t('common.inactive')}
               </button>
               <button
                 onClick={() => removeRule(rule)}
                 className="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"
-                aria-label="حذف"
+                aria-label={t('common.delete')}
               >
                 <Trash2 size={14} />
               </button>
             </div>
           </div>
         ))}
-        {rules.length === 0 && <p className="text-center text-ink/40 text-sm py-4">هنوز ساعت شادی تعریف نشده است.</p>}
+        {rules.length === 0 && <p className="text-center text-ink/40 text-sm py-4">{t('components.happyHourManager.empty')}</p>}
       </div>
     </div>
   );

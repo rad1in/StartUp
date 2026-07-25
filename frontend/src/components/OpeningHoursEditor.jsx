@@ -1,12 +1,10 @@
-const DAYS = [
-  { key: 'sat', label: 'شنبه' },
-  { key: 'sun', label: 'یک‌شنبه' },
-  { key: 'mon', label: 'دوشنبه' },
-  { key: 'tue', label: 'سه‌شنبه' },
-  { key: 'wed', label: 'چهارشنبه' },
-  { key: 'thu', label: 'پنج‌شنبه' },
-  { key: 'fri', label: 'جمعه' },
-];
+import { useLanguage } from '../context/LanguageContext';
+
+const DAY_KEYS = ['sat', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri'];
+
+function getDays(t) {
+  return DAY_KEYS.map((key) => ({ key, label: t(`components.openingHoursEditor.day${key.charAt(0).toUpperCase()}${key.slice(1)}`) }));
+}
 
 const HOURS = Array.from({ length: 24 }, (_, i) => {
   const h = String(i).padStart(2, '0');
@@ -22,7 +20,7 @@ const CLOSED_DAY = { open: false, from: '09:00', to: '22:00' };
  */
 function parse(raw) {
   const base = {};
-  DAYS.forEach((d) => { base[d.key] = { ...CLOSED_DAY }; });
+  DAY_KEYS.forEach((key) => { base[key] = { ...CLOSED_DAY }; });
 
   if (!raw) return base;
 
@@ -31,7 +29,7 @@ function parse(raw) {
 
   // New per-day format: { sat: { open, from, to }, ... }
   if (obj.sat !== undefined || obj.sun !== undefined) {
-    DAYS.forEach(({ key }) => {
+    DAY_KEYS.forEach((key) => {
       if (obj[key]) base[key] = { open: !!obj[key].open, from: obj[key].from || '09:00', to: obj[key].to || '22:00' };
     });
     return base;
@@ -56,7 +54,7 @@ function parse(raw) {
 
 function serialize(schedule) {
   const out = {};
-  DAYS.forEach(({ key }) => { out[key] = schedule[key]; });
+  DAY_KEYS.forEach((key) => { out[key] = schedule[key]; });
   return JSON.stringify(out);
 }
 
@@ -68,6 +66,8 @@ function serialize(schedule) {
  *   onChange   — called with new JSON string whenever anything changes
  */
 export default function OpeningHoursEditor({ value, onChange }) {
+  const { t } = useLanguage();
+  const DAYS = getDays(t);
   const schedule = parse(value);
 
   function update(dayKey, patch) {
@@ -105,7 +105,7 @@ export default function OpeningHoursEditor({ value, onChange }) {
 
             {day.open ? (
               <>
-                <span className="text-xs text-gray-400 flex-shrink-0">از</span>
+                <span className="text-xs text-gray-400 flex-shrink-0">{t('components.openingHoursEditor.from')}</span>
                 <select
                   value={day.from}
                   onChange={(e) => update(key, { from: e.target.value })}
@@ -116,7 +116,7 @@ export default function OpeningHoursEditor({ value, onChange }) {
                   ))}
                 </select>
 
-                <span className="text-xs text-gray-400 flex-shrink-0">تا</span>
+                <span className="text-xs text-gray-400 flex-shrink-0">{t('components.openingHoursEditor.to')}</span>
                 <select
                   value={day.to}
                   onChange={(e) => update(key, { to: e.target.value })}
@@ -131,20 +131,20 @@ export default function OpeningHoursEditor({ value, onChange }) {
                   type="button"
                   onClick={() => copyToAll(key)}
                   className="text-xs text-primary-600 hover:text-primary-800 whitespace-nowrap mr-auto"
-                  title="اعمال این ساعت برای همه روزها"
+                  title={t('components.openingHoursEditor.copyToAllTitle')}
                 >
-                  اعمال برای همه
+                  {t('components.openingHoursEditor.copyToAllButton')}
                 </button>
               </>
             ) : (
-              <span className="text-xs text-gray-400 italic">تعطیل</span>
+              <span className="text-xs text-gray-400 italic">{t('components.openingHoursEditor.closedLabel')}</span>
             )}
           </div>
         );
       })}
 
       {openDays.length === 0 && (
-        <p className="text-xs text-amber-600 pt-1">هیچ روزی انتخاب نشده — مجموعه تعطیل نمایش داده می‌شود.</p>
+        <p className="text-xs text-amber-600 pt-1">{t('components.openingHoursEditor.noDaysWarning')}</p>
       )}
     </div>
   );
