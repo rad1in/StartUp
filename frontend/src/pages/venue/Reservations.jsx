@@ -20,12 +20,17 @@ export default function Reservations() {
   const { user } = useAuth();
   const venueId = user?.venueId;
   const [reservations, setReservations] = useState([]);
+  const [waitlist, setWaitlist] = useState([]);
   const [filter, setFilter] = useState('UPCOMING');
 
   async function refresh() {
     const params = filter === 'UPCOMING' ? { from: new Date().toISOString() } : {};
-    const { data } = await api.get(`/venues/${venueId}/reservations`, { params });
+    const [{ data }, { data: wl }] = await Promise.all([
+      api.get(`/venues/${venueId}/reservations`, { params }),
+      api.get(`/venues/${venueId}/reservations/waitlist`, { params: { status: 'WAITING' } }),
+    ]);
     setReservations(data);
+    setWaitlist(wl);
   }
 
   useEffect(() => {
@@ -35,6 +40,11 @@ export default function Reservations() {
 
   async function setStatus(reservation, status) {
     await api.patch(`/venues/${venueId}/reservations/${reservation.id}`, { status });
+    refresh();
+  }
+
+  async function cancelWaitlistEntry(entry) {
+    await api.patch(`/venues/${venueId}/reservations/waitlist/${entry.id}`, { status: 'CANCELLED' });
     refresh();
   }
 
@@ -124,6 +134,44 @@ export default function Reservations() {
           );
         })}
       </div>
+
+      {waitlist.length > 0 && (
+        <div className="pt-2">
+          <h3 className="text-sm font-bold text-ink mb-3">{t('venue.reservations.waitlistTitle')}</h3>
+          <div className="space-y-2.5">
+            {waitlist.map((w) => (
+              <div key={w.id} className="card-luxe p-4 flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="w-11 h-11 rounded-2xl bg-accent-100 text-accent-800 flex items-center justify-center shrink-0">
+                    <CalendarClock size={18} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-bold text-ink text-sm truncate">{w.guestName}</p>
+                    <p className="text-xs text-ink/50 mt-0.5">{formatTime(w.requestedTime)}</p>
+                    <div className="flex items-center gap-3 mt-1 text-[11px] text-ink/45">
+                      <span className="flex items-center gap-1">
+                        <Users size={11} />
+                        {Number(w.partySize).toLocaleString('fa-IR')} {t('venue.reservations.guestsSuffix')}
+                      </span>
+                      <span className="flex items-center gap-1" dir="ltr">
+                        <Phone size={11} />
+                        {w.guestPhone}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => cancelWaitlistEntry(w)}
+                  className="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"
+                  aria-label={t('venue.reservations.cancel')}
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

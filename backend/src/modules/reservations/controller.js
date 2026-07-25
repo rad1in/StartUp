@@ -27,4 +27,30 @@ async function updateStatus(req, res, next) {
   }
 }
 
-module.exports = { create, list, updateStatus };
+async function joinWaitlist(req, res, next) {
+  try {
+    const customerId = req.user?.role === 'CUSTOMER' ? req.user.id : null;
+    const entry = await service.joinWaitlist(req.params.venueId, req.body, customerId);
+    res.status(201).json(entry);
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function listWaitlist(req, res, next) {
+  try {
+    res.json(await service.listWaitlist(req.params.venueId, { status: req.query.status }));
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function updateWaitlistStatus(req, res, next) {
+  try {
+    res.json(await service.updateWaitlistStatus(req.params.venueId, req.params.id, req.body.status));
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { create, list, updateStatus, joinWaitlist, listWaitlist, updateWaitlistStatus };

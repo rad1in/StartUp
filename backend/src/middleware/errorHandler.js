@@ -51,9 +51,13 @@ function errorHandler(err, req, res, next) {
       ? 'مشکل از سمت سرور است: یک خطای فنی غیرمنتظره در پردازش درخواست شما رخ داد و ربطی به کاری که انجام دادید ندارد. لطفاً چند لحظه صبر کنید و دوباره تلاش کنید؛ اگر مشکل ادامه داشت، از بخش پشتیبانی به ما اطلاع دهید.'
       : err.message || 'درخواست شما قابل انجام نبود. لطفاً اطلاعات را بررسی و دوباره تلاش کنید.';
 
+  // A small, optional machine-readable code (e.g. 'VENUE_FULL') lets the
+  // frontend react to a *specific* known error case (offer a fallback
+  // action) instead of just showing the message — most errors don't set
+  // this, and its absence changes nothing for existing callers.
   sendStatus(req, res, {
     code: status,
-    json: { message },
+    json: err.code ? { message, code: err.code } : { message },
     html: () =>
       renderStatusPage({
         title: status >= 500 ? '500 — Server Error' : `${status} — Request Error`,
