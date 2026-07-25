@@ -3,6 +3,7 @@ import Card from './Card';
 import Button from './Button';
 import OccupancyBadge from './OccupancyBadge';
 import { useVenueOccupancy } from '../hooks/useVenueOccupancy';
+import { useLanguage } from '../context/LanguageContext';
 
 const FILE_BASE_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:4000';
 
@@ -24,14 +25,15 @@ export function distanceMeters(a, b) {
   return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 }
 
-export function priceLabel(averagePrice) {
+export function priceLabel(averagePrice, t) {
   if (!averagePrice) return null;
   const rounded = Math.round(averagePrice / 10000) * 10000;
-  return `حدود ${rounded.toLocaleString('fa-IR')} تومان`;
+  return `${t('venueCard.about')} ${rounded.toLocaleString('fa-IR')} ${t('venueCard.toman')}`;
 }
 
 export function RatingLabel({ averageRating, reviewCount }) {
-  if (!averageRating) return <span className="text-ink/50">تازه‌کار</span>;
+  const { t } = useLanguage();
+  if (!averageRating) return <span className="text-ink/50">{t('venueCard.new')}</span>;
   return (
     <span className="inline-flex items-center gap-1">
       <Star size={12} fill="currentColor" className="text-accent-500" />
@@ -42,6 +44,7 @@ export function RatingLabel({ averageRating, reviewCount }) {
 }
 
 export function NearbyCard({ venue, onClick }) {
+  const { t } = useLanguage();
   const image = resolveImageUrl(venue.coverImageUrl || venue.logoUrl);
   const occupancy = useVenueOccupancy(venue.id, venue.occupancy);
   return (
@@ -52,12 +55,12 @@ export function NearbyCard({ venue, onClick }) {
     >
       {venue.distanceMeters !== undefined && (
         <span className="absolute top-2 left-2 bg-gradient-to-b from-accent-400 to-accent-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-accent-glow">
-          {Math.round(venue.distanceMeters).toLocaleString('fa-IR')} متر
+          {Math.round(venue.distanceMeters).toLocaleString('fa-IR')} {t('venueCard.metersSuffix')}
         </span>
       )}
       {!!venue.isFeatured && (
         <span className="absolute top-2 right-2 bg-ink text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-amber-400/40">
-          <Star size={10} fill="currentColor" /> ویژه
+          <Star size={10} fill="currentColor" /> {t('venueCard.featured')}
         </span>
       )}
       {image ? (
@@ -82,8 +85,9 @@ export function NearbyCard({ venue, onClick }) {
 }
 
 export function VenueCard({ venue, onClick }) {
+  const { t } = useLanguage();
   const image = resolveImageUrl(venue.coverImageUrl);
-  const price = priceLabel(venue.averagePrice);
+  const price = priceLabel(venue.averagePrice, t);
   const occupancy = useVenueOccupancy(venue.id, venue.occupancy);
   return (
     <Card interactive onClick={onClick} className="p-0 overflow-hidden flex flex-col group rounded-3xl">
@@ -123,7 +127,7 @@ export function VenueCard({ venue, onClick }) {
       </div>
       <div className="flex items-center justify-between px-5 py-4 border-t border-black/5">
         {price ? <span className="font-bold text-accent-700 text-sm">{price}</span> : <span />}
-        <Button onClick={onClick}>مشاهده منو</Button>
+        <Button onClick={onClick}>{t('venueCard.viewMenu')}</Button>
       </div>
     </Card>
   );

@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useVenueOccupancy } from '../hooks/useVenueOccupancy';
 import { RatingLabel } from './VenueCards';
 import OccupancyBadge from './OccupancyBadge';
+import { useLanguage } from '../context/LanguageContext';
 
 // Circle radius/opacity scale with crowd density — monochrome only (ink at
 // varying alpha), never a hue, consistent with the rest of the design system.
@@ -15,6 +16,7 @@ const MARKER_STYLE = {
 };
 
 function VenueMarker({ venue, onSelect }) {
+  const { t } = useLanguage();
   const occupancy = useVenueOccupancy(venue.id, venue.occupancy);
   const style = MARKER_STYLE[occupancy?.level] || MARKER_STYLE.unknown;
 
@@ -36,7 +38,7 @@ function VenueMarker({ venue, onSelect }) {
             onClick={() => onSelect(venue)}
             className="text-xs font-bold text-ink underline hover:opacity-70"
           >
-            <span className="flex items-center gap-1">مشاهده منو <ArrowLeft size={12} /></span>
+            <span className="flex items-center gap-1">{t('discoveryMap.viewMenu')} <ArrowLeft size={12} /></span>
           </button>
         </div>
       </Popup>

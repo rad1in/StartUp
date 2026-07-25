@@ -7,10 +7,12 @@ import Card from '../../components/Card';
 import SearchBar from '../../components/SearchBar';
 import { VenueCard, distanceMeters } from '../../components/VenueCards';
 import DiscoveryMap from '../../components/DiscoveryMap';
+import { useLanguage } from '../../context/LanguageContext';
 
 const MAX_DISTANCE_METERS = 5000;
 
 export default function Cafes() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { position } = useGeolocation();
   const { city } = useCity();
@@ -73,35 +75,35 @@ export default function Cafes() {
       <header className="text-center pt-2 animate-fade-up">
         <p className="inline-flex items-center gap-1.5 glass-clear text-ink/70 text-xs font-medium px-3 py-1 rounded-full mb-3">
           <span className="w-1.5 h-1.5 rounded-full bg-accent-500" />
-          {visibleVenues.length.toLocaleString('fa-IR')} کافه
+          {visibleVenues.length.toLocaleString('fa-IR')} {t('cafes.countLabel')}
         </p>
         <h1 className="text-3xl sm:text-4xl font-black text-ink tracking-tight">
-          کافه‌های <span className="text-gradient-accent">{activeCity || 'شهر شما'}</span>
+          {t('cafes.titlePrefix')} <span className="text-gradient-accent">{activeCity || t('cafes.yourCity')}</span>
         </h1>
-        <p className="text-ink/60 mt-2">همه کافه‌های فعال شهر را ببین، فیلتر کن و سفارش بده.</p>
+        <p className="text-ink/60 mt-2">{t('cafes.subtitle')}</p>
       </header>
 
       <Card className="space-y-5 rounded-3xl">
         <div className="grid sm:grid-cols-3 gap-5">
           <div>
-            <label className="block text-sm font-bold text-ink mb-2">جستجو در نام یا توضیحات</label>
-            <SearchBar value={search} onChange={setSearch} placeholder="مثلاً «قرار دونفره» یا «بام»..." />
+            <label className="block text-sm font-bold text-ink mb-2">{t('cafes.searchLabel')}</label>
+            <SearchBar value={search} onChange={setSearch} placeholder={t('cafes.searchPlaceholder')} />
           </div>
           <div>
-            <label className="block text-sm font-bold text-ink mb-2">حداقل امتیاز</label>
+            <label className="block text-sm font-bold text-ink mb-2">{t('cafes.minRatingLabel')}</label>
             <select
               className="glass-input w-full rounded-full px-4 py-2.5 text-sm"
               value={minRating}
               onChange={(e) => setMinRating(Number(e.target.value))}
             >
-              <option value={0}>همه امتیازها</option>
-              <option value={4}>۴ ستاره و بالاتر</option>
-              <option value={4.5}>۴.۵ ستاره و بالاتر</option>
+              <option value={0}>{t('cafes.allRatings')}</option>
+              <option value={4}>{t('cafes.rating4Plus')}</option>
+              <option value={4.5}>{t('cafes.rating45Plus')}</option>
             </select>
           </div>
           <div>
             <label className="block text-sm font-bold text-ink mb-2">
-              حداکثر فاصله: {maxDistance.toLocaleString('fa-IR')} متر
+              {t('cafes.maxDistanceLabel')} {maxDistance.toLocaleString('fa-IR')} {t('cafes.meters')}
             </label>
             <input
               type="range"
@@ -113,28 +115,28 @@ export default function Cafes() {
               className="w-full accent-primary-800 mt-3"
               disabled={!position}
             />
-            {!position && <p className="text-xs text-ink/40 mt-1">برای فیلتر فاصله، دسترسی به موقعیت مکانی لازم است.</p>}
+            {!position && <p className="text-xs text-ink/40 mt-1">{t('cafes.distanceLocationHint')}</p>}
           </div>
         </div>
 
         <div className="grid sm:grid-cols-2 gap-5">
           <div>
-            <label className="block text-sm font-bold text-ink mb-2">محله</label>
-            <SearchBar value={neighborhoodQuery} onChange={setNeighborhoodQuery} placeholder="جستجوی محله..." className="mb-3" />
+            <label className="block text-sm font-bold text-ink mb-2">{t('cafes.neighborhoodLabel')}</label>
+            <SearchBar value={neighborhoodQuery} onChange={setNeighborhoodQuery} placeholder={t('cafes.neighborhoodSearchPlaceholder')} className="mb-3" />
             <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
               {filteredNeighborhoods.map((n) => (
                 <FilterChip key={n} active={activeNeighborhoods.includes(n)} onClick={() => toggleNeighborhood(n)}>
                   {n}
                 </FilterChip>
               ))}
-              {neighborhoods.length === 0 && <p className="text-xs text-ink/40">محله‌ای ثبت نشده است.</p>}
+              {neighborhoods.length === 0 && <p className="text-xs text-ink/40">{t('cafes.noNeighborhoods')}</p>}
             </div>
           </div>
           <div>
-            <label className="block text-sm font-bold text-ink mb-2">نوع کافه</label>
+            <label className="block text-sm font-bold text-ink mb-2">{t('cafes.cafeTypeLabel')}</label>
             <div className="flex flex-wrap gap-2">
               <FilterChip active={activeTag === 'all'} onClick={() => setActiveTag('all')}>
-                همه
+                {t('cafes.allTag')}
               </FilterChip>
               {tags.map((tag) => (
                 <FilterChip key={tag} active={activeTag === tag} onClick={() => setActiveTag(tag)}>
@@ -156,7 +158,7 @@ export default function Cafes() {
                 viewMode === 'list' ? 'bg-gradient-to-b from-primary-700 to-primary-900 text-white shadow-button' : 'text-ink/60 hover:text-ink'
               }`}
             >
-              فهرست
+              {t('cafes.viewList')}
             </button>
             <button
               type="button"
@@ -165,7 +167,7 @@ export default function Cafes() {
                 viewMode === 'map' ? 'bg-gradient-to-b from-primary-700 to-primary-900 text-white shadow-button' : 'text-ink/60 hover:text-ink'
               }`}
             >
-              نقشه
+              {t('cafes.viewMap')}
             </button>
           </div>
         </div>
@@ -183,8 +185,8 @@ export default function Cafes() {
           <Card className="text-center py-10 rounded-3xl">
             <p className="text-ink/50">
               {cityVenues.length === 0
-                ? `هنوز کافه‌ای در ${activeCity || 'این شهر'} ثبت نشده — از دکمه انتخاب شهر در بالای صفحه، شهر دیگری را امتحان کنید.`
-                : 'مجموعه‌ای با این فیلترها یافت نشد.'}
+                ? `${t('cafes.noCafesInCityPrefix')} ${activeCity || t('cafes.thisCity')} ${t('cafes.noCafesInCitySuffix')}`
+                : t('cafes.noCafesFiltered')}
             </p>
           </Card>
         )}

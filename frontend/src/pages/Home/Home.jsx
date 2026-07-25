@@ -8,9 +8,11 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { NearbyCard, VenueCard } from '../../components/VenueCards';
 import { usePageTitle } from '../../hooks/usePageTitle';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function Home() {
-  usePageTitle('کشف و سفارش از کافه‌های اطراف شما');
+  const { t } = useLanguage();
+  usePageTitle(t('home.pageTitle'));
   const navigate = useNavigate();
   const { position, error: geoError, loading: geoLoading } = useGeolocation();
   const { city } = useCity();
@@ -83,31 +85,31 @@ export default function Home() {
 
         <p className="chip-gold mb-5 animate-fade-up">
           <span className="w-1.5 h-1.5 rounded-full bg-accent-600 animate-pulse-soft" />
-          ET-Cafe · پلتفرم سفارش آنلاین کافه و رستوران
+          {t('home.badge')}
         </p>
 
         <h1 className="text-4xl sm:text-6xl font-black text-ink leading-[1.2] tracking-tight max-w-3xl mx-auto animate-fade-up">
-          کافه‌های اطراف خودت رو
-          <br className="hidden sm:block" /> <span className="text-gold-sheen">کشف کن</span> و سفارش بده
+          {t('home.heroTitle')}
+          <br className="hidden sm:block" /> <span className="text-gold-sheen">{t('home.heroAccent')}</span>
         </h1>
         <p className="text-ink/60 text-base sm:text-lg max-w-xl mx-auto mt-5 animate-fade-up" style={{ animationDelay: '0.1s' }}>
-          نزدیک‌ترین کافه‌ها، امتیازها و منوها را ببین، بین محله‌ها فیلتر کن و همین‌جا سفارشت را ثبت کن.
+          {t('home.heroSubtitle')}
         </p>
 
         {/* Round, translucent glass action buttons — the aurora shows through them. */}
         <div className="flex items-start justify-center gap-6 sm:gap-10 mt-9 animate-fade-up" style={{ animationDelay: '0.18s' }}>
-          <RoundAction icon={<MapPin size={28} />} label="نزدیک من" onClick={scrollToNearby} />
-          <RoundAction icon={<Coffee size={28} />} label="همه کافه‌ها" onClick={() => navigate('/cafes')} highlight />
-          <RoundAction icon={<QrCode size={28} />} label="اسکن QR" onClick={() => navigate('/scan')} />
+          <RoundAction icon={<MapPin size={28} />} label={t('home.roundActionNearMe')} onClick={scrollToNearby} />
+          <RoundAction icon={<Coffee size={28} />} label={t('home.roundActionAllCafes')} onClick={() => navigate('/cafes')} highlight />
+          <RoundAction icon={<QrCode size={28} />} label={t('home.roundActionScanQr')} onClick={() => navigate('/scan')} />
         </div>
 
         {/* Slim stat bar. */}
         <div className="inline-flex items-center gap-5 sm:gap-8 glass rounded-full px-6 py-3 mt-10 text-sm animate-fade-up" style={{ animationDelay: '0.26s' }}>
-          <Stat value={cityVenues.length} label={`کافه در ${city?.name || 'شهر شما'}`} />
+          <Stat value={cityVenues.length} label={`${t('home.statCafesIn')} ${city?.name || t('home.yourCity')}`} />
           <span className="w-px h-6 bg-ink/10" />
-          <Stat value={neighborhoodCount} label="محله" />
+          <Stat value={neighborhoodCount} label={t('home.statNeighborhoods')} />
           <span className="w-px h-6 bg-ink/10" />
-          <Stat value={cityCount || 1} label="شهر" />
+          <Stat value={cityCount || 1} label={t('home.statCities')} />
         </div>
       </section>
 
@@ -117,12 +119,12 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <span className="section-tick" />
             <div>
-              <h2 className="text-2xl font-black text-ink">کافه‌های نزدیک تو</h2>
-              <p className="text-sm text-ink/50 mt-1">بر اساس موقعیت مکانی، تا شعاع {radiusMeters.toLocaleString('fa-IR')} متر</p>
+              <h2 className="text-2xl font-black text-ink">{t('home.nearbyTitle')}</h2>
+              <p className="text-sm text-ink/50 mt-1">{t('home.nearbyRadiusPrefix')} {radiusMeters.toLocaleString('fa-IR')} {t('home.meters')}</p>
             </div>
           </div>
           <Button variant="secondary" onClick={() => navigate('/scan')} className="shrink-0">
-            اسکن QR کد
+            {t('home.scanQrButton')}
           </Button>
         </div>
 
@@ -144,14 +146,14 @@ export default function Home() {
             <div className="text-center py-8">
               <MapPin size={32} className="mx-auto text-ink/20 mb-3" />
               <p className="text-ink/50 text-sm">
-                دسترسی به موقعیت مکانی امکان‌پذیر نبود. برای مشاهده منو، از دکمه «اسکن QR کد» استفاده کنید.
+                {t('home.geoErrorMessage')}
               </p>
             </div>
           )}
           {!geoLoading && !geoError && !loadingNearby && nearbyVenues.length === 0 && (
             <div className="text-center py-8">
               <Coffee size={32} className="mx-auto text-ink/20 mb-3" />
-              <p className="text-ink/50 text-sm">مجموعه‌ای در نزدیکی شما یافت نشد.</p>
+              <p className="text-ink/50 text-sm">{t('home.noNearbyVenues')}</p>
             </div>
           )}
           {nearbyVenues.length > 0 && (
@@ -170,8 +172,8 @@ export default function Home() {
           <div className="flex items-center gap-3 mb-4">
             <span className="section-tick" />
             <div>
-              <h2 className="text-2xl font-black text-ink">پیشنهاد امروز برای تو</h2>
-              <p className="text-sm text-ink/50 mt-1">بر اساس ساعت روز، سلیقه‌ات و نزدیکی به تو</p>
+              <h2 className="text-2xl font-black text-ink">{t('home.suggestedTitle')}</h2>
+              <p className="text-sm text-ink/50 mt-1">{t('home.suggestedSubtitle')}</p>
             </div>
           </div>
           <div className="grid sm:grid-cols-2 gap-6">
@@ -189,8 +191,8 @@ export default function Home() {
             <div className="flex items-center gap-3">
               <span className="section-tick" />
               <div>
-                <h2 className="text-2xl font-black text-ink">کافه‌های برگزیده</h2>
-                <p className="text-sm text-ink/50 mt-1">محبوب‌ترین‌ها بر اساس امتیاز مشتری‌ها</p>
+                <h2 className="text-2xl font-black text-ink">{t('home.featuredTitle')}</h2>
+                <p className="text-sm text-ink/50 mt-1">{t('home.featuredSubtitle')}</p>
               </div>
             </div>
             <button
@@ -199,7 +201,7 @@ export default function Home() {
               className="group text-sm font-bold text-ink hover:text-accent-600 transition-colors shrink-0"
             >
               <span className="flex items-center gap-1">
-                همه کافه‌ها <ArrowLeft size={14} className="transition-transform group-hover:-translate-x-1" />
+                {t('home.allCafes')} <ArrowLeft size={14} className="transition-transform group-hover:-translate-x-1" />
               </span>
             </button>
           </div>

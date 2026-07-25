@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Html5Qrcode } from 'html5-qrcode';
 import { XCircle, Camera, RefreshCw } from 'lucide-react';
 import Button from '../../components/Button';
+import { useLanguage } from '../../context/LanguageContext';
 
 const SCAN_BOX = 260;
 
 export default function ScanQr() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [status, setStatus] = useState('idle'); // idle | starting | scanning | error | done
   const [error, setError] = useState('');
@@ -52,9 +54,9 @@ export default function ScanQr() {
     } catch (err) {
       if (!mountedRef.current) return;
       if (err?.message?.includes('permission') || err?.name === 'NotAllowedError') {
-        setError('دسترسی به دوربین رد شد. لطفاً مجوز دوربین را در مرورگر خود فعال کنید.');
+        setError(t('scanQr.cameraDeniedError'));
       } else {
-        setError('دوربین پیدا نشد یا قابل استفاده نیست.');
+        setError(t('scanQr.cameraNotFoundError'));
       }
       setStatus('error');
     }
@@ -81,8 +83,8 @@ export default function ScanQr() {
   return (
     <div className="max-w-sm mx-auto flex flex-col items-center gap-4">
       <div className="text-center">
-        <h2 className="text-xl font-bold text-gray-800 mb-1">اسکن کد QR میز</h2>
-        <p className="text-sm text-gray-500">دوربین را روی کد QR روی میز نگه دارید</p>
+        <h2 className="text-xl font-bold text-gray-800 mb-1">{t('scanQr.title')}</h2>
+        <p className="text-sm text-gray-500">{t('scanQr.subtitle')}</p>
       </div>
 
       {/* Camera viewport */}
@@ -118,7 +120,7 @@ export default function ScanQr() {
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gray-900/95">
             <Camera size={48} className="text-white/40" />
             {status === 'idle' && (
-              <p className="text-white/60 text-sm">برای شروع اسکن دکمه زیر را بزنید</p>
+              <p className="text-white/60 text-sm">{t('scanQr.startScanHint')}</p>
             )}
             {error && (
               <p className="text-red-400 text-xs text-center px-6 flex items-center gap-1">
@@ -137,7 +139,7 @@ export default function ScanQr() {
         {status === 'done' && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/60">
             <div className="bg-white rounded-2xl px-5 py-3 text-sm font-medium text-gray-800">
-              کد خوانده شد...
+              {t('scanQr.codeScanned')}
             </div>
           </div>
         )}
@@ -147,19 +149,19 @@ export default function ScanQr() {
         <Button className="w-full" onClick={startCamera}>
           <span className="flex items-center justify-center gap-2">
             <Camera size={18} />
-            {status === 'error' ? 'تلاش مجدد' : 'باز کردن دوربین'}
+            {status === 'error' ? t('scanQr.retry') : t('scanQr.openCamera')}
           </span>
         </Button>
       )}
 
       {status === 'scanning' && (
         <Button variant="secondary" className="w-full" onClick={() => { stopScanner(); setStatus('idle'); }}>
-          توقف اسکن
+          {t('scanQr.stopScanning')}
         </Button>
       )}
 
       <p className="text-xs text-gray-400 text-center">
-        اگر کد QR روی میز دارید، دوربین گوشی خود را مستقیماً روی آن بگیرید — نیازی به باز کردن این صفحه نیست.
+        {t('scanQr.footerHint')}
       </p>
     </div>
   );
