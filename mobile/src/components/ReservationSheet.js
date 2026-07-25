@@ -24,10 +24,20 @@ export function ReservationSheet({ visible, onClose, venueId }) {
   const [showPicker, setShowPicker] = useState(null); // 'date' | 'time' | null
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [venueFull, setVenueFull] = useState(false);
+  const [waitlisted, setWaitlisted] = useState(false);
 
   function reset() {
     setDone(false);
+    setWaitlisted(false);
+    setVenueFull(false);
     setNotes('');
+  }
+
+  function buildReservationTime() {
+    return `${dateTime.getFullYear()}-${pad(dateTime.getMonth() + 1)}-${pad(
+      dateTime.getDate()
+    )}T${pad(dateTime.getHours())}:${pad(dateTime.getMinutes())}:00`;
   }
 
   async function submit() {
@@ -36,18 +46,39 @@ export function ReservationSheet({ visible, onClose, venueId }) {
       return;
     }
     setSubmitting(true);
+    setVenueFull(false);
     try {
-      const reservationTime = `${dateTime.getFullYear()}-${pad(dateTime.getMonth() + 1)}-${pad(
-        dateTime.getDate()
-      )}T${pad(dateTime.getHours())}:${pad(dateTime.getMinutes())}:00`;
       await api.post(`/venues/${venueId}/reservations`, {
         guestName,
         guestPhone,
         partySize: Number(partySize) || 1,
-        reservationTime,
+        reservationTime: buildReservationTime(),
         notes: notes || undefined,
       });
       setDone(true);
+    } catch (err) {
+      if (err.response?.data?.code === 'VENUE_FULL') {
+        setVenueFull(true);
+        toast.error(err.response.data.message);
+      } else {
+        toast.error(err.response?.data?.message || t('orderFailed'));
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function joinWaitlist() {
+    setSubmitting(true);
+    try {
+      await api.post(`/venues/${venueId}/reservations/waitlist`, {
+        guestName,
+        guestPhone,
+        partySize: Number(partySize) || 1,
+        requestedTime: buildReservationTime(),
+        notes: notes || undefined,
+      });
+      setWaitlisted(true);
     } catch (err) {
       toast.error(err.response?.data?.message || t('orderFailed'));
     } finally {
@@ -60,7 +91,25 @@ export function ReservationSheet({ visible, onClose, venueId }) {
       <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end' }}>
         <Pressable style={{ flex: 1 }} onPress={onClose} />
         <Card style={{ borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, borderBottomWidth: 0, padding: 20 }}>
-          {done ? (
+          {waitlisted ? (
+            <View style={{ alignItems: 'center', paddingVertical: 8 }}>
+              <View style={{ marginBottom: 10 }}>
+                <Icon name="check-circle" size={40} color={colors.green} />
+              </View>
+              <T style={{ fontFamily: fonts.black, fontSize: 16, textAlign: 'center' }}>{t('waitlistJoined')}</T>
+              <T style={{ color: colors.inkMuted, fontSize: 13, textAlign: 'center', marginTop: 6 }}>
+                {t('waitlistJoinedHint')}
+              </T>
+              <Button
+                title={t('gotIt')}
+                style={{ marginTop: 16, alignSelf: 'stretch' }}
+                onPress={() => {
+                  reset();
+                  onClose();
+                }}
+              />
+            </View>
+          ) : done ? (
             <View style={{ alignItems: 'center', paddingVertical: 8 }}>
               <View style={{ marginBottom: 10 }}>
                 <Icon name="check-circle" size={40} color={colors.green} />
@@ -152,12 +201,21 @@ export function ReservationSheet({ visible, onClose, venueId }) {
                 numberOfLines={2}
               />
 
-              <Button
-                title={submitting ? t('submittingReservation') : t('submitReservation')}
-                onPress={submit}
-                disabled={submitting}
-                style={{ marginTop: 4 }}
-              />
+              {venueFull ? (
+                <Button
+                  title={submitting ? t('submittingReservation') : t('joinWaitlist')}
+                  onPress={joinWaitlist}
+                  disabled={submitting}
+                  style={{ marginTop: 4 }}
+                />
+              ) : (
+                <Button
+                  title={submitting ? t('submittingReservation') : t('submitReservation')}
+                  onPress={submit}
+                  disabled={submitting}
+                  style={{ marginTop: 4 }}
+                />
+              )}
             </View>
           )}
         </Card>
