@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Printer, ArrowRight, Coffee } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
+import { useLanguage } from '../../context/LanguageContext';
 
 const FILE_BASE_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:4000';
 
@@ -14,6 +15,7 @@ const FILE_BASE_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:4000'
 export default function TablePoster() {
   const { tableId } = useParams();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { user } = useAuth();
   const venueId = user?.venueId;
   const [venue, setVenue] = useState(null);
@@ -26,7 +28,7 @@ export default function TablePoster() {
   }, [venueId, tableId]);
 
   if (!venue || !table) {
-    return <p className="p-8 text-ink/50">در حال بارگذاری پوستر...</p>;
+    return <p className="p-8 text-ink/50">{t('venue.tablePoster.loadingPoster')}</p>;
   }
 
   return (
@@ -35,11 +37,11 @@ export default function TablePoster() {
       <div className="w-full max-w-[420px] flex items-center justify-between mb-5 print:hidden">
         <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1.5 text-sm text-ink/60 hover:text-ink">
           <ArrowRight size={16} />
-          بازگشت
+          {t('common.back')}
         </button>
         <button onClick={() => window.print()} className="btn-gold px-5 py-2.5 text-sm">
           <Printer size={16} />
-          چاپ / دانلود PDF
+          {t('venue.tablePoster.printDownload')}
         </button>
       </div>
 
@@ -72,21 +74,21 @@ export default function TablePoster() {
 
           <div className="divider-gold w-full my-6" />
 
-          <p className="text-base font-extrabold text-accent-800">اسکن کن و سفارش بده</p>
+          <p className="text-base font-extrabold text-accent-800">{t('venue.tablePoster.scanToOrder')}</p>
           <p className="text-xs text-ink/45 mt-1 max-w-[240px]">
-            کد زیر را با دوربین گوشی خود اسکن کنید تا مستقیم به منوی این میز برسید.
+            {t('venue.tablePoster.scanInstructions')}
           </p>
 
           {/* QR code */}
           <div className="mt-6 p-4 bg-white rounded-3xl shadow-xl border-4 border-white">
             <img
               src={`${FILE_BASE_URL}/api/venues/${venueId}/tables/${tableId}/qrcode.png`}
-              alt="کد QR میز"
+              alt={t('venue.tablePoster.qrAlt')}
               className="w-44 h-44"
             />
           </div>
 
-          <div className="mt-6 chip-gold text-base px-6 py-2">میز {table.tableNumber}</div>
+          <div className="mt-6 chip-gold text-base px-6 py-2">{t('common.table')} {table.tableNumber}</div>
 
           <div className="flex-1" />
 

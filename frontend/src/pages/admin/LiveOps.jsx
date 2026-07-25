@@ -2,24 +2,25 @@ import { useEffect, useState } from 'react';
 import { Activity, AlertTriangle, CreditCard, Radio, RefreshCw, Clock } from 'lucide-react';
 import api from '../../services/api';
 import { useAdminSocket } from '../../hooks/useSocket';
+import { useLanguage } from '../../context/LanguageContext';
 
-function formatUptime(seconds) {
+function formatUptime(seconds, t) {
   const days = Math.floor(seconds / 86400);
   const hours = Math.floor((seconds % 86400) / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
-  if (days > 0) return `${days.toLocaleString('fa-IR')} روز و ${hours.toLocaleString('fa-IR')} ساعت`;
-  if (hours > 0) return `${hours.toLocaleString('fa-IR')} ساعت و ${mins.toLocaleString('fa-IR')} دقیقه`;
-  return `${mins.toLocaleString('fa-IR')} دقیقه`;
+  if (days > 0) return `${days.toLocaleString('fa-IR')} ${t('admin.liveOps.days')} ${hours.toLocaleString('fa-IR')} ${t('admin.liveOps.hours')}`;
+  if (hours > 0) return `${hours.toLocaleString('fa-IR')} ${t('admin.liveOps.hours')} ${mins.toLocaleString('fa-IR')} ${t('admin.liveOps.minutes')}`;
+  return `${mins.toLocaleString('fa-IR')} ${t('admin.liveOps.minutes')}`;
 }
 
-function timeAgo(dateStr) {
+function timeAgo(dateStr, t) {
   const diffMs = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return 'همین الان';
-  if (mins < 60) return `${mins} دقیقه پیش`;
+  if (mins < 1) return t('admin.liveOps.justNow');
+  if (mins < 60) return `${mins} ${t('admin.liveOps.minutesAgo')}`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours} ساعت پیش`;
-  return `${Math.floor(hours / 24)} روز پیش`;
+  if (hours < 24) return `${hours} ${t('admin.liveOps.hoursAgo')}`;
+  return `${Math.floor(hours / 24)} ${t('admin.liveOps.daysAgo')}`;
 }
 
 function StatTile({ icon: Icon, label, value, tone = 'default' }) {
@@ -46,6 +47,7 @@ function StatTile({ icon: Icon, label, value, tone = 'default' }) {
 // events (new orders, venue signups) piped straight from the admin socket
 // room, plus the most recent server error log entries for quick triage.
 export default function LiveOps() {
+  const { t } = useLanguage();
   const [health, setHealth] = useState(null);
   const [errors, setErrors] = useState([]);
   const [feed, setFeed] = useState([]);
@@ -73,11 +75,11 @@ export default function LiveOps() {
 
   useAdminSocket({
     'order:new': (order) =>
-      setFeed((prev) => [{ text: `سفارش جدید در ${order.venue?.name || 'یک مجموعه'}`, at: new Date().toISOString() }, ...prev].slice(0, 20)),
+      setFeed((prev) => [{ text: `${t('admin.liveOps.newOrderIn')} ${order.venue?.name || t('admin.liveOps.aVenue')}`, at: new Date().toISOString() }, ...prev].slice(0, 20)),
     'venue:registered': (venue) =>
-      setFeed((prev) => [{ text: `ثبت‌نام مجموعه جدید: ${venue.name}`, at: new Date().toISOString() }, ...prev].slice(0, 20)),
+      setFeed((prev) => [{ text: `${t('admin.liveOps.newVenueRegistered')}: ${venue.name}`, at: new Date().toISOString() }, ...prev].slice(0, 20)),
     'reservation:new': (r) =>
-      setFeed((prev) => [{ text: `رزرو میز جدید: ${r.guestName}`, at: new Date().toISOString() }, ...prev].slice(0, 20)),
+      setFeed((prev) => [{ text: `${t('admin.liveOps.newTableReservation')}: ${r.guestName}`, at: new Date().toISOString() }, ...prev].slice(0, 20)),
   });
 
   const failedPct = health ? (health.failedPaymentRate * 100).toFixed(1) : '—';
@@ -89,7 +91,7 @@ export default function LiveOps() {
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-black text-ink flex items-center gap-2">
           <Activity size={20} className="text-accent-600" />
-          مرکز عملیات زنده
+          {t('admin.liveOps.title')}
         </h2>
         <button
           onClick={refresh}
@@ -97,22 +99,22 @@ export default function LiveOps() {
           className="inline-flex items-center gap-1.5 text-xs font-bold text-ink/50 hover:text-ink bg-surface-2/60 border border-ink/10 rounded-full px-3 py-1.5 transition-colors"
         >
           <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
-          تازه‌سازی
+          {t('common.refresh')}
         </button>
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatTile icon={AlertTriangle} label="خطاهای API (۲۴ ساعت اخیر)" value={health ? health.apiErrorsLast24h.toLocaleString('fa-IR') : '—'} tone={errorTone} />
-        <StatTile icon={CreditCard} label="نرخ پرداخت ناموفق (۲۴ ساعت اخیر)" value={`${failedPct}٪`} tone={failedTone} />
-        <StatTile icon={Radio} label="اتصالات زنده (Socket)" value={health ? health.connectedSockets.toLocaleString('fa-IR') : '—'} />
-        <StatTile icon={Clock} label="مدت زمان فعالیت سرور" value={health ? formatUptime(health.uptimeSeconds) : '—'} />
+        <StatTile icon={AlertTriangle} label={t('admin.liveOps.apiErrorsLast24h')} value={health ? health.apiErrorsLast24h.toLocaleString('fa-IR') : '—'} tone={errorTone} />
+        <StatTile icon={CreditCard} label={t('admin.liveOps.failedPaymentRate24h')} value={`${failedPct}٪`} tone={failedTone} />
+        <StatTile icon={Radio} label={t('admin.liveOps.liveConnections')} value={health ? health.connectedSockets.toLocaleString('fa-IR') : '—'} />
+        <StatTile icon={Clock} label={t('admin.liveOps.serverUptime')} value={health ? formatUptime(health.uptimeSeconds, t) : '—'} />
       </div>
 
       {health?.errorsByHour && (
         <div className="card-luxe p-5">
           <h3 className="font-extrabold text-ink mb-3 flex items-center gap-2">
             <AlertTriangle size={16} className="text-accent-600" />
-            روند خطاهای API در ۲۴ ساعت اخیر
+            {t('admin.liveOps.errorTrend24h')}
           </h3>
           <div className="flex items-end gap-1 h-24">
             {health.errorsByHour.map((h, i) => {
@@ -122,13 +124,13 @@ export default function LiveOps() {
                   <div
                     className={`w-full rounded-t ${h.count > 0 ? 'bg-red-400' : 'bg-black/[0.06]'}`}
                     style={{ height: `${Math.max((h.count / max) * 100, 3)}%` }}
-                    title={`ساعت ${h.hour}: ${h.count} خطا`}
+                    title={`${t('admin.liveOps.hourLabel')} ${h.hour}: ${h.count} ${t('admin.liveOps.errorsWord')}`}
                   />
                 </div>
               );
             })}
           </div>
-          <p className="text-xs text-ink/35 mt-2 text-left">هر ستون = یک ساعت، از راست (۲۴ ساعت پیش) به چپ (اکنون)</p>
+          <p className="text-xs text-ink/35 mt-2 text-left">{t('admin.liveOps.chartAxisHint')}</p>
         </div>
       )}
 
@@ -136,14 +138,14 @@ export default function LiveOps() {
         <div className="card-luxe p-5">
           <h3 className="font-extrabold text-ink mb-3 flex items-center gap-2">
             <Radio size={16} className="text-accent-600" />
-            فید رویدادهای زنده
+            {t('admin.liveOps.liveEventFeed')}
           </h3>
           <div className="space-y-2 max-h-96 overflow-y-auto">
-            {feed.length === 0 && <p className="text-ink/40 text-sm text-center py-6">رویداد زنده‌ای دریافت نشده است.</p>}
+            {feed.length === 0 && <p className="text-ink/40 text-sm text-center py-6">{t('admin.liveOps.noLiveEventsYet')}</p>}
             {feed.map((item, i) => (
               <div key={i} className="flex items-center justify-between text-sm border-b border-black/5 pb-2 animate-slide-in-left">
                 <span className="text-ink/75">{item.text}</span>
-                <span className="text-xs text-ink/35">{timeAgo(item.at)}</span>
+                <span className="text-xs text-ink/35">{timeAgo(item.at, t)}</span>
               </div>
             ))}
           </div>
@@ -152,17 +154,17 @@ export default function LiveOps() {
         <div className="card-luxe p-5">
           <h3 className="font-extrabold text-ink mb-3 flex items-center gap-2">
             <AlertTriangle size={16} className="text-red-500" />
-            آخرین خطاهای سرور
+            {t('admin.liveOps.recentServerErrors')}
           </h3>
           <div className="space-y-2 max-h-96 overflow-y-auto">
-            {errors.length === 0 && <p className="text-ink/40 text-sm text-center py-6">خطایی ثبت نشده است.</p>}
+            {errors.length === 0 && <p className="text-ink/40 text-sm text-center py-6">{t('admin.liveOps.noErrorsLogged')}</p>}
             {errors.map((err) => (
               <div key={err.id} className="text-xs border-b border-black/5 pb-2">
                 <div className="flex items-center justify-between">
                   <span className="font-mono font-bold text-red-600">
                     {err.statusCode} · {err.method} {err.path}
                   </span>
-                  <span className="text-ink/35">{timeAgo(err.createdAt)}</span>
+                  <span className="text-ink/35">{timeAgo(err.createdAt, t)}</span>
                 </div>
                 {err.message && <p className="text-ink/50 mt-1 truncate">{err.message}</p>}
               </div>

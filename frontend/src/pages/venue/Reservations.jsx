@@ -2,20 +2,21 @@ import { useEffect, useState } from 'react';
 import { CalendarClock, Phone, Users, Check, X, Ban } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
-
-const STATUS_META = {
-  PENDING: { label: 'در انتظار تایید', className: 'bg-accent-100 text-accent-800 border-accent-200' },
-  CONFIRMED: { label: 'تایید شده', className: 'bg-green-100 text-green-700 border-green-200' },
-  CANCELLED: { label: 'لغو شده', className: 'bg-red-50 text-red-500 border-red-200' },
-  COMPLETED: { label: 'انجام شده', className: 'bg-gray-100 text-ink/50 border-gray-200' },
-  NO_SHOW: { label: 'عدم حضور', className: 'bg-gray-100 text-ink/50 border-gray-200' },
-};
+import { useLanguage } from '../../context/LanguageContext';
 
 function formatTime(dt) {
   return new Date(dt).toLocaleString('fa-IR', { weekday: 'long', hour: '2-digit', minute: '2-digit', month: 'long', day: 'numeric' });
 }
 
 export default function Reservations() {
+  const { t } = useLanguage();
+  const STATUS_META = {
+    PENDING: { label: t('venue.reservations.statusPending'), className: 'bg-accent-100 text-accent-800 border-accent-200' },
+    CONFIRMED: { label: t('venue.reservations.statusConfirmed'), className: 'bg-green-100 text-green-700 border-green-200' },
+    CANCELLED: { label: t('venue.reservations.statusCancelled'), className: 'bg-red-50 text-red-500 border-red-200' },
+    COMPLETED: { label: t('venue.reservations.statusCompleted'), className: 'bg-gray-100 text-ink/50 border-gray-200' },
+    NO_SHOW: { label: t('venue.reservations.statusNoShow'), className: 'bg-gray-100 text-ink/50 border-gray-200' },
+  };
   const { user } = useAuth();
   const venueId = user?.venueId;
   const [reservations, setReservations] = useState([]);
@@ -37,14 +38,14 @@ export default function Reservations() {
     refresh();
   }
 
-  if (!venueId) return <p className="text-gray-500">این حساب کاربری به مجموعه‌ای متصل نیست.</p>;
+  if (!venueId) return <p className="text-gray-500">{t('common.noVenueLinked')}</p>;
 
   return (
     <div className="space-y-4">
       <div className="flex gap-2">
         {[
-          { key: 'UPCOMING', label: 'پیش‌رو' },
-          { key: 'ALL', label: 'همه' },
+          { key: 'UPCOMING', label: t('venue.reservations.filterUpcoming') },
+          { key: 'ALL', label: t('venue.reservations.filterAll') },
         ].map((f) => (
           <button
             key={f.key}
@@ -59,7 +60,7 @@ export default function Reservations() {
       </div>
 
       {reservations.length === 0 && (
-        <p className="text-center text-ink/40 text-sm py-10">رزروی برای نمایش وجود ندارد.</p>
+        <p className="text-center text-ink/40 text-sm py-10">{t('venue.reservations.noReservations')}</p>
       )}
 
       <div className="space-y-2.5">
@@ -77,13 +78,13 @@ export default function Reservations() {
                   <div className="flex items-center gap-3 mt-1 text-[11px] text-ink/45">
                     <span className="flex items-center gap-1">
                       <Users size={11} />
-                      {Number(r.partySize).toLocaleString('fa-IR')} نفر
+                      {Number(r.partySize).toLocaleString('fa-IR')} {t('venue.reservations.guestsSuffix')}
                     </span>
                     <span className="flex items-center gap-1" dir="ltr">
                       <Phone size={11} />
                       {r.guestPhone}
                     </span>
-                    {r.tableNumber && <span>میز {r.tableNumber}</span>}
+                    {r.tableNumber && <span>{t('common.table')} {r.tableNumber}</span>}
                   </div>
                   {r.notes && <p className="text-[11px] text-ink/40 mt-1">{r.notes}</p>}
                 </div>
@@ -96,14 +97,14 @@ export default function Reservations() {
                     <button
                       onClick={() => setStatus(r, 'CONFIRMED')}
                       className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center hover:bg-green-600 transition-colors"
-                      aria-label="تایید"
+                      aria-label={t('venue.reservations.confirm')}
                     >
                       <Check size={14} />
                     </button>
                     <button
                       onClick={() => setStatus(r, 'CANCELLED')}
                       className="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"
-                      aria-label="لغو"
+                      aria-label={t('venue.reservations.cancel')}
                     >
                       <X size={14} />
                     </button>
@@ -115,7 +116,7 @@ export default function Reservations() {
                     className="text-[11px] font-bold text-ink/45 hover:text-red-500 flex items-center gap-1"
                   >
                     <Ban size={12} />
-                    عدم حضور
+                    {t('venue.reservations.noShow')}
                   </button>
                 )}
               </div>

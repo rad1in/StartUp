@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import { useConfirm } from '../../context/ConfirmContext';
+import { useLanguage } from '../../context/LanguageContext';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { SkeletonRows } from '../../components/SkeletonBlock';
 
 export default function ContentCenter() {
+  const { t } = useLanguage();
   const toast = useToast();
   const confirm = useConfirm();
   const [venues, setVenues] = useState(null);
@@ -50,16 +52,16 @@ export default function ContentCenter() {
 
   async function requireSelection() {
     if (selectedIds.length === 0) {
-      toast.error('حداقل یک مجموعه را انتخاب کنید.');
+      toast.error(t('admin.contentCenter.selectAtLeastOne'));
       return false;
     }
-    return confirm(`این عملیات روی ${selectedIds.length.toLocaleString('fa-IR')} مجموعه اعمال می‌شود. ادامه می‌دهید؟`, {
-      title: 'تایید ویرایش گروهی',
+    return confirm(`${t('admin.contentCenter.bulkActionConfirmPrefix')} ${selectedIds.length.toLocaleString('fa-IR')} ${t('admin.contentCenter.bulkActionConfirmSuffix')}`, {
+      title: t('admin.contentCenter.bulkEditConfirmTitle'),
     });
   }
 
   async function runFindReplace() {
-    if (!findText) return toast.error('متن جستجو را وارد کنید.');
+    if (!findText) return toast.error(t('admin.contentCenter.enterSearchText'));
     if (!(await requireSelection())) return;
     setBusy(true);
     try {
@@ -68,9 +70,9 @@ export default function ContentCenter() {
         find: findText,
         replace: replaceText,
       });
-      toast.success(`توضیحات ${data.affected.toLocaleString('fa-IR')} مجموعه از ${data.matched.toLocaleString('fa-IR')} مورد یافت‌شده به‌روزرسانی شد.`);
+      toast.success(`${t('admin.contentCenter.descriptionsUpdatedPrefix')} ${data.affected.toLocaleString('fa-IR')} ${t('admin.contentCenter.descriptionsUpdatedMiddle')} ${data.matched.toLocaleString('fa-IR')} ${t('admin.contentCenter.descriptionsUpdatedSuffix')}`);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'ویرایش گروهی ناموفق بود.');
+      toast.error(err.response?.data?.message || t('admin.contentCenter.bulkEditFailed'));
     } finally {
       setBusy(false);
     }
@@ -84,16 +86,16 @@ export default function ContentCenter() {
         venueIds: selectedIds,
         [field]: value,
       });
-      toast.success(`وضعیت ${data.affected.toLocaleString('fa-IR')} مجموعه به‌روزرسانی شد.`);
+      toast.success(`${t('admin.contentCenter.statusUpdatedPrefix')} ${data.affected.toLocaleString('fa-IR')} ${t('admin.contentCenter.statusUpdatedSuffix')}`);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'به‌روزرسانی ناموفق بود.');
+      toast.error(err.response?.data?.message || t('admin.contentCenter.updateFailed'));
     } finally {
       setBusy(false);
     }
   }
 
   async function runPriceAdjust() {
-    if (pricePercent === '' || Number.isNaN(Number(pricePercent))) return toast.error('درصد معتبر وارد کنید.');
+    if (pricePercent === '' || Number.isNaN(Number(pricePercent))) return toast.error(t('admin.contentCenter.enterValidPercent'));
     if (!(await requireSelection())) return;
     setBusy(true);
     try {
@@ -101,16 +103,16 @@ export default function ContentCenter() {
         venueIds: selectedIds,
         percent: Number(pricePercent),
       });
-      toast.success(`قیمت ${data.affected.toLocaleString('fa-IR')} آیتم منو تعدیل شد.`);
+      toast.success(`${t('admin.contentCenter.priceAdjustedPrefix')} ${data.affected.toLocaleString('fa-IR')} ${t('admin.contentCenter.priceAdjustedSuffix')}`);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'تعدیل قیمت ناموفق بود.');
+      toast.error(err.response?.data?.message || t('admin.contentCenter.priceAdjustFailed'));
     } finally {
       setBusy(false);
     }
   }
 
   async function runAvailability() {
-    if (!itemNameContains) return toast.error('نام آیتم را وارد کنید.');
+    if (!itemNameContains) return toast.error(t('admin.contentCenter.enterItemName'));
     if (!(await requireSelection())) return;
     setBusy(true);
     try {
@@ -119,9 +121,9 @@ export default function ContentCenter() {
         itemNameContains,
         isAvailable: itemAvailable,
       });
-      toast.success(`وضعیت موجودی ${data.affected.toLocaleString('fa-IR')} آیتم تغییر کرد.`);
+      toast.success(`${t('admin.contentCenter.availabilityChangedPrefix')} ${data.affected.toLocaleString('fa-IR')} ${t('admin.contentCenter.availabilityChangedSuffix')}`);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'به‌روزرسانی ناموفق بود.');
+      toast.error(err.response?.data?.message || t('admin.contentCenter.updateFailed'));
     } finally {
       setBusy(false);
     }
@@ -130,18 +132,18 @@ export default function ContentCenter() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-bold text-ink text-lg">مدیریت متمرکز محتوای مجموعه‌ها</h2>
-        <p className="text-sm text-ink/50 mt-1">اعمال یک تغییر روی چند مجموعه هم‌زمان، بدون ورود جداگانه به هر پنل.</p>
+        <h2 className="font-bold text-ink text-lg">{t('admin.contentCenter.title')}</h2>
+        <p className="text-sm text-ink/50 mt-1">{t('admin.contentCenter.subtitle')}</p>
       </div>
 
       <Card>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-ink">انتخاب مجموعه‌ها</h3>
-          <span className="text-xs text-ink/50">{selectedIds.length.toLocaleString('fa-IR')} مورد انتخاب شده</span>
+          <h3 className="font-semibold text-ink">{t('admin.contentCenter.selectVenuesTitle')}</h3>
+          <span className="text-xs text-ink/50">{selectedIds.length.toLocaleString('fa-IR')} {t('admin.contentCenter.itemsSelected')}</span>
         </div>
         <input
           className="border border-ink/10 bg-transparent rounded-lg px-3 py-2 text-sm w-full mb-3"
-          placeholder="جستجو بر اساس نام یا شهر..."
+          placeholder={t('admin.contentCenter.searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -150,7 +152,7 @@ export default function ContentCenter() {
         ) : (
           <>
             <button type="button" onClick={toggleAll} className="text-xs text-primary-700 hover:underline mb-2">
-              {filtered.every((v) => selected.has(v.id)) && filtered.length > 0 ? 'لغو انتخاب همه' : 'انتخاب همه (نتایج فیلترشده)'}
+              {filtered.every((v) => selected.has(v.id)) && filtered.length > 0 ? t('admin.contentCenter.deselectAll') : t('admin.contentCenter.selectAllFiltered')}
             </button>
             <div className="max-h-80 overflow-y-auto space-y-1">
               {filtered.map((v) => (
@@ -160,7 +162,7 @@ export default function ContentCenter() {
                   <span className="text-ink/40 text-xs">{v.city}</span>
                 </label>
               ))}
-              {filtered.length === 0 && <p className="text-ink/40 text-sm py-2">موردی یافت نشد.</p>}
+              {filtered.length === 0 && <p className="text-ink/40 text-sm py-2">{t('admin.contentCenter.noResults')}</p>}
             </div>
           </>
         )}
@@ -168,79 +170,79 @@ export default function ContentCenter() {
 
       <div className="grid sm:grid-cols-2 gap-4">
         <Card>
-          <h3 className="font-semibold text-ink mb-3">جستجو و جایگزینی گروهی در توضیحات</h3>
+          <h3 className="font-semibold text-ink mb-3">{t('admin.contentCenter.findReplaceTitle')}</h3>
           <div className="space-y-2">
             <input
               className="border border-ink/10 bg-transparent rounded-lg px-3 py-2 text-sm w-full"
-              placeholder="متن جستجو"
+              placeholder={t('admin.contentCenter.searchTextPlaceholder')}
               value={findText}
               onChange={(e) => setFindText(e.target.value)}
             />
             <input
               className="border border-ink/10 bg-transparent rounded-lg px-3 py-2 text-sm w-full"
-              placeholder="متن جایگزین (اختیاری)"
+              placeholder={t('admin.contentCenter.replaceTextPlaceholder')}
               value={replaceText}
               onChange={(e) => setReplaceText(e.target.value)}
             />
             <Button onClick={runFindReplace} disabled={busy}>
-              اعمال روی مجموعه‌های انتخاب‌شده
+              {t('admin.contentCenter.applyToSelected')}
             </Button>
           </div>
         </Card>
 
         <Card>
-          <h3 className="font-semibold text-ink mb-3">تغییر وضعیت گروهی</h3>
+          <h3 className="font-semibold text-ink mb-3">{t('admin.contentCenter.bulkStatusChangeTitle')}</h3>
           <div className="flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => runStatusChange('isTemporarilyClosed', true)} disabled={busy}>
-              تعطیلی موقت (فعال)
+              {t('admin.contentCenter.tempClosureOn')}
             </Button>
             <Button variant="ghost" onClick={() => runStatusChange('isTemporarilyClosed', false)} disabled={busy}>
-              تعطیلی موقت (غیرفعال)
+              {t('admin.contentCenter.tempClosureOff')}
             </Button>
             <Button variant="secondary" onClick={() => runStatusChange('acceptsPickup', true)} disabled={busy}>
-              پیک‌آپ (فعال)
+              {t('admin.contentCenter.pickupOn')}
             </Button>
             <Button variant="ghost" onClick={() => runStatusChange('acceptsPickup', false)} disabled={busy}>
-              پیک‌آپ (غیرفعال)
+              {t('admin.contentCenter.pickupOff')}
             </Button>
           </div>
         </Card>
 
         <Card>
-          <h3 className="font-semibold text-ink mb-3">تعدیل گروهی قیمت منو</h3>
+          <h3 className="font-semibold text-ink mb-3">{t('admin.contentCenter.bulkPriceAdjustTitle')}</h3>
           <div className="space-y-2">
             <input
               type="number"
               className="border border-ink/10 bg-transparent rounded-lg px-3 py-2 text-sm w-full"
-              placeholder="درصد تغییر (مثلا 10 یا -15)"
+              placeholder={t('admin.contentCenter.percentChangePlaceholder')}
               value={pricePercent}
               onChange={(e) => setPricePercent(e.target.value)}
             />
             <Button onClick={runPriceAdjust} disabled={busy}>
-              اعمال روی همه آیتم‌های منوی مجموعه‌های انتخاب‌شده
+              {t('admin.contentCenter.applyToAllMenuItems')}
             </Button>
           </div>
         </Card>
 
         <Card>
-          <h3 className="font-semibold text-ink mb-3">تغییر گروهی موجودی آیتم منو</h3>
+          <h3 className="font-semibold text-ink mb-3">{t('admin.contentCenter.bulkAvailabilityTitle')}</h3>
           <div className="space-y-2">
             <input
               className="border border-ink/10 bg-transparent rounded-lg px-3 py-2 text-sm w-full"
-              placeholder="بخشی از نام آیتم (مثلا اسپرسو)"
+              placeholder={t('admin.contentCenter.itemNamePlaceholder')}
               value={itemNameContains}
               onChange={(e) => setItemNameContains(e.target.value)}
             />
             <div className="flex items-center gap-3 text-sm text-ink/70">
               <label className="flex items-center gap-1.5">
-                <input type="radio" checked={itemAvailable} onChange={() => setItemAvailable(true)} /> موجود
+                <input type="radio" checked={itemAvailable} onChange={() => setItemAvailable(true)} /> {t('admin.contentCenter.available')}
               </label>
               <label className="flex items-center gap-1.5">
-                <input type="radio" checked={!itemAvailable} onChange={() => setItemAvailable(false)} /> ناموجود
+                <input type="radio" checked={!itemAvailable} onChange={() => setItemAvailable(false)} /> {t('admin.contentCenter.unavailable')}
               </label>
             </div>
             <Button onClick={runAvailability} disabled={busy}>
-              اعمال روی مجموعه‌های انتخاب‌شده
+              {t('admin.contentCenter.applyToSelected')}
             </Button>
           </div>
         </Card>

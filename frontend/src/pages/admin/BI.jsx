@@ -3,24 +3,11 @@ import { X } from 'lucide-react';
 import api from '../../services/api';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
-
-const TIER_LABELS = { FREE: 'رایگان', PRO: 'حرفه‌ای', ULTRA: 'ویژه' };
-const TIER_COLORS = { FREE: 'bg-gray-200 text-gray-700', PRO: 'bg-blue-100 text-blue-700', ULTRA: 'bg-purple-100 text-purple-700' };
-const GRANULARITY = [
-  { value: 'day', label: 'روزانه' }, { value: 'week', label: 'هفتگی' },
-  { value: 'month', label: 'ماهانه' }, { value: 'year', label: 'سالانه' },
-];
-const EXPORT_TYPES = [
-  { value: 'overview_trend', label: 'روند درآمد' },
-  { value: 'by_venue', label: 'تفکیک مجموعه' },
-  { value: 'by_tier', label: 'تفکیک سطح اشتراک' },
-  { value: 'by_city', label: 'تفکیک شهر' },
-  { value: 'venue_activity', label: 'فعالیت مجموعه‌ها' },
-  { value: 'cohorts', label: 'کوهورت مشتریان' },
-];
+import { useLanguage } from '../../context/LanguageContext';
 
 function TrendBarChart({ data, valueKey = 'gmv' }) {
-  if (!data?.length) return <p className="text-gray-400 text-sm">داده‌ای موجود نیست.</p>;
+  const { t } = useLanguage();
+  if (!data?.length) return <p className="text-gray-400 text-sm">{t('common.noDataToShow')}</p>;
   const max = Math.max(...data.map((d) => Number(d[valueKey])), 1);
   const w = 560; const h = 120; const bw = w / data.length - 4;
   return (
@@ -70,6 +57,7 @@ function pctChange(current, previous) {
 }
 
 function DrillDownModal({ dimension, id, label, from, to, onClose }) {
+  const { t } = useLanguage();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -82,11 +70,11 @@ function DrillDownModal({ dimension, id, label, from, to, onClose }) {
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-4 py-3 border-b">
-          <h3 className="font-semibold text-gray-800">جزئیات: {label}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 p-1 rounded" aria-label="بستن"><X size={18} /></button>
+          <h3 className="font-semibold text-gray-800">{t('admin.bi.detailsPrefix')}: {label}</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 p-1 rounded" aria-label={t('common.close')}><X size={18} /></button>
         </div>
         <div className="overflow-auto flex-1 p-4">
-          {loading ? <p className="text-gray-400 text-sm text-center py-6">در حال بارگذاری...</p> : (
+          {loading ? <p className="text-gray-400 text-sm text-center py-6">{t('common.loading')}</p> : (
             <table className="w-full text-sm text-right">
               <thead><tr className="text-xs text-gray-500 border-b">{Object.keys(rows[0] || {}).map((k) => <th key={k} className="pb-2 pr-2">{k}</th>)}</tr></thead>
               <tbody>
@@ -98,7 +86,7 @@ function DrillDownModal({ dimension, id, label, from, to, onClose }) {
               </tbody>
             </table>
           )}
-          {!loading && rows.length === 0 && <p className="text-gray-400 text-sm text-center py-6">داده‌ای یافت نشد.</p>}
+          {!loading && rows.length === 0 && <p className="text-gray-400 text-sm text-center py-6">{t('common.noDataToShow')}</p>}
         </div>
       </div>
     </div>
@@ -106,6 +94,7 @@ function DrillDownModal({ dimension, id, label, from, to, onClose }) {
 }
 
 export default function BI() {
+  const { t } = useLanguage();
   const today = new Date().toISOString().slice(0, 10);
   const monthAgo = new Date(Date.now() - 30 * 86400e3).toISOString().slice(0, 10);
 
@@ -126,6 +115,21 @@ export default function BI() {
   const [venueActivity, setVenueActivity] = useState([]);
   const [funnel, setFunnel] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const TIER_LABELS = { FREE: t('admin.bi.tierFree'), PRO: t('admin.bi.tierPro'), ULTRA: t('admin.bi.tierUltra') };
+  const TIER_COLORS = { FREE: 'bg-gray-200 text-gray-700', PRO: 'bg-blue-100 text-blue-700', ULTRA: 'bg-purple-100 text-purple-700' };
+  const GRANULARITY = [
+    { value: 'day', label: t('admin.bi.granularityDay') }, { value: 'week', label: t('admin.bi.granularityWeek') },
+    { value: 'month', label: t('admin.bi.granularityMonth') }, { value: 'year', label: t('admin.bi.granularityYear') },
+  ];
+  const EXPORT_TYPES = [
+    { value: 'overview_trend', label: t('admin.bi.exportRevenueTrend') },
+    { value: 'by_venue', label: t('admin.bi.exportByVenue') },
+    { value: 'by_tier', label: t('admin.bi.exportByTier') },
+    { value: 'by_city', label: t('admin.bi.exportByCity') },
+    { value: 'venue_activity', label: t('admin.bi.exportVenueActivity') },
+    { value: 'cohorts', label: t('admin.bi.exportCohorts') },
+  ];
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -162,12 +166,12 @@ export default function BI() {
   }
 
   const tabs = [
-    { id: 'overview', label: 'نمای کلی' },
-    { id: 'trend', label: 'روند درآمد' },
-    { id: 'breakdown', label: 'تفکیک' },
-    { id: 'cohorts', label: 'کوهورت' },
-    { id: 'venues', label: 'مجموعه‌ها' },
-    { id: 'funnel', label: 'قیف تبدیل' },
+    { id: 'overview', label: t('admin.bi.tabOverview') },
+    { id: 'trend', label: t('admin.bi.exportRevenueTrend') },
+    { id: 'breakdown', label: t('admin.bi.tabBreakdown') },
+    { id: 'cohorts', label: t('admin.bi.tabCohorts') },
+    { id: 'venues', label: t('admin.bi.tabVenues') },
+    { id: 'funnel', label: t('admin.bi.tabFunnel') },
   ];
 
   return (
@@ -177,20 +181,20 @@ export default function BI() {
       {/* Date + controls */}
       <div className="flex items-center gap-3 flex-wrap">
         <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm" />
-        <span className="text-gray-400 text-sm">تا</span>
+        <span className="text-gray-400 text-sm">{t('admin.bi.dateRangeTo')}</span>
         <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm" />
         <select value={granularity} onChange={(e) => setGranularity(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
           {GRANULARITY.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
         </select>
-        <Button onClick={load} disabled={loading}>{loading ? 'در حال بارگذاری...' : 'بروزرسانی'}</Button>
+        <Button onClick={load} disabled={loading}>{loading ? t('common.loading') : t('common.refresh')}</Button>
         <div className="mr-auto flex gap-2 flex-wrap">
-          {EXPORT_TYPES.map((t) => (
-            <div key={t.value} className="flex border border-gray-300 rounded overflow-hidden">
-              <button onClick={() => exportCSV(t.value, 'csv')}
+          {EXPORT_TYPES.map((et) => (
+            <div key={et.value} className="flex border border-gray-300 rounded overflow-hidden">
+              <button onClick={() => exportCSV(et.value, 'csv')}
                 className="text-xs px-2 py-1 hover:bg-gray-50 text-gray-600 border-l border-gray-300">
-                ↓ {t.label} CSV
+                ↓ {et.label} CSV
               </button>
-              <button onClick={() => exportCSV(t.value, 'xlsx')}
+              <button onClick={() => exportCSV(et.value, 'xlsx')}
                 className="text-xs px-2 py-1 hover:bg-gray-50 text-green-700">
                 Excel
               </button>
@@ -201,10 +205,10 @@ export default function BI() {
 
       {/* Tabs */}
       <div className="flex gap-2 flex-wrap border-b pb-2">
-        {tabs.map((t) => (
-          <button key={t.id} onClick={() => setActiveTab(t.id)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${activeTab === t.id ? 'bg-primary-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
-            {t.label}
+        {tabs.map((tb) => (
+          <button key={tb.id} onClick={() => setActiveTab(tb.id)}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${activeTab === tb.id ? 'bg-primary-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+            {tb.label}
           </button>
         ))}
       </div>
@@ -214,38 +218,38 @@ export default function BI() {
         <div className="space-y-4">
           <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer w-fit">
             <input type="checkbox" checked={comparePrev} onChange={(e) => setComparePrev(e.target.checked)} />
-            مقایسه با دوره قبل (به همین طول)
+            {t('admin.bi.comparePrevPeriod')}
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             <KPICard
-              label="GMV کل" value={`${Number(overview.gmv).toLocaleString('fa-IR')} تومان`} color="text-primary-700"
+              label={t('admin.bi.kpiGmv')} value={`${Number(overview.gmv).toLocaleString('fa-IR')} ${t('common.toman')}`} color="text-primary-700"
               changePct={comparePrev && prevOverview ? pctChange(overview.gmv, prevOverview.gmv) : undefined}
             />
             <KPICard
-              label="درآمد کمیسیون" value={`${Number(overview.commissionRevenue).toLocaleString('fa-IR')} تومان`} color="text-green-700"
+              label={t('admin.bi.kpiCommissionRevenue')} value={`${Number(overview.commissionRevenue).toLocaleString('fa-IR')} ${t('common.toman')}`} color="text-green-700"
               changePct={comparePrev && prevOverview ? pctChange(overview.commissionRevenue, prevOverview.commissionRevenue) : undefined}
             />
             <KPICard
-              label="کل سفارش‌ها" value={Number(overview.totalOrders).toLocaleString('fa-IR')}
+              label={t('admin.bi.kpiTotalOrders')} value={Number(overview.totalOrders).toLocaleString('fa-IR')}
               changePct={comparePrev && prevOverview ? pctChange(overview.totalOrders, prevOverview.totalOrders) : undefined}
             />
             <KPICard
-              label="میانگین سفارش" value={`${Math.round(Number(overview.avgOrderValue)).toLocaleString('fa-IR')} تومان`}
+              label={t('admin.bi.kpiAvgOrder')} value={`${Math.round(Number(overview.avgOrderValue)).toLocaleString('fa-IR')} ${t('common.toman')}`}
               changePct={comparePrev && prevOverview ? pctChange(overview.avgOrderValue, prevOverview.avgOrderValue) : undefined}
             />
             <KPICard
-              label="مجموعه‌های فعال" value={Number(overview.activeVenues).toLocaleString('fa-IR')}
+              label={t('admin.bi.kpiActiveVenues')} value={Number(overview.activeVenues).toLocaleString('fa-IR')}
               changePct={comparePrev && prevOverview ? pctChange(overview.activeVenues, prevOverview.activeVenues) : undefined}
             />
             <KPICard
-              label="مشتریان یکتا" value={Number(overview.uniqueCustomers).toLocaleString('fa-IR')}
+              label={t('admin.bi.kpiUniqueCustomers')} value={Number(overview.uniqueCustomers).toLocaleString('fa-IR')}
               changePct={comparePrev && prevOverview ? pctChange(overview.uniqueCustomers, prevOverview.uniqueCustomers) : undefined}
             />
           </div>
           {comparePrev && prevOverview && (
             <p className="text-[11px] text-gray-400">
-              دوره قبل برای مقایسه: {new Date(new Date(`${from}T00:00:00`) - 86400e3 - (new Date(`${to}T23:59:59`) - new Date(`${from}T00:00:00`))).toLocaleDateString('fa-IR')}
-              {' '}تا{' '}
+              {t('admin.bi.comparePeriodLabel')} {new Date(new Date(`${from}T00:00:00`) - 86400e3 - (new Date(`${to}T23:59:59`) - new Date(`${from}T00:00:00`))).toLocaleDateString('fa-IR')}
+              {' '}{t('admin.bi.dateRangeTo')}{' '}
               {new Date(new Date(`${from}T00:00:00`) - 86400e3).toLocaleDateString('fa-IR')}
             </p>
           )}
@@ -257,19 +261,19 @@ export default function BI() {
         <div className="space-y-4">
           <Card>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-gray-800">روند GMV</h3>
-              <button onClick={() => exportCSV('overview_trend')} className="text-xs text-primary-600">↓ دانلود CSV</button>
+              <h3 className="font-semibold text-gray-800">{t('admin.bi.trendGmvTitle')}</h3>
+              <button onClick={() => exportCSV('overview_trend')} className="text-xs text-primary-600">↓ {t('admin.bi.downloadCsv')}</button>
             </div>
             <TrendBarChart data={trend} valueKey="gmv" />
           </Card>
           <Card>
-            <h3 className="font-semibold text-gray-800 mb-3">روند کمیسیون</h3>
+            <h3 className="font-semibold text-gray-800 mb-3">{t('admin.bi.trendCommissionTitle')}</h3>
             <TrendBarChart data={trend} valueKey="commission" />
           </Card>
           <div className="overflow-auto">
             <table className="w-full text-sm text-right">
               <thead><tr className="text-xs text-gray-500 border-b">
-                <th className="pb-2">دوره</th><th className="pb-2">سفارش‌ها</th><th className="pb-2">GMV</th><th className="pb-2">کمیسیون</th>
+                <th className="pb-2">{t('admin.bi.periodColumn')}</th><th className="pb-2">{t('admin.bi.ordersColumn')}</th><th className="pb-2">{t('admin.bi.gmvColumn')}</th><th className="pb-2">{t('admin.bi.commissionColumn')}</th>
               </tr></thead>
               <tbody>
                 {trend.map((r) => (
@@ -290,30 +294,30 @@ export default function BI() {
       {activeTab === 'breakdown' && (
         <div className="space-y-4">
           <Card>
-            <h3 className="font-semibold text-gray-800 mb-3">تفکیک بر اساس سطح اشتراک</h3>
+            <h3 className="font-semibold text-gray-800 mb-3">{t('admin.bi.byTierTitle')}</h3>
             <div className="space-y-2">
               {byTier.map((r) => (
                 <div key={r.tier} className="flex items-center gap-3 py-2 border-b last:border-0">
                   <span className={`px-2 py-0.5 rounded text-xs font-medium ${TIER_COLORS[r.tier]}`}>{TIER_LABELS[r.tier] || r.tier}</span>
-                  <span className="text-xs text-gray-500">{r.venueCount} مجموعه</span>
-                  <span className="text-xs text-gray-500">{Number(r.orders).toLocaleString('fa-IR')} سفارش</span>
-                  <span className="text-sm font-medium text-gray-900 mr-auto">{Number(r.gmv).toLocaleString('fa-IR')} تومان GMV</span>
-                  <span className="text-sm font-medium text-green-700">{Number(r.commission).toLocaleString('fa-IR')} تومان کمیسیون</span>
-                  <button onClick={() => setDrill({ dimension: 'tier', id: r.tier, label: TIER_LABELS[r.tier] || r.tier })} className="text-xs text-primary-600 hover:underline">جزئیات</button>
+                  <span className="text-xs text-gray-500">{r.venueCount} {t('admin.bi.venueCountSuffix')}</span>
+                  <span className="text-xs text-gray-500">{Number(r.orders).toLocaleString('fa-IR')} {t('admin.bi.orderCountSuffix')}</span>
+                  <span className="text-sm font-medium text-gray-900 mr-auto">{Number(r.gmv).toLocaleString('fa-IR')} {t('admin.bi.gmvSuffix')}</span>
+                  <span className="text-sm font-medium text-green-700">{Number(r.commission).toLocaleString('fa-IR')} {t('admin.bi.commissionSuffix')}</span>
+                  <button onClick={() => setDrill({ dimension: 'tier', id: r.tier, label: TIER_LABELS[r.tier] || r.tier })} className="text-xs text-primary-600 hover:underline">{t('admin.bi.detailsLink')}</button>
                 </div>
               ))}
             </div>
           </Card>
           <Card>
-            <h3 className="font-semibold text-gray-800 mb-3">تفکیک بر اساس شهر</h3>
+            <h3 className="font-semibold text-gray-800 mb-3">{t('admin.bi.byCityTitle')}</h3>
             <div className="space-y-2">
               {byCity.map((r) => (
                 <div key={r.city} className="flex items-center gap-3 py-2 border-b last:border-0">
                   <span className="text-sm font-medium text-gray-800">{r.city}</span>
-                  <span className="text-xs text-gray-500">{r.venueCount} مجموعه</span>
-                  <span className="text-xs text-gray-500">{Number(r.orders).toLocaleString('fa-IR')} سفارش</span>
-                  <span className="text-sm font-medium text-gray-900 mr-auto">{Number(r.gmv).toLocaleString('fa-IR')} تومان</span>
-                  <button onClick={() => setDrill({ dimension: 'city', id: r.city, label: r.city })} className="text-xs text-primary-600 hover:underline">جزئیات</button>
+                  <span className="text-xs text-gray-500">{r.venueCount} {t('admin.bi.venueCountSuffix')}</span>
+                  <span className="text-xs text-gray-500">{Number(r.orders).toLocaleString('fa-IR')} {t('admin.bi.orderCountSuffix')}</span>
+                  <span className="text-sm font-medium text-gray-900 mr-auto">{Number(r.gmv).toLocaleString('fa-IR')} {t('common.toman')}</span>
+                  <button onClick={() => setDrill({ dimension: 'city', id: r.city, label: r.city })} className="text-xs text-primary-600 hover:underline">{t('admin.bi.detailsLink')}</button>
                 </div>
               ))}
             </div>
@@ -324,11 +328,11 @@ export default function BI() {
       {/* Cohorts */}
       {activeTab === 'cohorts' && (
         <Card>
-          <h3 className="font-semibold text-gray-800 mb-3">تحلیل کوهورت — نرخ بازگشت مشتریان</h3>
+          <h3 className="font-semibold text-gray-800 mb-3">{t('admin.bi.cohortAnalysisTitle')}</h3>
           <div className="overflow-auto">
             <table className="w-full text-sm text-right">
               <thead><tr className="text-xs text-gray-500 border-b">
-                <th className="pb-2">ماه ورود</th><th className="pb-2">اندازه کوهورت</th><th className="pb-2">مشتریان تکراری</th><th className="pb-2">نرخ بازگشت</th>
+                <th className="pb-2">{t('admin.bi.cohortMonthColumn')}</th><th className="pb-2">{t('admin.bi.cohortSizeColumn')}</th><th className="pb-2">{t('admin.bi.repeatCustomersColumn')}</th><th className="pb-2">{t('admin.bi.repeatRateColumn')}</th>
               </tr></thead>
               <tbody>
                 {cohorts.map((r) => (
@@ -346,7 +350,7 @@ export default function BI() {
               </tbody>
             </table>
           </div>
-          {cohorts.length === 0 && <p className="text-gray-400 text-sm text-center py-6">داده‌ای در این بازه زمانی موجود نیست.</p>}
+          {cohorts.length === 0 && <p className="text-gray-400 text-sm text-center py-6">{t('admin.bi.noCohortData')}</p>}
         </Card>
       )}
 
@@ -354,12 +358,12 @@ export default function BI() {
       {activeTab === 'venues' && (
         <div className="space-y-3">
           <Card>
-            <h3 className="font-semibold text-gray-800 mb-3">عملکرد مجموعه‌ها</h3>
+            <h3 className="font-semibold text-gray-800 mb-3">{t('admin.bi.venuePerformanceTitle')}</h3>
             <div className="overflow-auto">
               <table className="w-full text-sm text-right">
                 <thead><tr className="text-xs text-gray-500 border-b">
-                  <th className="pb-2">مجموعه</th><th className="pb-2">شهر</th><th className="pb-2">اشتراک</th>
-                  <th className="pb-2">سفارش‌ها</th><th className="pb-2">درآمد</th><th className="pb-2">وضعیت</th><th className="pb-2"></th>
+                  <th className="pb-2">{t('admin.bi.venueColumn')}</th><th className="pb-2">{t('admin.bi.cityColumn')}</th><th className="pb-2">{t('admin.bi.subscriptionColumn')}</th>
+                  <th className="pb-2">{t('admin.bi.ordersColumn')}</th><th className="pb-2">{t('admin.bi.revenueColumn')}</th><th className="pb-2">{t('common.status')}</th><th className="pb-2"></th>
                 </tr></thead>
                 <tbody>
                   {byVenue.map((r) => (
@@ -371,11 +375,11 @@ export default function BI() {
                       <td className="py-2">{Number(r.gmv).toLocaleString('fa-IR')}</td>
                       <td className="py-2">
                         {venueActivity.find((v) => v.id === r.venueId)?.activityStatus === 'CHURNED'
-                          ? <span className="text-xs text-red-600">ریزش</span>
-                          : <span className="text-xs text-green-600">فعال</span>}
+                          ? <span className="text-xs text-red-600">{t('admin.bi.churned')}</span>
+                          : <span className="text-xs text-green-600">{t('common.active')}</span>}
                       </td>
                       <td className="py-2">
-                        <button onClick={() => setDrill({ dimension: 'venue', id: r.venueId, label: r.venueName })} className="text-xs text-primary-600 hover:underline">جزئیات</button>
+                        <button onClick={() => setDrill({ dimension: 'venue', id: r.venueId, label: r.venueName })} className="text-xs text-primary-600 hover:underline">{t('admin.bi.detailsLink')}</button>
                       </td>
                     </tr>
                   ))}
@@ -389,9 +393,9 @@ export default function BI() {
       {activeTab === 'funnel' && funnel && (
         <div className="space-y-3">
           <Card>
-            <h3 className="font-semibold text-gray-800 mb-1">قیف تبدیل سفارش</h3>
+            <h3 className="font-semibold text-gray-800 mb-1">{t('admin.bi.funnelTitle')}</h3>
             <p className="text-xs text-gray-500 mb-4">
-              مسیر سفارش از ثبت تا سرو شدن — نرخ افت هر مرحله نسبت به مرحله قبل محاسبه شده است.
+              {t('admin.bi.funnelDescription')}
             </p>
             <div className="space-y-2">
               {funnel.stages.map((s, i) => {
@@ -412,7 +416,7 @@ export default function BI() {
                     </div>
                     {i > 0 && s.dropOffRate > 0 && (
                       <p className="text-[11px] text-red-500 mt-0.5">
-                        {s.dropOffRate.toLocaleString('fa-IR')}٪ افت نسبت به مرحله قبل
+                        {s.dropOffRate.toLocaleString('fa-IR')}٪ {t('admin.bi.dropOffSuffix')}
                       </p>
                     )}
                   </div>
@@ -421,7 +425,7 @@ export default function BI() {
             </div>
             {funnel.cancelled > 0 && (
               <p className="text-xs text-gray-500 mt-4 border-t pt-3">
-                {funnel.cancelled.toLocaleString('fa-IR')} سفارش در این بازه لغو شده است.
+                {funnel.cancelled.toLocaleString('fa-IR')} {t('admin.bi.cancelledOrdersSuffix')}
               </p>
             )}
           </Card>

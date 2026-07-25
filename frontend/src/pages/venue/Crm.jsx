@@ -3,14 +3,16 @@ import { Search, Gift, Crown, Users, Send, Sparkles } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../context/ToastContext';
+import { useLanguage } from '../../context/LanguageContext';
 
-function recencyLabel(days) {
-  if (days <= 7) return { text: 'همین اواخر', cls: 'text-green-700 bg-green-50 border-green-200' };
-  if (days <= 30) return { text: `${days.toLocaleString('fa-IR')} روز پیش`, cls: 'text-accent-800 bg-accent-50 border-accent-200' };
-  return { text: `${days.toLocaleString('fa-IR')} روز پیش`, cls: 'text-red-600 bg-red-50 border-red-200' };
+function recencyLabel(days, t) {
+  if (days <= 7) return { text: t('venue.crm.recentlyActive'), cls: 'text-green-700 bg-green-50 border-green-200' };
+  if (days <= 30) return { text: `${days.toLocaleString('fa-IR')} ${t('venue.crm.daysAgo')}`, cls: 'text-accent-800 bg-accent-50 border-accent-200' };
+  return { text: `${days.toLocaleString('fa-IR')} ${t('venue.crm.daysAgo')}`, cls: 'text-red-600 bg-red-50 border-red-200' };
 }
 
 function SmartCouponEngine({ venueId }) {
+  const { t } = useLanguage();
   const toast = useToast();
   const [config, setConfig] = useState(null);
   const [log, setLog] = useState([]);
@@ -39,10 +41,10 @@ function SmartCouponEngine({ venueId }) {
     setRunning(true);
     try {
       const { data } = await api.post(`/venues/${venueId}/smart-coupons/run`);
-      toast.success(`${data.targeted.toLocaleString('fa-IR')} کوپن برای مشتریان غیرفعال ارسال شد.`);
+      toast.success(`${data.targeted.toLocaleString('fa-IR')} ${t('venue.crm.couponsSentToInactive')}`);
       refresh();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'اجرای موتور کوپن ناموفق بود.');
+      toast.error(err.response?.data?.message || t('venue.crm.couponEngineRunFailed'));
     } finally {
       setRunning(false);
     }
@@ -54,18 +56,18 @@ function SmartCouponEngine({ venueId }) {
     <div className="card-luxe p-4">
       <h3 className="font-black text-ink text-sm mb-1 flex items-center gap-1.5">
         <Sparkles size={15} />
-        موتور کوپن هوشمند
+        {t('venue.crm.smartCouponEngine')}
       </h3>
       <p className="text-xs text-ink/45 mb-3">
-        هر روز مشتریانی که مدتی سفارش نداده‌اند را شناسایی و برایشان یک کوپن بازگشت اختصاصی ارسال می‌کند.
+        {t('venue.crm.smartCouponEngineDesc')}
       </p>
       <div className="flex flex-wrap items-center gap-3 mb-3">
         <label className="flex items-center gap-2 text-sm text-ink">
           <input type="checkbox" checked={!!config.isActive} onChange={(e) => save({ isActive: e.target.checked })} />
-          فعال
+          {t('common.active')}
         </label>
         <label className="flex items-center gap-2 text-xs text-ink/60">
-          غیرفعال بعد از
+          {t('venue.crm.inactiveAfter')}
           <input
             type="number"
             min={1}
@@ -73,10 +75,10 @@ function SmartCouponEngine({ venueId }) {
             value={config.inactivityDays}
             onChange={(e) => save({ inactivityDays: Number(e.target.value) })}
           />
-          روز
+          {t('venue.crm.days')}
         </label>
         <label className="flex items-center gap-2 text-xs text-ink/60">
-          تخفیف
+          {t('venue.crm.discount')}
           <input
             type="number"
             min={1}
@@ -87,7 +89,7 @@ function SmartCouponEngine({ venueId }) {
           ٪
         </label>
         <label className="flex items-center gap-2 text-xs text-ink/60">
-          فاصله بین ارسال‌ها
+          {t('venue.crm.gapBetweenSends')}
           <input
             type="number"
             min={1}
@@ -95,7 +97,7 @@ function SmartCouponEngine({ venueId }) {
             value={config.cooldownDays}
             onChange={(e) => save({ cooldownDays: Number(e.target.value) })}
           />
-          روز
+          {t('venue.crm.days')}
         </label>
         <button
           type="button"
@@ -103,7 +105,7 @@ function SmartCouponEngine({ venueId }) {
           disabled={running}
           className="text-xs font-bold px-3 py-1.5 rounded-full bg-white/60 text-accent-700 border border-accent-200/70 hover:bg-accent-500 hover:text-white transition-all"
         >
-          {running ? 'در حال اجرا...' : 'اجرا همین حالا'}
+          {running ? t('venue.crm.running') : t('venue.crm.runNow')}
         </button>
       </div>
       <div className="space-y-1.5">
@@ -114,13 +116,14 @@ function SmartCouponEngine({ venueId }) {
             <span className="text-ink/40">{new Date(l.sentAt).toLocaleDateString('fa-IR')}</span>
           </div>
         ))}
-        {log.length === 0 && <p className="text-xs text-ink/35">هنوز کوپنی به‌صورت خودکار ارسال نشده است.</p>}
+        {log.length === 0 && <p className="text-xs text-ink/35">{t('venue.crm.noCouponsSentYet')}</p>}
       </div>
     </div>
   );
 }
 
 export default function Crm() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const venueId = user?.venueId;
   const [customers, setCustomers] = useState([]);
@@ -147,8 +150,8 @@ export default function Crm() {
   }, [venueId]);
 
   useEffect(() => {
-    const t = setTimeout(() => venueId && refresh(), 350);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => venueId && refresh(), 350);
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
@@ -168,7 +171,7 @@ export default function Crm() {
     }
   }
 
-  if (!venueId) return <p className="text-gray-500">این حساب کاربری به مجموعه‌ای متصل نیست.</p>;
+  if (!venueId) return <p className="text-gray-500">{t('common.noVenueLinked')}</p>;
 
   const top = customers[0];
 
@@ -180,7 +183,7 @@ export default function Crm() {
             <Users size={18} />
           </span>
           <div>
-            <p className="text-xs text-ink/50">مشتریان تکراری</p>
+            <p className="text-xs text-ink/50">{t('venue.crm.repeatCustomers')}</p>
             <p className="font-black text-ink text-lg">{customers.length.toLocaleString('fa-IR')}</p>
           </div>
         </div>
@@ -189,9 +192,9 @@ export default function Crm() {
             <Crown size={18} />
           </span>
           <div className="min-w-0">
-            <p className="text-xs text-ink/50">وفادارترین مشتری</p>
+            <p className="text-xs text-ink/50">{t('venue.crm.mostLoyalCustomer')}</p>
             <p className="font-bold text-ink text-sm truncate">
-              {top ? `${top.name} — ${top.orderCount.toLocaleString('fa-IR')} سفارش، ${top.totalSpent.toLocaleString('fa-IR')} تومان` : '—'}
+              {top ? `${top.name} — ${top.orderCount.toLocaleString('fa-IR')} ${t('venue.crm.ordersSuffix')}, ${top.totalSpent.toLocaleString('fa-IR')} ${t('common.toman')}` : '—'}
             </p>
           </div>
         </div>
@@ -201,15 +204,15 @@ export default function Crm() {
 
       <div className="search-pill">
         <Search size={16} className="text-ink/35 shrink-0" />
-        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="جستجوی نام، شماره یا ایمیل…" />
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('venue.crm.searchPlaceholder')} />
       </div>
 
-      {loading && <p className="text-center text-ink/40 text-sm py-8">در حال بارگذاری...</p>}
-      {!loading && customers.length === 0 && <p className="text-center text-ink/40 text-sm py-8">هنوز مشتری تکراری‌ای ثبت نشده.</p>}
+      {loading && <p className="text-center text-ink/40 text-sm py-8">{t('common.loading')}</p>}
+      {!loading && customers.length === 0 && <p className="text-center text-ink/40 text-sm py-8">{t('venue.crm.noRepeatCustomersYet')}</p>}
 
       <div className="space-y-2.5">
         {customers.map((c) => {
-          const rec = recencyLabel(c.recencyDays);
+          const rec = recencyLabel(c.recencyDays, t);
           return (
             <div key={c.customerId} className="card-luxe p-4 flex items-center justify-between gap-3 flex-wrap">
               <div className="min-w-0">
@@ -217,8 +220,8 @@ export default function Crm() {
                 <p className="text-xs text-ink/45 mt-0.5" dir="ltr">{c.phone || c.email}</p>
                 <div className="flex items-center gap-3 mt-1.5 text-[11px]">
                   <span className={`px-2 py-0.5 rounded-full border font-bold ${rec.cls}`}>{rec.text}</span>
-                  <span className="text-ink/50">{c.orderCount.toLocaleString('fa-IR')} سفارش</span>
-                  <span className="text-accent-700 font-bold">{c.totalSpent.toLocaleString('fa-IR')} تومان</span>
+                  <span className="text-ink/50">{c.orderCount.toLocaleString('fa-IR')} {t('venue.crm.ordersSuffix')}</span>
+                  <span className="text-accent-700 font-bold">{c.totalSpent.toLocaleString('fa-IR')} {t('common.toman')}</span>
                 </div>
               </div>
               <button
@@ -226,7 +229,7 @@ export default function Crm() {
                 className="shrink-0 inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-full bg-white/60 text-accent-700 border border-accent-200/70 hover:bg-accent-500 hover:text-white hover:border-accent-500 transition-all active:scale-95"
               >
                 <Gift size={14} />
-                {sentFor === c.customerId ? 'ارسال شد ✓' : 'ارسال کوپن اختصاصی'}
+                {sentFor === c.customerId ? t('venue.crm.sentCheck') : t('venue.crm.sendCustomCoupon')}
               </button>
             </div>
           );
@@ -236,15 +239,15 @@ export default function Crm() {
       {couponTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={(e) => e.target === e.currentTarget && setCouponTarget(null)}>
           <form onSubmit={sendCoupon} className="glass-strong rounded-3xl shadow-lift w-full max-w-sm p-6 space-y-4 animate-pop-in" dir="rtl">
-            <h3 className="font-black text-ink text-lg">کوپن اختصاصی برای {couponTarget.name}</h3>
+            <h3 className="font-black text-ink text-lg">{t('venue.crm.customCouponFor')} {couponTarget.name}</h3>
             <div className="grid grid-cols-2 gap-3">
               <select
                 className="glass-input rounded-xl px-3 py-2.5 text-sm"
                 value={couponForm.discountType}
                 onChange={(e) => setCouponForm({ ...couponForm, discountType: e.target.value })}
               >
-                <option value="PERCENT">درصدی</option>
-                <option value="FIXED">مبلغ ثابت</option>
+                <option value="PERCENT">{t('venue.crm.percentage')}</option>
+                <option value="FIXED">{t('venue.crm.fixedAmount')}</option>
               </select>
               <input
                 type="number"
@@ -257,17 +260,17 @@ export default function Crm() {
             <textarea
               className="glass-input w-full rounded-xl px-4 py-2.5 text-sm resize-none"
               rows={2}
-              placeholder="پیام دلخواه (اختیاری)"
+              placeholder={t('venue.crm.customMessageOptional')}
               value={couponForm.message}
               onChange={(e) => setCouponForm({ ...couponForm, message: e.target.value })}
             />
             <div className="flex gap-2">
               <button type="submit" disabled={sending} className="btn-gold flex-1 py-2.5 text-sm">
                 <Send size={15} />
-                {sending ? 'در حال ارسال…' : 'ارسال'}
+                {sending ? t('venue.crm.sending') : t('venue.crm.send')}
               </button>
               <button type="button" onClick={() => setCouponTarget(null)} className="px-4 text-sm text-ink/50 hover:text-ink">
-                انصراف
+                {t('common.cancel')}
               </button>
             </div>
           </form>

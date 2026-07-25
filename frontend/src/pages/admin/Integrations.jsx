@@ -2,25 +2,19 @@ import { useEffect, useState } from 'react';
 import { Check, X } from 'lucide-react';
 import api from '../../services/api';
 import Card from '../../components/Card';
-
-const PROVIDER_LABELS = {
-  mock: 'شبیه‌سازی (Mock)',
-  aqayepardakht: 'آقای پرداخت',
-  saman: 'سامان (SEP)',
-  zarinpal: 'زرین‌پال',
-  zibal: 'زیبال',
-  payping: 'پی‌پینگ',
-};
+import { useLanguage } from '../../context/LanguageContext';
 
 function ConfiguredBadge({ configured }) {
+  const { t } = useLanguage();
   return configured ? (
-    <span className="text-ink font-bold inline-flex items-center gap-1"><Check size={12} />تنظیم شده</span>
+    <span className="text-ink font-bold inline-flex items-center gap-1"><Check size={12} />{t('admin.integrations.configuredWord')}</span>
   ) : (
-    <span className="text-red-600 font-bold inline-flex items-center gap-1"><X size={12} />تنظیم نشده</span>
+    <span className="text-red-600 font-bold inline-flex items-center gap-1"><X size={12} />{t('admin.integrations.notConfiguredWord')}</span>
   );
 }
 
 function EnableToggle({ enabled, onToggle }) {
+  const { t } = useLanguage();
   return (
     <button
       type="button"
@@ -29,12 +23,21 @@ function EnableToggle({ enabled, onToggle }) {
         enabled ? 'border-green-400 bg-green-50 text-green-800' : 'border-gray-300 bg-gray-50 text-gray-600'
       }`}
     >
-      {enabled ? 'فعال — برای غیرفعال کردن کلیک کنید' : 'غیرفعال — برای فعال کردن کلیک کنید'}
+      {enabled ? t('admin.integrations.enabledClickToDisable') : t('admin.integrations.disabledClickToEnable')}
     </button>
   );
 }
 
 export default function Integrations() {
+  const { t } = useLanguage();
+  const PROVIDER_LABELS = {
+    mock: t('admin.integrations.providerMock'),
+    aqayepardakht: t('admin.integrations.providerAqayepardakht'),
+    saman: t('admin.integrations.providerSaman'),
+    zarinpal: t('admin.integrations.providerZarinpal'),
+    zibal: t('admin.integrations.providerZibal'),
+    payping: t('admin.integrations.providerPayping'),
+  };
   const [status, setStatus] = useState(null);
   const [pinInput, setPinInput] = useState('');
   const [samanTerminalInput, setSamanTerminalInput] = useState('');
@@ -133,16 +136,16 @@ export default function Integrations() {
     await patchAnalytics({ measurementId: gaIdInput });
   }
 
-  if (!status) return <p className="text-gray-500">در حال بارگذاری وضعیت یکپارچه‌سازی‌ها...</p>;
+  if (!status) return <p className="text-gray-500">{t('admin.integrations.loadingStatus')}</p>;
 
   const p = status.payment;
 
   return (
     <div className="space-y-6">
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-1">درگاه‌های پرداخت</h3>
+        <h3 className="font-semibold text-gray-800 mb-1">{t('admin.integrations.paymentGateways')}</h3>
         <p className="text-xs text-gray-500 mb-4">
-          چند درگاه را می‌توان همزمان فعال کرد — مشتری هنگام پرداخت از بین درگاه‌های فعال یکی را انتخاب می‌کند.
+          {t('admin.integrations.paymentGatewaysHint')}
         </p>
 
         <div className="space-y-4">
@@ -150,17 +153,17 @@ export default function Integrations() {
           <div className="border border-gray-100 rounded-lg p-3">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <span className="font-bold text-sm text-gray-800">{PROVIDER_LABELS.mock}</span>
-              <span className="text-xs text-gray-500">همیشه فعال — فقط برای محیط توسعه</span>
+              <span className="text-xs text-gray-500">{t('admin.integrations.alwaysOnDevOnly')}</span>
             </div>
             <div className="mt-3">
-              <label className="block text-xs text-gray-500 mb-1">نتیجه آزمایشی پرداخت</label>
+              <label className="block text-xs text-gray-500 mb-1">{t('admin.integrations.mockOutcomeLabel')}</label>
               <select
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-64"
                 value={p.mockOutcome}
                 onChange={(e) => patchPayment({ mockOutcome: e.target.value })}
               >
-                <option value="success">موفق</option>
-                <option value="failure">ناموفق</option>
+                <option value="success">{t('admin.integrations.outcomeSuccess')}</option>
+                <option value="failure">{t('admin.integrations.outcomeFailure')}</option>
               </select>
             </div>
           </div>
@@ -173,12 +176,12 @@ export default function Integrations() {
             </div>
             <div className="mt-3 grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">کد پین درگاه — <ConfiguredBadge configured={p.aqayepardakht.configured} /></label>
+                <label className="block text-xs text-gray-500 mb-1">{t('admin.integrations.pinLabel')} — <ConfiguredBadge configured={p.aqayepardakht.configured} /></label>
                 <div className="flex gap-2">
                   <input
                     type="password"
                     className="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1"
-                    placeholder="کد پین جدید را وارد کنید"
+                    placeholder={t('admin.integrations.pinPlaceholder')}
                     value={pinInput}
                     onChange={(e) => setPinInput(e.target.value)}
                   />
@@ -187,12 +190,12 @@ export default function Integrations() {
                     onClick={() => { if (pinInput) { patchPayment({ aqayepardakhtPin: pinInput }); setPinInput(''); } }}
                     className="px-3 py-2 rounded-lg bg-primary-800 text-white text-sm"
                   >
-                    ذخیره
+                    {t('common.save')}
                   </button>
                 </div>
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">حالت</label>
+                <label className="block text-xs text-gray-500 mb-1">{t('admin.integrations.modeLabel')}</label>
                 <button
                   type="button"
                   onClick={() => patchPayment({ aqayepardakhtSandbox: !p.aqayepardakht.sandbox })}
@@ -200,7 +203,7 @@ export default function Integrations() {
                     p.aqayepardakht.sandbox ? 'border-yellow-400 bg-yellow-50 text-yellow-800' : 'border-green-400 bg-green-50 text-green-800'
                   }`}
                 >
-                  {p.aqayepardakht.sandbox ? 'آزمایشی (Sandbox)' : 'واقعی (Live)'}
+                  {p.aqayepardakht.sandbox ? t('admin.integrations.sandbox') : t('admin.integrations.live')}
                 </button>
               </div>
             </div>
@@ -213,12 +216,12 @@ export default function Integrations() {
               <EnableToggle enabled={p.saman.enabled} onToggle={() => patchPayment({ samanEnabled: !p.saman.enabled })} />
             </div>
             <div className="mt-3">
-              <label className="block text-xs text-gray-500 mb-1">شناسه ترمینال (TerminalId) — <ConfiguredBadge configured={p.saman.configured} /></label>
+              <label className="block text-xs text-gray-500 mb-1">{t('admin.integrations.terminalIdLabel')} — <ConfiguredBadge configured={p.saman.configured} /></label>
               <div className="flex gap-2 max-w-md">
                 <input
                   type="text"
                   className="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1"
-                  placeholder="شناسه ترمینال جدید را وارد کنید"
+                  placeholder={t('admin.integrations.terminalIdPlaceholder')}
                   value={samanTerminalInput}
                   onChange={(e) => setSamanTerminalInput(e.target.value)}
                 />
@@ -227,7 +230,7 @@ export default function Integrations() {
                   onClick={() => { if (samanTerminalInput) { patchPayment({ samanTerminalId: samanTerminalInput }); setSamanTerminalInput(''); } }}
                   className="px-3 py-2 rounded-lg bg-primary-800 text-white text-sm"
                 >
-                  ذخیره
+                  {t('common.save')}
                 </button>
               </div>
             </div>
@@ -241,12 +244,12 @@ export default function Integrations() {
             </div>
             <div className="mt-3 grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">کد پذیرنده (Merchant ID) — <ConfiguredBadge configured={p.zarinpal.configured} /></label>
+                <label className="block text-xs text-gray-500 mb-1">{t('admin.integrations.merchantIdLabel')} — <ConfiguredBadge configured={p.zarinpal.configured} /></label>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     className="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1"
-                    placeholder="کد پذیرنده جدید را وارد کنید"
+                    placeholder={t('admin.integrations.merchantIdPlaceholder')}
                     value={zarinpalMerchantInput}
                     onChange={(e) => setZarinpalMerchantInput(e.target.value)}
                   />
@@ -255,12 +258,12 @@ export default function Integrations() {
                     onClick={() => { if (zarinpalMerchantInput) { patchPayment({ zarinpalMerchantId: zarinpalMerchantInput }); setZarinpalMerchantInput(''); } }}
                     className="px-3 py-2 rounded-lg bg-primary-800 text-white text-sm"
                   >
-                    ذخیره
+                    {t('common.save')}
                   </button>
                 </div>
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">حالت</label>
+                <label className="block text-xs text-gray-500 mb-1">{t('admin.integrations.modeLabel')}</label>
                 <button
                   type="button"
                   onClick={() => patchPayment({ zarinpalSandbox: !p.zarinpal.sandbox })}
@@ -268,7 +271,7 @@ export default function Integrations() {
                     p.zarinpal.sandbox ? 'border-yellow-400 bg-yellow-50 text-yellow-800' : 'border-green-400 bg-green-50 text-green-800'
                   }`}
                 >
-                  {p.zarinpal.sandbox ? 'آزمایشی (Sandbox)' : 'واقعی (Live)'}
+                  {p.zarinpal.sandbox ? t('admin.integrations.sandbox') : t('admin.integrations.live')}
                 </button>
               </div>
             </div>
@@ -281,12 +284,12 @@ export default function Integrations() {
               <EnableToggle enabled={p.zibal.enabled} onToggle={() => patchPayment({ zibalEnabled: !p.zibal.enabled })} />
             </div>
             <div className="mt-3">
-              <label className="block text-xs text-gray-500 mb-1">کد پذیرنده (Merchant) — <ConfiguredBadge configured={p.zibal.configured} /></label>
+              <label className="block text-xs text-gray-500 mb-1">{t('admin.integrations.merchantLabel')} — <ConfiguredBadge configured={p.zibal.configured} /></label>
               <div className="flex gap-2 max-w-md">
                 <input
                   type="text"
                   className="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1"
-                  placeholder="کد پذیرنده جدید را وارد کنید"
+                  placeholder={t('admin.integrations.merchantIdPlaceholder')}
                   value={zibalMerchantInput}
                   onChange={(e) => setZibalMerchantInput(e.target.value)}
                 />
@@ -295,7 +298,7 @@ export default function Integrations() {
                   onClick={() => { if (zibalMerchantInput) { patchPayment({ zibalMerchant: zibalMerchantInput }); setZibalMerchantInput(''); } }}
                   className="px-3 py-2 rounded-lg bg-primary-800 text-white text-sm"
                 >
-                  ذخیره
+                  {t('common.save')}
                 </button>
               </div>
             </div>
@@ -308,12 +311,12 @@ export default function Integrations() {
               <EnableToggle enabled={p.payping.enabled} onToggle={() => patchPayment({ paypingEnabled: !p.payping.enabled })} />
             </div>
             <div className="mt-3">
-              <label className="block text-xs text-gray-500 mb-1">توکن دسترسی (Access Token) — <ConfiguredBadge configured={p.payping.configured} /></label>
+              <label className="block text-xs text-gray-500 mb-1">{t('admin.integrations.accessTokenLabel')} — <ConfiguredBadge configured={p.payping.configured} /></label>
               <div className="flex gap-2 max-w-md">
                 <input
                   type="password"
                   className="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1"
-                  placeholder="توکن جدید را وارد کنید"
+                  placeholder={t('admin.integrations.tokenPlaceholder')}
                   value={paypingTokenInput}
                   onChange={(e) => setPaypingTokenInput(e.target.value)}
                 />
@@ -322,7 +325,7 @@ export default function Integrations() {
                   onClick={() => { if (paypingTokenInput) { patchPayment({ paypingAccessToken: paypingTokenInput }); setPaypingTokenInput(''); } }}
                   className="px-3 py-2 rounded-lg bg-primary-800 text-white text-sm"
                 >
-                  ذخیره
+                  {t('common.save')}
                 </button>
               </div>
             </div>
@@ -331,9 +334,9 @@ export default function Integrations() {
       </Card>
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">پیامک / OTP</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('admin.integrations.smsOtp')}</h3>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">ارائه‌دهنده فعال</label>
+          <label className="block text-xs text-gray-500 mb-1">{t('admin.integrations.activeProvider')}</label>
           <select
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-64"
             value={status.sms.provider}
@@ -351,13 +354,13 @@ export default function Integrations() {
           <div className="mt-4 pt-4 border-t border-gray-100 grid sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-gray-500 mb-1">
-                کد اختصاصی (Token) — <ConfiguredBadge configured={status.sms.melipayamak.configured} />
+                {t('admin.integrations.dedicatedTokenLabel')} — <ConfiguredBadge configured={status.sms.melipayamak.configured} />
               </label>
               <div className="flex gap-2">
                 <input
                   type="password"
                   className="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1"
-                  placeholder="کد اختصاصی جدید را وارد کنید"
+                  placeholder={t('admin.integrations.dedicatedTokenPlaceholder')}
                   value={melipayamakApiKeyInput}
                   onChange={(e) => setMelipayamakApiKeyInput(e.target.value)}
                 />
@@ -366,20 +369,20 @@ export default function Integrations() {
                   onClick={() => { if (melipayamakApiKeyInput) { patchSms({ melipayamakApiKey: melipayamakApiKeyInput }); setMelipayamakApiKeyInput(''); } }}
                   className="px-3 py-2 rounded-lg bg-primary-800 text-white text-sm"
                 >
-                  ذخیره
+                  {t('common.save')}
                 </button>
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                همان کدی که در آدرس API متدهای ارسال (پس از send/) ظاهر می‌شود — برای OTP و پیامک‌های متنی مشترک است.
+                {t('admin.integrations.dedicatedTokenHint')}
               </p>
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">شماره خط ارسال (from)</label>
+              <label className="block text-xs text-gray-500 mb-1">{t('admin.integrations.senderLineLabel')}</label>
               <div className="flex gap-2">
                 <input
                   type="text"
                   className="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1"
-                  placeholder={status.sms.melipayamak.from || 'مثلاً 5000xxx'}
+                  placeholder={status.sms.melipayamak.from || t('admin.integrations.senderLineExample')}
                   value={melipayamakFromInput}
                   onChange={(e) => setMelipayamakFromInput(e.target.value)}
                 />
@@ -388,7 +391,7 @@ export default function Integrations() {
                   onClick={() => { if (melipayamakFromInput) { patchSms({ melipayamakFrom: melipayamakFromInput }); setMelipayamakFromInput(''); } }}
                   className="px-3 py-2 rounded-lg bg-primary-800 text-white text-sm"
                 >
-                  ذخیره
+                  {t('common.save')}
                 </button>
               </div>
             </div>
@@ -397,10 +400,10 @@ export default function Integrations() {
       </Card>
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-1">ایمیل</h3>
-        <p className="text-xs text-gray-500 mb-4">برای ارسال فیش، تایید سفارش و پیامک‌های بازاریابی از طریق ایمیل.</p>
+        <h3 className="font-semibold text-gray-800 mb-1">{t('admin.integrations.email')}</h3>
+        <p className="text-xs text-gray-500 mb-4">{t('admin.integrations.emailHint')}</p>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">ارائه‌دهنده فعال</label>
+          <label className="block text-xs text-gray-500 mb-1">{t('admin.integrations.activeProvider')}</label>
           <select
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-64"
             value={status.email.provider}
@@ -408,7 +411,7 @@ export default function Integrations() {
           >
             {status.email.availableProviders.map((p2) => (
               <option key={p2} value={p2}>
-                {p2 === 'mock' ? 'شبیه‌سازی (Mock)' : 'SMTP'}
+                {p2 === 'mock' ? t('admin.integrations.providerMock') : 'SMTP'}
               </option>
             ))}
           </select>
@@ -417,7 +420,7 @@ export default function Integrations() {
         {status.email.provider === 'smtp' && (
           <div className="mt-4 pt-4 border-t border-gray-100 grid sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-gray-500 mb-1">آدرس سرور (Host)</label>
+              <label className="block text-xs text-gray-500 mb-1">{t('admin.integrations.smtpHost')}</label>
               <input
                 type="text"
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"
@@ -427,7 +430,7 @@ export default function Integrations() {
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">پورت</label>
+              <label className="block text-xs text-gray-500 mb-1">{t('admin.integrations.port')}</label>
               <input
                 type="number"
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"
@@ -437,7 +440,7 @@ export default function Integrations() {
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">نام کاربری</label>
+              <label className="block text-xs text-gray-500 mb-1">{t('admin.integrations.username')}</label>
               <input
                 type="text"
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"
@@ -447,18 +450,18 @@ export default function Integrations() {
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">
-                رمز عبور — <ConfiguredBadge configured={status.email.smtp.configured} />
+                {t('admin.integrations.password')} — <ConfiguredBadge configured={status.email.smtp.configured} />
               </label>
               <input
                 type="password"
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"
-                placeholder="رمز جدید را وارد کنید"
+                placeholder={t('admin.integrations.newPasswordPlaceholder')}
                 value={smtpForm.pass}
                 onChange={(e) => setSmtpForm({ ...smtpForm, pass: e.target.value })}
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">آدرس ایمیل فرستنده</label>
+              <label className="block text-xs text-gray-500 mb-1">{t('admin.integrations.senderEmailAddress')}</label>
               <input
                 type="email"
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"
@@ -468,7 +471,7 @@ export default function Integrations() {
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">نام فرستنده</label>
+              <label className="block text-xs text-gray-500 mb-1">{t('admin.integrations.senderName')}</label>
               <input
                 type="text"
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"
@@ -482,14 +485,14 @@ export default function Integrations() {
                 checked={smtpForm.secure}
                 onChange={(e) => setSmtpForm({ ...smtpForm, secure: e.target.checked })}
               />
-              اتصال با SSL/TLS (پورت 465)
+              {t('admin.integrations.sslTls')}
             </label>
             <button
               type="button"
               onClick={saveSmtp}
               className="sm:col-span-2 px-3 py-2 rounded-lg bg-primary-800 text-white text-sm"
             >
-              ذخیره تنظیمات SMTP
+              {t('admin.integrations.saveSmtpSettings')}
             </button>
           </div>
         )}
@@ -497,11 +500,11 @@ export default function Integrations() {
 
       <Card>
         <div className="flex items-center justify-between gap-3 flex-wrap mb-1">
-          <h3 className="font-semibold text-gray-800">کپچا (hCaptcha)</h3>
+          <h3 className="font-semibold text-gray-800">{t('admin.integrations.captcha')}</h3>
           <EnableToggle enabled={status.captcha.enabled} onToggle={() => patchCaptcha({ enabled: !status.captcha.enabled })} />
         </div>
         <p className="text-xs text-gray-500 mb-4">
-          برای صفحات ثبت‌نام، ورود و درخواست کد پیامک — جلوگیری از حملات bot و brute-force.
+          {t('admin.integrations.captchaHint')}
         </p>
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
@@ -509,19 +512,19 @@ export default function Integrations() {
             <input
               type="text"
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"
-              placeholder="Site Key از پنل hCaptcha"
+              placeholder={t('admin.integrations.siteKeyFromPanel')}
               value={captchaSiteKeyInput}
               onChange={(e) => setCaptchaSiteKeyInput(e.target.value)}
             />
           </div>
           <div>
             <label className="block text-xs text-gray-500 mb-1">
-              Secret Key — <ConfiguredBadge configured={status.captcha.configured} />
+              {t('admin.integrations.secretKeyLabel')} — <ConfiguredBadge configured={status.captcha.configured} />
             </label>
             <input
               type="password"
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"
-              placeholder="Secret Key جدید را وارد کنید"
+              placeholder={t('admin.integrations.newSecretKeyPlaceholder')}
               value={captchaSecretKeyInput}
               onChange={(e) => setCaptchaSecretKeyInput(e.target.value)}
             />
@@ -532,17 +535,17 @@ export default function Integrations() {
           onClick={saveCaptchaKeys}
           className="mt-4 px-3 py-2 rounded-lg bg-primary-800 text-white text-sm"
         >
-          ذخیره کلیدهای کپچا
+          {t('admin.integrations.saveCaptchaKeys')}
         </button>
       </Card>
 
       <Card>
         <div className="flex items-center justify-between gap-3 flex-wrap mb-1">
-          <h3 className="font-semibold text-gray-800">تحلیل و آمار (Google Analytics 4)</h3>
+          <h3 className="font-semibold text-gray-800">{t('admin.integrations.analytics')}</h3>
           <EnableToggle enabled={status.analytics.enabled} onToggle={() => patchAnalytics({ enabled: !status.analytics.enabled })} />
         </div>
         <p className="text-xs text-gray-500 mb-4">
-          ردیابی ترافیک ورودی و کمپین‌های تبلیغاتی — فقط پس از رضایت کاربر به کوکی‌ها روی وب فعال می‌شود.
+          {t('admin.integrations.analyticsHint')}
         </p>
         <div className="max-w-md">
           <label className="block text-xs text-gray-500 mb-1">Measurement ID</label>
@@ -550,7 +553,7 @@ export default function Integrations() {
             <input
               type="text"
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1"
-              placeholder="مثلاً G-XXXXXXXXXX"
+              placeholder={t('admin.integrations.measurementIdExample')}
               value={gaIdInput}
               onChange={(e) => setGaIdInput(e.target.value)}
             />
@@ -559,24 +562,24 @@ export default function Integrations() {
               onClick={saveGaId}
               className="px-3 py-2 rounded-lg bg-primary-800 text-white text-sm"
             >
-              ذخیره
+              {t('common.save')}
             </button>
           </div>
         </div>
       </Card>
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">نشان (Neshan) — نقشه و موقعیت‌یابی</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('admin.integrations.neshan')}</h3>
         <p className="text-sm text-gray-700">
-          وضعیت کلید API:{' '}
+          {t('admin.integrations.apiKeyStatus')}{' '}
           <span className={status.neshan.configured ? 'text-ink font-bold' : 'text-ink/50 font-bold'}>
             {status.neshan.configured
-              ? <span className="flex items-center gap-1"><Check size={13} />پیکربندی شده</span>
-              : <span className="flex items-center gap-1"><X size={13} />پیکربندی نشده</span>}
+              ? <span className="flex items-center gap-1"><Check size={13} />{t('admin.integrations.configuredWord')}</span>
+              : <span className="flex items-center gap-1"><X size={13} />{t('admin.integrations.notConfiguredWord')}</span>}
           </span>
         </p>
         <p className="text-xs text-gray-500 mt-1">
-          کلیدهای API از طریق متغیرهای محیطی سرور تنظیم می‌شوند و از این پنل قابل مشاهده یا ویرایش نیستند.
+          {t('admin.integrations.envVarsHint')}
         </p>
       </Card>
     </div>

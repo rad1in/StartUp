@@ -5,8 +5,10 @@ import Card from './Card';
 import Button from './Button';
 import { useConfirm } from '../context/ConfirmContext';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function ApiKeysManager({ venueId }) {
+  const { t } = useLanguage();
   const confirm = useConfirm();
   const toast = useToast();
   const [keys, setKeys] = useState([]);
@@ -39,7 +41,7 @@ export default function ApiKeysManager({ venueId }) {
   }
 
   async function revoke(key) {
-    if (!(await confirm(`کلید «${key.label}» باطل شود؟ این کار قابل بازگشت نیست.`, { danger: true }))) return;
+    if (!(await confirm(`${t('components.apiKeysManager.revokeConfirmPrefix')} «${key.label}» ${t('components.apiKeysManager.revokeConfirmSuffix')}`, { danger: true }))) return;
     await api.delete(`/venues/${venueId}/api-keys/${key.id}`);
     refresh();
   }
@@ -47,7 +49,7 @@ export default function ApiKeysManager({ venueId }) {
   function copyKey() {
     navigator.clipboard?.writeText(freshKey);
     setCopied(true);
-    toast.success('کلید کپی شد.');
+    toast.success(t('components.apiKeysManager.keyCopied'));
     setTimeout(() => setCopied(false), 2000);
   }
 
@@ -55,13 +57,13 @@ export default function ApiKeysManager({ venueId }) {
     <Card>
       <h3 className="font-bold text-ink text-sm mb-1 flex items-center gap-1.5">
         <KeyRound size={15} />
-        کلیدهای API
+        {t('components.apiKeysManager.title')}
       </h3>
-      <p className="text-xs text-ink/45 mb-3">برای اتصال سیستم‌های خودتان (POS، حسابداری و…) به ET-Cafe.</p>
+      <p className="text-xs text-ink/45 mb-3">{t('components.apiKeysManager.description')}</p>
 
       {freshKey && (
         <div className="bg-accent-50 border border-accent-200 rounded-xl p-3 mb-3">
-          <p className="text-xs font-bold text-accent-800 mb-1.5">این کلید فقط یک‌بار نمایش داده می‌شود — همین حالا کپی کنید:</p>
+          <p className="text-xs font-bold text-accent-800 mb-1.5">{t('components.apiKeysManager.oneTimeWarning')}</p>
           <div className="flex items-center gap-2">
             <code className="flex-1 text-xs bg-white/60 rounded-lg px-2 py-1.5 overflow-x-auto" dir="ltr">{freshKey}</code>
             <button type="button" onClick={copyKey} className="shrink-0 text-accent-700">
@@ -74,12 +76,12 @@ export default function ApiKeysManager({ venueId }) {
       <form onSubmit={createKey} className="flex gap-2 mb-4">
         <input
           className="glass-input flex-1 rounded-xl px-3 py-2 text-sm"
-          placeholder="نام کلید (مثلاً «POS فروشگاه»)"
+          placeholder={t('components.apiKeysManager.labelPlaceholder')}
           value={label}
           onChange={(e) => setLabel(e.target.value)}
         />
         <Button type="submit" disabled={creating || !label.trim()}>
-          {creating ? 'در حال ساخت...' : 'ساخت کلید'}
+          {creating ? t('components.apiKeysManager.creating') : t('components.apiKeysManager.generateKey')}
         </Button>
       </form>
 

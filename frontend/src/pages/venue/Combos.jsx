@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
+import { useLanguage } from '../../context/LanguageContext';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 
 export default function Combos() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const venueId = user?.venueId;
   const [combos, setCombos] = useState([]);
@@ -57,36 +59,36 @@ export default function Combos() {
     refresh();
   }
 
-  if (!venueId) return <p className="text-gray-500">این حساب کاربری به مجموعه‌ای متصل نیست.</p>;
+  if (!venueId) return <p className="text-gray-500">{t('common.noVenueLinked')}</p>;
 
   return (
     <div className="space-y-6">
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">ساخت کمبوی جدید</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('venue.combos.createNew')}</h3>
         <form onSubmit={createCombo} className="space-y-2">
           <div className="grid sm:grid-cols-2 gap-2">
             <input
               className="border border-gray-300 rounded-lg px-3 py-2"
-              placeholder="نام کمبو"
+              placeholder={t('venue.combos.comboName')}
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
             <input
               type="number"
               className="border border-gray-300 rounded-lg px-3 py-2"
-              placeholder="قیمت کمبو (تومان)"
+              placeholder={t('venue.combos.comboPrice')}
               value={form.price}
               onChange={(e) => setForm({ ...form, price: e.target.value })}
             />
           </div>
           <input
             className="w-full border border-gray-300 rounded-lg px-3 py-2"
-            placeholder="توضیحات"
+            placeholder={t('venue.combos.description')}
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
           <div>
-            <p className="text-sm text-gray-600 mb-2">آیتم‌های داخل کمبو را انتخاب کنید:</p>
+            <p className="text-sm text-gray-600 mb-2">{t('venue.combos.selectItems')}</p>
             <div className="flex flex-wrap gap-2">
               {items.map((item) => (
                 <label
@@ -108,7 +110,7 @@ export default function Combos() {
               ))}
             </div>
           </div>
-          <Button type="submit">ساخت کمبو</Button>
+          <Button type="submit">{t('venue.combos.createCombo')}</Button>
         </form>
       </Card>
 
@@ -117,20 +119,20 @@ export default function Combos() {
           <Card key={combo.id}>
             <p className="font-medium text-gray-800">{combo.name}</p>
             <p className="text-sm text-gray-500 mt-1">{combo.description}</p>
-            <p className="text-sm font-bold text-primary-700 mt-2">{Number(combo.price).toLocaleString('fa-IR')} تومان</p>
+            <p className="text-sm font-bold text-primary-700 mt-2">{Number(combo.price).toLocaleString('fa-IR')} {t('common.toman')}</p>
             <ul className="text-xs text-gray-500 mt-2">
               {combo.items.map((item) => (
                 <li key={item.id}>
-                  {item.menuItemName} — {item.quantity} عدد
+                  {item.menuItemName} — {item.quantity} {t('venue.combos.itemCountSuffix')}
                 </li>
               ))}
             </ul>
             <div className="flex gap-2 mt-3">
               <Button variant="secondary" onClick={() => toggleActive(combo)}>
-                {combo.isActive ? 'غیرفعال کردن' : 'فعال کردن'}
+                {combo.isActive ? t('venue.combos.deactivate') : t('venue.combos.activate')}
               </Button>
               <Button variant="danger" onClick={() => removeCombo(combo)}>
-                حذف
+                {t('common.delete')}
               </Button>
             </div>
           </Card>

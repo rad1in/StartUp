@@ -4,32 +4,38 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import { useVenueSocket } from '../../hooks/useSocket';
+import { useLanguage } from '../../context/LanguageContext';
 
 // Kitchen Display System — a full-screen, dark, touch-friendly board for the
 // kitchen line. Live tickets flow across three lanes (new → preparing → ready),
 // each colored by how long it has been waiting, with an audible chime on new
 // orders. Designed to run on a wall-mounted tablet, independent of the admin UI.
 
-const LANES = [
-  { key: 'PENDING', label: 'جدید', accent: 'border-r-4 border-accent-400' },
-  { key: 'PREPARING', label: 'در حال آماده‌سازی', accent: 'border-r-4 border-accent-200' },
-  { key: 'READY', label: 'آماده سرو', accent: 'border-r-4 border-green-400' },
-];
+function getLanes(t) {
+  return [
+    { key: 'PENDING', label: t('venue.kitchenDisplay.laneNew'), accent: 'border-r-4 border-accent-400' },
+    { key: 'PREPARING', label: t('venue.kitchenDisplay.lanePreparing'), accent: 'border-r-4 border-accent-200' },
+    { key: 'READY', label: t('venue.kitchenDisplay.laneReady'), accent: 'border-r-4 border-green-400' },
+  ];
+}
 const NEXT = { PENDING: 'PREPARING', PREPARING: 'READY', READY: 'SERVED' };
-const NEXT_LABEL = { PENDING: 'شروع پخت', PREPARING: 'آماده شد', READY: 'تحویل شد' };
+function getNextLabel(t) {
+  return { PENDING: t('venue.kitchenDisplay.actionStartCooking'), PREPARING: t('venue.kitchenDisplay.actionMarkReady'), READY: t('venue.kitchenDisplay.actionMarkServed') };
+}
 
 function minutesSince(dateStr) {
   return Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
 }
 
 // Age-based urgency color: fresh → amber → red as tickets get older.
-function urgency(mins) {
-  if (mins >= 15) return { ring: 'ring-2 ring-red-500', chip: 'bg-red-500 text-white', label: 'دیرشده' };
-  if (mins >= 8) return { ring: 'ring-1 ring-accent-400/70', chip: 'bg-accent-400 text-black', label: 'در انتظار' };
-  return { ring: 'ring-1 ring-white/10', chip: 'bg-white/15 text-white', label: 'تازه' };
+function urgency(mins, t) {
+  if (mins >= 15) return { ring: 'ring-2 ring-red-500', chip: 'bg-red-500 text-white', label: t('venue.kitchenDisplay.urgencyLate') };
+  if (mins >= 8) return { ring: 'ring-1 ring-accent-400/70', chip: 'bg-accent-400 text-black', label: t('venue.kitchenDisplay.urgencyWaiting') };
+  return { ring: 'ring-1 ring-white/10', chip: 'bg-white/15 text-white', label: t('venue.kitchenDisplay.urgencyFresh') };
 }
 
 export default function KitchenDisplay() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
   const venueId = user?.venueId;
@@ -37,6 +43,8 @@ export default function KitchenDisplay() {
   const [soundOn, setSoundOn] = useState(true);
   const [, forceTick] = useState(0);
   const audioCtxRef = useRef(null);
+  const LANES = getLanes(t);
+  const NEXT_LABEL = getNextLabel(t);
 
   async function refresh() {
     if (!venueId) return;
@@ -51,8 +59,8 @@ export default function KitchenDisplay() {
 
   // Re-render every 20s so the elapsed timers and urgency colors stay live.
   useEffect(() => {
-    const t = setInterval(() => forceTick((n) => n + 1), 20000);
-    return () => clearInterval(t);
+    const timer = setInterval(() => forceTick((n) => n + 1), 20000);
+    return () => clearInterval(timer);
   }, []);
 
   // Short synthesized chime — no asset needed, works offline.
@@ -108,7 +116,7 @@ export default function KitchenDisplay() {
   }
 
   if (!venueId) {
-    return <p className="text-white/70 p-8">این حساب کاربری به مجموعه‌ای متصل نیست.</p>;
+    return <p className="text-white/70 p-8">{t('common.noVenueLinked')}</p>;
   }
 
   const counts = LANES.map((l) => orders.filter((o) => o.status === l.key).length);
@@ -124,29 +132,29 @@ export default function KitchenDisplay() {
             <ChefHat size={24} />
           </span>
           <div>
-            <h1 className="text-lg font-extrabold leading-none">نمایشگر آشپزخانه</h1>
-            <p className="text-xs text-white/45 mt-1">{orders.length.toLocaleString('fa-IR')} سفارش فعال</p>
+            <h1 className="text-lg font-extrabold leading-none">{t('venue.kitchenDisplay.title')}</h1>
+            <p className="text-xs text-white/45 mt-1">{orders.length.toLocaleString('fa-IR')} {t('venue.kitchenDisplay.activeOrders')}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setSoundOn((s) => !s)}
             className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-            title={soundOn ? 'قطع صدا' : 'وصل صدا'}
+            title={soundOn ? t('venue.kitchenDisplay.muteSound') : t('venue.kitchenDisplay.unmuteSound')}
           >
             {soundOn ? <Volume2 size={18} /> : <VolumeX size={18} className="text-white/50" />}
           </button>
           <button
             onClick={refresh}
             className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-            title="تازه‌سازی"
+            title={t('common.refresh')}
           >
             <RefreshCw size={17} />
           </button>
           <button
             onClick={() => navigate('/venue/orders')}
             className="w-10 h-10 rounded-full bg-white/10 hover:bg-red-500/80 flex items-center justify-center transition-colors"
-            title="خروج از نمایشگر"
+            title={t('venue.kitchenDisplay.exitDisplay')}
           >
             <X size={18} />
           </button>
@@ -169,7 +177,7 @@ export default function KitchenDisplay() {
                 .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
                 .map((order) => {
                   const mins = minutesSince(order.createdAt);
-                  const u = urgency(mins);
+                  const u = urgency(mins, t);
                   return (
                     <div
                       key={order.id}
@@ -177,7 +185,7 @@ export default function KitchenDisplay() {
                     >
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-extrabold text-base">
-                          {order.table ? `میز ${order.table.tableNumber}` : order.isPickup ? 'پیک‌آپ' : 'آنلاین'}
+                          {order.table ? `${t('common.table')} ${order.table.tableNumber}` : order.isPickup ? t('common.pickup') : t('common.online')}
                         </span>
                         <span className={`inline-flex items-center gap-1 text-[11px] font-bold rounded-full px-2 py-0.5 ${u.chip}`}>
                           <Clock size={11} />
@@ -202,7 +210,7 @@ export default function KitchenDisplay() {
                         <button
                           onClick={() => window.open(`/venue/orders/${order.id}/receipt-print`, '_blank', 'width=380,height=600')}
                           className="w-10 shrink-0 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors active:scale-95"
-                          title="چاپ فیش"
+                          title={t('venue.kitchenDisplay.printReceipt')}
                         >
                           <Printer size={16} />
                         </button>

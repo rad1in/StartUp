@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { CheckCircle } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
+import { useLanguage } from '../../context/LanguageContext';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import HappyHourManager from '../../components/HappyHourManager';
@@ -9,6 +10,7 @@ import PunchCardManager from '../../components/PunchCardManager';
 import SmsCampaignManager from '../../components/SmsCampaignManager';
 
 export default function Marketing() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const venueId = user?.venueId;
   const [coupons, setCoupons] = useState([]);

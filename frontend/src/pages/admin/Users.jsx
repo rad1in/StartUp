@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react';
 import api from '../../services/api';
 import Card from '../../components/Card';
-
-const roleLabels = {
-  CUSTOMER: 'مشتری',
-  VENUE_STAFF: 'کارمند مجموعه',
-  VENUE_OWNER: 'مالک مجموعه',
-  SUPER_ADMIN: 'مدیر کل',
-};
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function Users() {
+  const { t } = useLanguage();
+  const roleLabels = {
+    CUSTOMER: t('admin.users.roleCustomer'),
+    VENUE_STAFF: t('admin.users.roleVenueStaff'),
+    VENUE_OWNER: t('admin.users.roleVenueOwner'),
+    SUPER_ADMIN: t('admin.users.roleSuperAdmin'),
+  };
   const [users, setUsers] = useState([]);
 
   useEffect(() => {

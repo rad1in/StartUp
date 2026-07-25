@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import api from '../../services/api';
+import { useLanguage } from '../../context/LanguageContext';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 
 export default function AuditLog() {
+  const { t } = useLanguage();
   const [entries, setEntries] = useState([]);
   const [filters, setFilters] = useState({ action: '', entityType: '', from: '', to: '' });
 
@@ -28,13 +30,13 @@ export default function AuditLog() {
         <div className="grid sm:grid-cols-4 gap-3">
           <input
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
-            placeholder="نوع رویداد (مثلاً VENUE_ACTIVE)"
+            placeholder={t('admin.auditLog.actionTypePlaceholder')}
             value={filters.action}
             onChange={(e) => setFilters((f) => ({ ...f, action: e.target.value }))}
           />
           <input
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
-            placeholder="نوع موجودیت (مثلاً Venue)"
+            placeholder={t('admin.auditLog.entityTypePlaceholder')}
             value={filters.entityType}
             onChange={(e) => setFilters((f) => ({ ...f, entityType: e.target.value }))}
           />
@@ -52,7 +54,7 @@ export default function AuditLog() {
           />
         </div>
         <div className="mt-3 flex items-center gap-2 flex-wrap">
-          <Button onClick={refresh}>اعمال فیلتر</Button>
+          <Button onClick={refresh}>{t('admin.auditLog.applyFilter')}</Button>
           <Button
             variant="ghost"
             onClick={() => {
@@ -60,7 +62,7 @@ export default function AuditLog() {
               refresh({ action: 'IMPERSONATED_ACTION' });
             }}
           >
-            فقط اکشن‌های Impersonation
+            {t('admin.auditLog.impersonationOnly')}
           </Button>
         </div>
       </Card>
@@ -74,14 +76,14 @@ export default function AuditLog() {
                 <span className="text-xs text-gray-400">{new Date(entry.createdAt).toLocaleString('fa-IR')}</span>
               </div>
               <p className="text-xs text-gray-500">
-                عامل: {entry.userName || 'سیستم'} — موجودیت: {entry.entityType} {entry.entityId ? `(${entry.entityId})` : ''}
+                {t('admin.auditLog.actorLabel')}: {entry.userName || t('admin.auditLog.systemActor')} — {t('admin.auditLog.entityLabel')}: {entry.entityType} {entry.entityId ? `(${entry.entityId})` : ''}
               </p>
               {entry.details && (
                 <p className="text-xs text-gray-400 break-all">{typeof entry.details === 'string' ? entry.details : JSON.stringify(entry.details)}</p>
               )}
             </div>
           ))}
-          {entries.length === 0 && <p className="text-gray-500 text-sm">رویدادی یافت نشد.</p>}
+          {entries.length === 0 && <p className="text-gray-500 text-sm">{t('admin.auditLog.noEvents')}</p>}
         </div>
       </Card>
     </div>

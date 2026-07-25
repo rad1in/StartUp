@@ -4,17 +4,13 @@ import api from '../../services/api';
 import Card from '../../components/Card';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
-
-const AUDIENCES = [
-  { value: 'CUSTOMERS', label: 'مشتریان', icon: Users, hint: 'همه مشتریان پلتفرم' },
-  { value: 'VENUE_OWNERS', label: 'مالکان مجموعه', icon: Store, hint: 'صاحبان کافه و رستوران' },
-  { value: 'ALL', label: 'همه', icon: Globe, hint: 'مشتریان و مالکان' },
-];
+import { useLanguage } from '../../context/LanguageContext';
 
 // Admin broadcast composer — sends a platform-wide in-app announcement either
 // immediately or at a scheduled future time (queued server-side and sent by
 // a minute-interval checker in server.js).
 export default function Broadcast() {
+  const { t } = useLanguage();
   const confirm = useConfirm();
   const toast = useToast();
   const [audience, setAudience] = useState('CUSTOMERS');
@@ -25,6 +21,12 @@ export default function Broadcast() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [scheduled, setScheduled] = useState([]);
+
+  const AUDIENCES = [
+    { value: 'CUSTOMERS', label: t('admin.broadcast.audienceCustomers'), icon: Users, hint: t('admin.broadcast.audienceCustomersHint') },
+    { value: 'VENUE_OWNERS', label: t('admin.broadcast.audienceVenueOwners'), icon: Store, hint: t('admin.broadcast.audienceVenueOwnersHint') },
+    { value: 'ALL', label: t('admin.broadcast.audienceAll'), icon: Globe, hint: t('admin.broadcast.audienceAllHint') },
+  ];
 
   const canSend = title.trim() && body.trim() && !sending;
 
@@ -44,20 +46,20 @@ export default function Broadcast() {
       setError('');
       try {
         await api.post('/admin/broadcast/schedule', { title: title.trim(), body: body.trim(), audience, scheduledAt });
-        toast.success('اعلان برای زمان مشخص‌شده زمان‌بندی شد.');
+        toast.success(t('admin.broadcast.scheduledSuccess'));
         setTitle('');
         setBody('');
         setScheduledAt('');
         refreshScheduled();
       } catch (err) {
-        setError(err.response?.data?.message || 'زمان‌بندی اعلان با خطا مواجه شد.');
+        setError(err.response?.data?.message || t('admin.broadcast.scheduleFailed'));
       } finally {
         setSending(false);
       }
       return;
     }
 
-    if (!(await confirm('این اعلان برای همه‌ی مخاطبان انتخاب‌شده ارسال شود؟'))) return;
+    if (!(await confirm(t('admin.broadcast.sendConfirm')))) return;
     setSending(true);
     setError('');
     setResult(null);
@@ -67,14 +69,14 @@ export default function Broadcast() {
       setTitle('');
       setBody('');
     } catch (err) {
-      setError(err.response?.data?.message || 'ارسال اعلان با خطا مواجه شد.');
+      setError(err.response?.data?.message || t('admin.broadcast.sendFailed'));
     } finally {
       setSending(false);
     }
   }
 
   async function cancelScheduled(id) {
-    if (!(await confirm('این اعلان زمان‌بندی‌شده لغو شود؟', { danger: true }))) return;
+    if (!(await confirm(t('admin.broadcast.cancelScheduledConfirm'), { danger: true }))) return;
     await api.delete(`/admin/broadcast/scheduled/${id}`);
     refreshScheduled();
   }
@@ -88,14 +90,14 @@ export default function Broadcast() {
           <Megaphone size={24} />
         </span>
         <div>
-          <h2 className="text-lg font-extrabold">اعلان همگانی</h2>
-          <p className="text-sm text-white/55 mt-0.5">یک پیام برای همه‌ی کاربران — همین حالا یا زمان‌بندی‌شده.</p>
+          <h2 className="text-lg font-extrabold">{t('admin.broadcast.title')}</h2>
+          <p className="text-sm text-white/55 mt-0.5">{t('admin.broadcast.subtitle')}</p>
         </div>
       </div>
 
       <Card className="space-y-4">
         <div>
-          <label className="block text-xs font-bold text-ink/50 mb-2">مخاطبان</label>
+          <label className="block text-xs font-bold text-ink/50 mb-2">{t('admin.broadcast.audienceLabel')}</label>
           <div className="grid grid-cols-3 gap-2">
             {AUDIENCES.map((a) => {
               const Icon = a.icon;
@@ -121,24 +123,24 @@ export default function Broadcast() {
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-ink/50 mb-2">عنوان</label>
+          <label className="block text-xs font-bold text-ink/50 mb-2">{t('admin.broadcast.titleLabel')}</label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             maxLength={120}
-            placeholder="مثلاً: تخفیف ویژه پاییزی!"
+            placeholder={t('admin.broadcast.titlePlaceholder')}
             className="glass-input w-full rounded-xl px-4 py-2.5 text-sm"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-ink/50 mb-2">متن پیام</label>
+          <label className="block text-xs font-bold text-ink/50 mb-2">{t('admin.broadcast.messageLabel')}</label>
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
             maxLength={500}
             rows={4}
-            placeholder="متن اعلانی که به کاربران نمایش داده می‌شود…"
+            placeholder={t('admin.broadcast.messagePlaceholder')}
             className="glass-input w-full rounded-xl px-4 py-2.5 text-sm resize-none"
           />
           <p className="text-[11px] text-ink/35 mt-1 text-left">{body.length}/۵۰۰</p>
@@ -147,7 +149,7 @@ export default function Broadcast() {
         <div>
           <label className="flex items-center gap-1.5 text-xs font-bold text-ink/50 mb-2">
             <Clock size={13} />
-            زمان‌بندی برای بعداً (اختیاری)
+            {t('admin.broadcast.scheduleLaterLabel')}
           </label>
           <input
             type="datetime-local"
@@ -162,7 +164,7 @@ export default function Broadcast() {
         {result !== null && (
           <p className="text-sm text-green-700 bg-green-50 rounded-xl px-3 py-2 flex items-center gap-2">
             <CheckCircle2 size={16} />
-            اعلان با موفقیت برای {result.toLocaleString('fa-IR')} کاربر ارسال شد.
+            {t('admin.broadcast.sentSuccessPrefix')} {result.toLocaleString('fa-IR')} {t('admin.broadcast.sentSuccessSuffix')}
           </p>
         )}
 
@@ -173,13 +175,13 @@ export default function Broadcast() {
           className="btn-gold w-full py-3 disabled:opacity-50"
         >
           {scheduledAt ? <Clock size={17} /> : <Send size={17} />}
-          {sending ? 'در حال پردازش…' : scheduledAt ? 'زمان‌بندی اعلان' : 'ارسال اعلان'}
+          {sending ? t('admin.broadcast.processing') : scheduledAt ? t('admin.broadcast.scheduleButton') : t('admin.broadcast.sendButton')}
         </button>
       </Card>
 
       {scheduled.filter((s) => s.status === 'PENDING').length > 0 && (
         <Card>
-          <h3 className="font-bold text-ink text-sm mb-3">اعلان‌های زمان‌بندی‌شده</h3>
+          <h3 className="font-bold text-ink text-sm mb-3">{t('admin.broadcast.scheduledListTitle')}</h3>
           <div className="space-y-2">
             {scheduled
               .filter((s) => s.status === 'PENDING')
@@ -195,7 +197,7 @@ export default function Broadcast() {
                     type="button"
                     onClick={() => cancelScheduled(s.id)}
                     className="shrink-0 text-ink/40 hover:text-red-600"
-                    aria-label="لغو"
+                    aria-label={t('admin.broadcast.cancelAria')}
                   >
                     <X size={16} />
                   </button>

@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../../services/api';
+import { useLanguage } from '../../context/LanguageContext';
 
 // Narrow (80mm) monospace receipt formatted for thermal kitchen printers.
 // Most thermal printers register as a normal OS print driver, so the
 // browser's own print dialog (triggered automatically on load) is enough —
 // no raw ESC/POS byte-wrangling or native driver needed.
 export default function ReceiptPrint() {
+  const { t } = useLanguage();
   const { orderId } = useParams();
   const [order, setOrder] = useState(null);
   const [printed, setPrinted] = useState(false);
@@ -48,11 +50,11 @@ export default function ReceiptPrint() {
 
       <h1>ET-Cafe</h1>
       <p className="muted">
-        {order.venue?.name} — سفارش #{order.id.slice(0, 8)}
+        {order.venue?.name} — {t('venue.receipt.orderNumber')} #{order.id.slice(0, 8)}
         <br />
         {new Date(order.createdAt).toLocaleString('fa-IR')}
         <br />
-        {order.table ? `میز ${order.table.tableNumber}` : order.isPickup ? 'پیک‌آپ' : 'آنلاین'}
+        {order.table ? `${t('common.table')} ${order.table.tableNumber}` : order.isPickup ? t('common.pickup') : t('common.online')}
       </p>
       <hr />
       {order.items.map((item) => (
@@ -66,16 +68,16 @@ export default function ReceiptPrint() {
       <hr />
       {Number(order.discountAmount) > 0 && (
         <div className="row">
-          <span>تخفیف</span>
+          <span>{t('venue.receipt.discount')}</span>
           <span>-{Number(order.discountAmount).toLocaleString('fa-IR')}</span>
         </div>
       )}
       <div className="row total">
-        <span>جمع کل</span>
-        <span>{Number(order.totalAmount).toLocaleString('fa-IR')} تومان</span>
+        <span>{t('venue.receipt.total')}</span>
+        <span>{Number(order.totalAmount).toLocaleString('fa-IR')} {t('common.toman')}</span>
       </div>
       <hr />
-      <p className="muted">با تشکر از سفارش شما</p>
+      <p className="muted">{t('venue.receipt.thankYou')}</p>
     </div>
   );
 }

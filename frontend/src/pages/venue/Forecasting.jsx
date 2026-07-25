@@ -1,14 +1,35 @@
 import { useEffect, useState } from 'react';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { useLanguage } from '../../context/LanguageContext';
 import api from '../../services/api';
 import Card from '../../components/Card';
 
-const DOW_FA = ['یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه', 'شنبه'];
 const CONF_COLOR = { HIGH: 'text-green-600', MEDIUM: 'text-yellow-600', LOW: 'text-red-500' };
-const CONF_LABEL = { HIGH: 'اطمینان بالا', MEDIUM: 'اطمینان متوسط', LOW: 'اطمینان پایین' };
+
+function getDowLabels(t) {
+  return [
+    t('venue.forecasting.sunday'),
+    t('venue.forecasting.monday'),
+    t('venue.forecasting.tuesday'),
+    t('venue.forecasting.wednesday'),
+    t('venue.forecasting.thursday'),
+    t('venue.forecasting.friday'),
+    t('venue.forecasting.saturday'),
+  ];
+}
+
+function getConfLabels(t) {
+  return {
+    HIGH: t('venue.forecasting.confidenceHigh'),
+    MEDIUM: t('venue.forecasting.confidenceMedium'),
+    LOW: t('venue.forecasting.confidenceLow'),
+  };
+}
 
 function ForecastBar({ predictions }) {
+  const { t } = useLanguage();
+  const DOW = getDowLabels(t);
   if (!predictions || predictions.length === 0) return null;
   const maxOrders = Math.max(...predictions.map((p) => p.forecastOrders), 1);
   const width = 560;
@@ -26,7 +47,7 @@ function ForecastBar({ predictions }) {
           <g key={p.date}>
             <rect x={x} y={y} width={barW} height={barH} fill={fill} rx={4} opacity={0.85} />
             <text x={x + barW / 2} y={height - 10} fontSize="9" textAnchor="middle" fill="#6b7280">
-              {DOW_FA[p.dayOfWeek].slice(0, 3)}
+              {DOW[p.dayOfWeek].slice(0, 3)}
             </text>
             <text x={x + barW / 2} y={y - 4} fontSize="9" textAnchor="middle" fill="#374151">
               {p.forecastOrders}
@@ -39,11 +60,14 @@ function ForecastBar({ predictions }) {
 }
 
 export default function Forecasting({ venueId: propVenueId, compact = false }) {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const vid = propVenueId || user?.venueId;
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [days, setDays] = useState(7);
+  const DOW = getDowLabels(t);
+  const CONF_LABEL = getConfLabels(t);
 
   useEffect(() => {
     if (!vid) return;
@@ -54,7 +78,7 @@ export default function Forecasting({ venueId: propVenueId, compact = false }) {
       .finally(() => setLoading(false));
   }, [vid, days]);
 
-  if (loading) return <Card><p className="text-gray-400 text-sm text-center py-4">در حال محاسبه پیش‌بینی...</p></Card>;
+  if (loading) return <Card><p className="text-gray-400 text-sm text-center py-4">{t('venue.forecasting.calculating')}</p></Card>;
   if (!data) return null;
 
   const { predictions, historyDays } = data;
@@ -65,8 +89,8 @@ export default function Forecasting({ venueId: propVenueId, compact = false }) {
     return (
       <Card>
         <div className="flex items-center justify-between mb-2">
-          <h3 className="font-semibold text-gray-800 text-sm">پیش‌بینی فروش ۷ روز آینده</h3>
-          <span className="text-xs text-gray-400">بر اساس {historyDays} روز تاریخچه</span>
+          <h3 className="font-semibold text-gray-800 text-sm">{t('venue.forecasting.next7DaysForecast')}</h3>
+          <span className="text-xs text-gray-400">{t('venue.forecasting.basedOnHistoryPrefix')} {historyDays} {t('venue.forecasting.basedOnHistorySuffix')}</span>
         </div>
         <ForecastBar predictions={predictions} />
         {highAlerts.length > 0 && (
@@ -86,7 +110,7 @@ export default function Forecasting({ venueId: propVenueId, compact = false }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-gray-800">پیش‌بینی هوشمند فروش</h2>
+        <h2 className="text-lg font-bold text-gray-800">{t('venue.forecasting.smartSalesForecast')}</h2>
         <div className="flex gap-2">
           {[7, 14, 30].map((d) => (
             <button
@@ -96,7 +120,7 @@ export default function Forecasting({ venueId: propVenueId, compact = false }) {
                 days === d ? 'bg-primary-600 text-white border-primary-600' : 'border-gray-300 text-gray-600'
               }`}
             >
-              {d} روز
+              {d} {t('venue.forecasting.daysSuffix')}
             </button>
           ))}
         </div>
@@ -104,7 +128,7 @@ export default function Forecasting({ venueId: propVenueId, compact = false }) {
 
       <Card>
         <p className="text-xs text-gray-400 mb-3">
-          مدل: میانگین متحرک وزنی + ضریب فصلی روز هفته — بر اساس {historyDays} روز داده تاریخی
+          {t('venue.forecasting.modelDescPrefix')} {historyDays} {t('venue.forecasting.modelDescSuffix')}
         </p>
         <ForecastBar predictions={predictions} />
       </Card>
@@ -115,7 +139,7 @@ export default function Forecasting({ venueId: propVenueId, compact = false }) {
             <div className="flex items-start justify-between">
               <div>
                 <p className="font-semibold text-gray-800">
-                  {DOW_FA[p.dayOfWeek]} —{' '}
+                  {DOW[p.dayOfWeek]} —{' '}
                   <span className="text-sm font-normal text-gray-500">
                     {new Date(p.date).toLocaleDateString('fa-IR')}
                   </span>
@@ -124,9 +148,9 @@ export default function Forecasting({ venueId: propVenueId, compact = false }) {
               </div>
               <div className="text-right flex-shrink-0 mr-4">
                 <p className="text-lg font-bold text-gray-900">{p.forecastOrders}</p>
-                <p className="text-xs text-gray-400">سفارش</p>
+                <p className="text-xs text-gray-400">{t('venue.forecasting.ordersSuffix')}</p>
                 <p className="text-sm font-medium text-primary-700 mt-1">
-                  {Number(p.forecastRevenue).toLocaleString('fa-IR')} تومان
+                  {Number(p.forecastRevenue).toLocaleString('fa-IR')} {t('common.toman')}
                 </p>
               </div>
             </div>

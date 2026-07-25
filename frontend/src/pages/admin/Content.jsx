@@ -3,8 +3,10 @@ import api from '../../services/api';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import FeatureFlagsPanel from '../../components/FeatureFlagsPanel';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function Content() {
+  const { t } = useLanguage();
   const [faqs, setFaqs] = useState([]);
   const [banners, setBanners] = useState([]);
   const [settings, setSettings] = useState({ radiusMeters: 100, supportedCities: [] });
@@ -74,10 +76,10 @@ export default function Content() {
       <FeatureFlagsPanel />
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">تنظیمات کشف مجموعه‌ها</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('admin.content.discoverySettingsTitle')}</h3>
         <form onSubmit={saveSettings} className="space-y-3">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">شعاع کشف (متر)</label>
+            <label className="block text-xs text-gray-500 mb-1">{t('admin.content.discoveryRadiusLabel')}</label>
             <input
               type="number"
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-40"
@@ -86,33 +88,33 @@ export default function Content() {
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">شهرهای پشتیبانی‌شده (با «،» جدا کنید)</label>
+            <label className="block text-xs text-gray-500 mb-1">{t('admin.content.supportedCitiesLabel')}</label>
             <input
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"
               value={citiesText}
               onChange={(e) => setCitiesText(e.target.value)}
             />
           </div>
-          <Button type="submit">ذخیره تنظیمات</Button>
+          <Button type="submit">{t('common.save')}</Button>
         </form>
       </Card>
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">سوالات متداول</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('admin.content.faqTitle')}</h3>
         <form onSubmit={createFaq} className="space-y-2 mb-4">
           <input
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"
-            placeholder="سوال"
+            placeholder={t('admin.content.questionPlaceholder')}
             value={faqForm.question}
             onChange={(e) => setFaqForm({ ...faqForm, question: e.target.value })}
           />
           <textarea
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"
-            placeholder="پاسخ"
+            placeholder={t('admin.content.answerPlaceholder')}
             value={faqForm.answer}
             onChange={(e) => setFaqForm({ ...faqForm, answer: e.target.value })}
           />
-          <Button type="submit">افزودن سوال</Button>
+          <Button type="submit">{t('admin.content.addQuestion')}</Button>
         </form>
         <div className="space-y-2">
           {faqs.map((faq) => (
@@ -122,26 +124,26 @@ export default function Content() {
                 <p className="text-xs text-gray-500">{faq.answer}</p>
               </div>
               <Button variant="danger" onClick={() => deleteFaq(faq.id)}>
-                حذف
+                {t('common.delete')}
               </Button>
             </div>
           ))}
-          {faqs.length === 0 && <p className="text-gray-500 text-sm">سوالی ثبت نشده است.</p>}
+          {faqs.length === 0 && <p className="text-gray-500 text-sm">{t('admin.content.noFaqsRecorded')}</p>}
         </div>
       </Card>
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">بنرها و اعلان‌ها</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('admin.content.bannersTitle')}</h3>
         <form onSubmit={createBanner} className="space-y-2 mb-4">
           <input
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"
-            placeholder="عنوان بنر"
+            placeholder={t('admin.content.bannerTitlePlaceholder')}
             value={bannerForm.title}
             onChange={(e) => setBannerForm({ ...bannerForm, title: e.target.value })}
           />
           <textarea
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"
-            placeholder="متن بنر"
+            placeholder={t('admin.content.bannerBodyPlaceholder')}
             value={bannerForm.body}
             onChange={(e) => setBannerForm({ ...bannerForm, body: e.target.value })}
           />
@@ -150,29 +152,29 @@ export default function Content() {
             value={bannerForm.audience}
             onChange={(e) => setBannerForm({ ...bannerForm, audience: e.target.value })}
           >
-            <option value="CUSTOMER">مشتریان</option>
-            <option value="VENUE">مجموعه‌ها</option>
+            <option value="CUSTOMER">{t('admin.content.audienceCustomers')}</option>
+            <option value="VENUE">{t('admin.content.audienceVenues')}</option>
           </select>
-          <Button type="submit">افزودن بنر</Button>
+          <Button type="submit">{t('admin.content.addBanner')}</Button>
         </form>
         <div className="space-y-2">
           {banners.map((banner) => (
             <div key={banner.id} className="flex items-center justify-between border-b border-gray-100 pb-2">
               <div>
                 <p className="text-sm font-medium text-gray-800">{banner.title}</p>
-                <p className="text-xs text-gray-500">{banner.audience === 'CUSTOMER' ? 'مشتریان' : 'مجموعه‌ها'}</p>
+                <p className="text-xs text-gray-500">{banner.audience === 'CUSTOMER' ? t('admin.content.audienceCustomers') : t('admin.content.audienceVenues')}</p>
               </div>
               <div className="flex items-center gap-2">
                 <Button variant={banner.isActive ? 'primary' : 'ghost'} onClick={() => toggleBanner(banner)}>
-                  {banner.isActive ? 'فعال' : 'غیرفعال'}
+                  {banner.isActive ? t('common.active') : t('common.inactive')}
                 </Button>
                 <Button variant="danger" onClick={() => deleteBanner(banner.id)}>
-                  حذف
+                  {t('common.delete')}
                 </Button>
               </div>
             </div>
           ))}
-          {banners.length === 0 && <p className="text-gray-500 text-sm">بنری ثبت نشده است.</p>}
+          {banners.length === 0 && <p className="text-gray-500 text-sm">{t('admin.content.noBannersRecorded')}</p>}
         </div>
       </Card>
     </div>
