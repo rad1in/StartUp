@@ -1,0 +1,132 @@
+import { useEffect, useState } from 'react';
+import { AlertTriangle } from 'lucide-react';
+import api from '../../services/api';
+import Card from '../../components/Card';
+import Button from '../../components/Button';
+
+const tierLabels = { FREE: 'رایگان', PRO: 'حرفه‌ای', ULTRA: 'حرفه‌ای‌پلاس' };
+
+async function downloadCsv(endpoint, filename, format = 'csv') {
+  const mime = format === 'xlsx' ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/csv';
+  const { data } = await api.get(endpoint, { params: { format }, responseType: 'blob' });
+  const url = window.URL.createObjectURL(new Blob([data], { type: mime }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename.replace(/\.csv$/, `.${format}`);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+}
+
+function ExportButtons({ endpoint, filename }) {
+  return (
+    <div className="flex gap-1">
+      <Button variant="ghost" onClick={() => downloadCsv(endpoint, filename, 'csv')}>
+        CSV
+      </Button>
+      <Button variant="ghost" onClick={() => downloadCsv(endpoint, filename, 'xlsx')}>
+        Excel
+      </Button>
+    </div>
+  );
+}
+
+export default function Reports() {
+  const [revenueByVenue, setRevenueByVenue] = useState([]);
+  const [revenueByRegion, setRevenueByRegion] = useState([]);
+  const [commissionByTier, setCommissionByTier] = useState([]);
+  const [topVenues, setTopVenues] = useState([]);
+  const [retention, setRetention] = useState(null);
+  const [fraudFlags, setFraudFlags] = useState([]);
+
+  useEffect(() => {
+    api.get('/admin/reports/revenue-by-venue').then(({ data }) => setRevenueByVenue(data));
+    api.get('/admin/reports/revenue-by-region').then(({ data }) => setRevenueByRegion(data));
+    api.get('/admin/reports/commission-by-tier').then(({ data }) => setCommissionByTier(data));
+    api.get('/admin/reports/top-venues').then(({ data }) => setTopVenues(data));
+    api.get('/admin/reports/retention').then(({ data }) => setRetention(data));
+    api.get('/admin/reports/fraud-flags').then(({ data }) => setFraudFlags(data));
+  }, []);
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold text-gray-800">درآمد به تفکیک مجموعه</h3>
+          <ExportButtons endpoint="/admin/reports/revenue-by-venue" filename="revenue-by-venue.csv" />
+        </div>
+        <div className="space-y-2">
+          {revenueByVenue.slice(0, 10).map((row) => (
+            <div key={row.venueId} className="flex items-center justify-between text-sm border-b border-gray-100 pb-1">
+              <span>{row.venueName}</span>
+              <span className="text-gray-500">{row.revenue.toLocaleString('fa-IR')} تومان</span>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold text-gray-800">درآمد به تفکیک منطقه</h3>
+          <ExportButtons endpoint="/admin/reports/revenue-by-region" filename="revenue-by-region.csv" />
+        </div>
+        <div className="space-y-2">
+          {revenueByRegion.map((row) => (
+            <div key={row.city} className="flex items-center justify-between text-sm border-b border-gray-100 pb-1">
+              <span>{row.city}</span>
+              <span className="text-gray-500">{row.revenue.toLocaleString('fa-IR')} تومان</span>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card>
+        <h3 className="font-semibold text-gray-800 mb-3">کارمزد به تفکیک پلن</h3>
+        <div className="space-y-2">
+          {commissionByTier.map((row) => (
+            <div key={row.tier} className="flex items-center justify-between text-sm border-b border-gray-100 pb-1">
+              <span>{tierLabels[row.tier] || row.tier}</span>
+              <span className="text-gray-500">{row.commission.toLocaleString('fa-IR')} تومان — {row.orderCount} سفارش</span>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card>
+        <h3 className="font-semibold text-gray-800 mb-3">پرفروش‌ترین مجموعه‌ها</h3>
+        <div className="space-y-2">
+          {topVenues.map((row, i) => (
+            <div key={row.venueId} className="flex items-center justify-between text-sm border-b border-gray-100 pb-1">
+              <span>{i + 1}. {row.venueName}</span>
+              <span className="text-gray-500">{row.revenue.toLocaleString('fa-IR')} تومان</span>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {retention && (
+        <Card>
+          <h3 className="font-semibold text-gray-800 mb-3">نرخ بازگشت مشتریان</h3>
+          <p className="text-sm text-gray-700">
+            {retention.repeatCustomers.toLocaleString('fa-IR')} از {retention.totalCustomers.toLocaleString('fa-IR')}{' '}
+            مشتری بیش از یک سفارش موفق ثبت کرده‌اند ({(retention.retentionRate * 100).toFixed(1)}٪)
+          </p>
+        </Card>
+      )}
+
+      <Card>
+        <h3 className="font-semibold text-gray-800 mb-3">هشدارهای تقلب احتمالی</h3>
+        <div className="space-y-2">
+          {fraudFlags.map((flag) => (
+            <div key={flag.venueId} className="flex items-center justify-between text-sm border-b border-gray-100 pb-1">
+              <span>{flag.venueName}</span>
+              <span className="inline-flex items-center gap-1 text-ink text-xs font-bold"><AlertTriangle size={12} />{flag.flags.join('، ')}</span>
+            </div>
+          ))}
+          {fraudFlags.length === 0 && <p className="text-gray-500 text-sm">موردی برای بررسی یافت نشد.</p>}
+        </div>
+      </Card>
+    </div>
+  );
+}

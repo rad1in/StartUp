@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#26241F"/>
+      <stop offset="1" stop-color="#141210"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.8" cy="0.05" r="1">
+      <stop offset="0" stop-color="#C9922F" stop-opacity="0.5"/>
+      <stop offset="0.55" stop-color="#C9922F" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E5C476"/>
+      <stop offset="0.5" stop-color="#C9922F"/>
+      <stop offset="1" stop-color="#AC7825"/>
+    </linearGradient>
+    <linearGradient id="goldLight" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F4E3B2"/>
+      <stop offset="1" stop-color="#D9AB4B"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="112" fill="url(#glow)"/>
+  <rect x="6" y="6" width="500" height="500" rx="106" fill="none" stroke="url(#gold)" stroke-opacity="0.55" stroke-width="4"/>
+
+  <!-- steam -->
+  <path d="M215 120 c-14 22 14 34 0 56 M256 104 c-14 22 14 34 0 56 M297 120 c-14 22 14 34 0 56"
+        fill="none" stroke="url(#goldLight)" stroke-width="14" stroke-linecap="round" opacity="0.9"/>
+
+  <!-- cup body -->
+  <path d="M150 216 h212 a0 0 0 0 1 0 0 v52 c0 64 -47 106 -106 106 s-106 -42 -106 -106 z"
+        fill="url(#gold)"/>
+  <!-- crema line -->
+  <path d="M150 216 h212 v18 h-212 z" fill="#F4E3B2" opacity="0.85"/>
+  <!-- handle -->
+  <path d="M362 238 h20 c30 0 50 20 50 48 s-20 48 -50 48 h-26"
+        fill="none" stroke="url(#gold)" stroke-width="22" stroke-linecap="round"/>
+
+  <!-- saucer -->
+  <path d="M130 400 h252 c0 20 -28 30 -126 30 s-126 -10 -126 -30 z" fill="url(#gold)" opacity="0.95"/>
+</svg>

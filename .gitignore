@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+
+# Env files with real secrets
+.env
+.env.local
+*.env.local
+
+# Backend
+backend/dist/
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/backups/
+backend_dev.log
+
+# Frontend
+frontend/dist/
+
+# Mobile / Expo
+mobile/.expo/
+mobile/dist/
+mobile/web-build/
+mobile/expo-env.d.ts
+mobile/.git.bak/
+mobile/ios/
+mobile/android/
+*.jks
+*.p8
+*.p12
+*.mobileprovision
+
+# Misc logs / backups / editor
+*.log
+mysql_start.log
+mobile_backup_*/
+.DS_Store
+.claude/
