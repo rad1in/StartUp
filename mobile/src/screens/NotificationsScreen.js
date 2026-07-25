@@ -1,9 +1,9 @@
 import { useCallback, useMemo, useState } from 'react';
-import { SectionList, View } from 'react-native';
+import { SectionList, Switch, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import api from '../api/client';
-import { Button, EmptyState, Icon, Loading, Muted, Row, T, Title } from '../components/UI';
+import { Card, EmptyState, Icon, Loading, Muted, Row, T, Title, Button } from '../components/UI';
 import { PressableScale } from '../components/motion';
 import { useI18n } from '../i18n';
 import { colors, fonts, radius } from '../theme';
@@ -17,6 +17,14 @@ const TYPE_META = {
   LOW_REVIEW: { icon: 'star', color: colors.red },
 };
 
+const CUSTOMER_CATEGORIES = ['ORDER_STATUS', 'PROMO', 'LOYALTY', 'SYSTEM'];
+const CATEGORY_LABEL_KEYS = {
+  ORDER_STATUS: 'notifCategoryOrderStatus',
+  PROMO: 'notifCategoryPromo',
+  LOYALTY: 'notifCategoryLoyalty',
+  SYSTEM: 'notifCategorySystem',
+};
+
 function isToday(dateStr) {
   const d = new Date(dateStr);
   const now = new Date();
@@ -27,6 +35,7 @@ export default function NotificationsScreen() {
   const router = useRouter();
   const { t, date } = useI18n();
   const [notifications, setNotifications] = useState(null);
+  const [preferences, setPreferences] = useState([]);
 
   const load = useCallback(async () => {
     try {
@@ -35,7 +44,22 @@ export default function NotificationsScreen() {
     } catch {
       setNotifications([]);
     }
+    try {
+      const { data: prefs } = await api.get('/notifications/preferences');
+      setPreferences(prefs.filter((p) => CUSTOMER_CATEGORIES.includes(p.category)));
+    } catch {
+      setPreferences([]);
+    }
   }, []);
+
+  async function togglePreference(category, enabled) {
+    try {
+      await api.patch('/notifications/preferences', { category, enabled });
+      setPreferences((prev) => prev.map((p) => (p.category === category ? { ...p, enabled } : p)));
+    } catch {
+      // non-critical background preference — a failed toggle just won't stick, no need to interrupt the user
+    }
+  }
 
   useFocusEffect(
     useCallback(() => {
@@ -79,12 +103,30 @@ export default function NotificationsScreen() {
         stickySectionHeadersEnabled={false}
         contentContainerStyle={{ padding: 16, paddingBottom: 60 }}
         ListHeaderComponent={
-          <Row between style={{ marginBottom: 18 }}>
-            <Title>{t('notifications')}</Title>
-            {notifications.some((x) => !x.isRead) && (
-              <Button small variant="ghost" icon="check-circle" title={t('markAllRead')} onPress={markAllRead} />
+          <View style={{ marginBottom: 18 }}>
+            <Row between style={{ marginBottom: 18 }}>
+              <Title>{t('notifications')}</Title>
+              {notifications.some((x) => !x.isRead) && (
+                <Button small variant="ghost" icon="check-circle" title={t('markAllRead')} onPress={markAllRead} />
+              )}
+            </Row>
+
+            {preferences.length > 0 && (
+              <Card style={{ marginBottom: 4 }}>
+                <T style={{ fontFamily: fonts.bold, fontSize: 14, marginBottom: 10 }}>{t('notifPreferencesTitle')}</T>
+                {preferences.map((pref) => (
+                  <Row key={pref.category} between style={{ paddingVertical: 6 }}>
+                    <T style={{ fontSize: 13 }}>{t(CATEGORY_LABEL_KEYS[pref.category] || pref.category)}</T>
+                    <Switch
+                      value={pref.enabled}
+                      onValueChange={(v) => togglePreference(pref.category, v)}
+                      trackColor={{ false: colors.surfaceHigh, true: colors.gold300 }}
+                    />
+                  </Row>
+                ))}
+              </Card>
             )}
-          </Row>
+          </View>
         }
         ListEmptyComponent={<EmptyState icon="bell-off" title={t('noNotifications')} />}
         renderSectionHeader={({ section }) => (

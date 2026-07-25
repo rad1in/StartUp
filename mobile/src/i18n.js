@@ -335,6 +335,11 @@ const translations = {
     // Notifications
     markAllRead: 'Mark all read',
     noNotifications: 'No notifications',
+    notifPreferencesTitle: 'Notification settings',
+    notifCategoryOrderStatus: 'Order status',
+    notifCategoryPromo: 'Discounts & promotions',
+    notifCategoryLoyalty: 'Loyalty points',
+    notifCategorySystem: 'System',
     today: 'Today',
     earlier: 'Earlier',
     // Profile
@@ -972,6 +977,11 @@ const translations = {
     remove: 'حذف',
     markAllRead: 'خواندن همه',
     noNotifications: 'اعلانی ندارید',
+    notifPreferencesTitle: 'تنظیمات اعلان‌ها',
+    notifCategoryOrderStatus: 'وضعیت سفارش',
+    notifCategoryPromo: 'تخفیف و کمپین',
+    notifCategoryLoyalty: 'امتیاز وفاداری',
+    notifCategorySystem: 'سیستمی',
     today: 'امروز',
     earlier: 'قبل‌تر',
     changePassword: 'تغییر رمز عبور',
@@ -1625,6 +1635,11 @@ const translations = {
     // Notifications
     markAllRead: 'تحديد الكل كمقروء',
     noNotifications: 'لا توجد إشعارات',
+    notifPreferencesTitle: 'إعدادات الإشعارات',
+    notifCategoryOrderStatus: 'حالة الطلب',
+    notifCategoryPromo: 'الخصومات والعروض',
+    notifCategoryLoyalty: 'نقاط الولاء',
+    notifCategorySystem: 'النظام',
     today: 'اليوم',
     earlier: 'سابقاً',
     // Profile
@@ -2278,6 +2293,11 @@ const translations = {
     // Notifications
     markAllRead: 'Tümünü okundu işaretle',
     noNotifications: 'Bildirim yok',
+    notifPreferencesTitle: 'Bildirim ayarları',
+    notifCategoryOrderStatus: 'Sipariş durumu',
+    notifCategoryPromo: 'İndirimler ve kampanyalar',
+    notifCategoryLoyalty: 'Sadakat puanları',
+    notifCategorySystem: 'Sistem',
     today: 'Bugün',
     earlier: 'Daha önce',
     // Profile
