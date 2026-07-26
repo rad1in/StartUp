@@ -124,7 +124,6 @@ function RootStack() {
       <Stack.Screen name="favorites" options={screenHeader(t('favorites'))} />
       <Stack.Screen name="notifications" options={screenHeader(t('notifications'))} />
       <Stack.Screen name="reviews" options={screenHeader(t('myReviews'))} />
-      <Stack.Screen name="addresses" options={screenHeader(t('myAddresses'))} />
       <Stack.Screen name="support" options={screenHeader(t('support'))} />
       <Stack.Screen name="danger-zone" options={screenHeader(t('accountDangerZone'))} />
       <Stack.Screen name="sessions" options={screenHeader(t('sessionsAnd2fa'))} />

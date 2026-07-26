@@ -2,10 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // English is the app's main language; Persian/Arabic/Turkish are available
-// from the account screen. Layout direction follows the language. Only a
-// core subset of keys (tabs, common actions, auth flow, home) has full
-// Arabic/Turkish translations so far — everything else falls back to
-// English via the `t()` lookup below, same tradeoff made on the web app.
+// from the account screen. Layout direction follows the language.
 const STORAGE_KEY = 'etcafe.lang';
 
 export const LANGUAGES = [
