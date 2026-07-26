@@ -1,7 +1,9 @@
 import { Modal, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { IconButton } from './UI';
 import { colors } from '../theme';
+import { WEB_PANEL_BASE } from '../api/client';
 
 // hCaptcha has no first-party React Native SDK, so the widget is rendered
 // inside a small embedded HTML page loaded in a WebView — the standard
@@ -65,6 +67,7 @@ function buildHtml(siteKey) {
 }
 
 export default function HCaptchaModal({ visible, siteKey, onVerify, onClose }) {
+  const insets = useSafeAreaInsets();
   if (!visible) return null;
 
   function handleMessage(event) {
@@ -81,11 +84,15 @@ export default function HCaptchaModal({ visible, siteKey, onVerify, onClose }) {
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <IconButton name="x" onPress={onClose} color={colors.ink} />
       </View>
       <WebView
-        source={{ html: buildHtml(siteKey) }}
+        // A baseUrl matching the web app's real origin is required — hCaptcha
+        // validates the requesting hostname against the sitekey's allowed
+        // domains, and a bare `source: {html}` WebView otherwise loads from
+        // about:blank/file://, which hCaptcha rejects with "invalid-data".
+        source={{ html: buildHtml(siteKey), baseUrl: WEB_PANEL_BASE }}
         onMessage={handleMessage}
         style={styles.webview}
       />
@@ -97,7 +104,8 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    padding: 12,
+    paddingHorizontal: 12,
+    paddingBottom: 12,
     backgroundColor: colors.bg,
   },
   webview: { flex: 1, backgroundColor: colors.bg },
