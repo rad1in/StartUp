@@ -4,9 +4,10 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { GAMIFICATION_ICON_NAMES, GamificationIcon } from '../../utils/gamificationIcons';
 
-const emptyTier = { name: '', icon: '', minSpend: 0, minOrders: 0, pointsMultiplier: 1.0, sortOrder: 0 };
-const emptyBadge = { name: '', icon: '', description: '', criteriaType: 'TOTAL_ORDERS', threshold: 1, isActive: true };
+const emptyTier = { name: '', icon: GAMIFICATION_ICON_NAMES[0], minSpend: 0, minOrders: 0, pointsMultiplier: 1.0, sortOrder: 0 };
+const emptyBadge = { name: '', icon: GAMIFICATION_ICON_NAMES[0], description: '', criteriaType: 'TOTAL_ORDERS', threshold: 1, isActive: true };
 
 export default function Gamification() {
   const { t } = useLanguage();
@@ -116,7 +117,9 @@ export default function Gamification() {
         <h2 className="text-base font-semibold text-gray-800 mb-4">{t('admin.gamification.loyaltyTiersTitle')}</h2>
         <form onSubmit={saveTier} className="grid sm:grid-cols-3 gap-3 mb-4">
           <input className="border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder={t('admin.gamification.tierNamePlaceholder')} value={tierForm.name} onChange={(e) => setTierForm({ ...tierForm, name: e.target.value })} required />
-          <input className="border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder={t('admin.gamification.iconPlaceholder')} value={tierForm.icon} onChange={(e) => setTierForm({ ...tierForm, icon: e.target.value })} />
+          <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm flex items-center gap-2" value={tierForm.icon} onChange={(e) => setTierForm({ ...tierForm, icon: e.target.value })}>
+            {GAMIFICATION_ICON_NAMES.map((name) => <option key={name} value={name}>{name}</option>)}
+          </select>
           <input type="number" className="border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder={t('admin.gamification.minSpendPlaceholder')} value={tierForm.minSpend} onChange={(e) => setTierForm({ ...tierForm, minSpend: Number(e.target.value) })} />
           <input type="number" className="border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder={t('admin.gamification.minOrdersPlaceholder')} value={tierForm.minOrders} onChange={(e) => setTierForm({ ...tierForm, minOrders: Number(e.target.value) })} />
           <input type="number" step="0.01" className="border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder={t('admin.gamification.pointsMultiplierPlaceholder')} value={tierForm.pointsMultiplier} onChange={(e) => setTierForm({ ...tierForm, pointsMultiplier: Number(e.target.value) })} />
@@ -130,7 +133,7 @@ export default function Gamification() {
           {tiers.map((tier) => (
             <div key={tier.id} className="py-3 flex items-center justify-between">
               <div>
-                <p className="font-medium">{tier.icon} {tier.name}</p>
+                <p className="font-medium flex items-center gap-1.5"><GamificationIcon name={tier.icon} size={16} />{tier.name}</p>
                 <p className="text-xs text-gray-500">
                   {t('admin.gamification.minSpendLabel')}: {Number(tier.minSpend).toLocaleString('fa-IR')} — {t('admin.gamification.minOrdersLabel')}: {tier.minOrders} — {t('admin.gamification.pointsMultiplierLabel')}: {tier.pointsMultiplier} {t('admin.gamification.timesSuffix')}
                 </p>
@@ -150,7 +153,9 @@ export default function Gamification() {
         <h2 className="text-base font-semibold text-gray-800 mb-4">{t('admin.gamification.achievementBadgesTitle')}</h2>
         <form onSubmit={saveBadge} className="grid sm:grid-cols-3 gap-3 mb-4">
           <input className="border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder={t('admin.gamification.badgeNamePlaceholder')} value={badgeForm.name} onChange={(e) => setBadgeForm({ ...badgeForm, name: e.target.value })} required />
-          <input className="border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder={t('admin.gamification.iconPlaceholder')} value={badgeForm.icon} onChange={(e) => setBadgeForm({ ...badgeForm, icon: e.target.value })} />
+          <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm" value={badgeForm.icon} onChange={(e) => setBadgeForm({ ...badgeForm, icon: e.target.value })}>
+            {GAMIFICATION_ICON_NAMES.map((name) => <option key={name} value={name}>{name}</option>)}
+          </select>
           <input className="border border-gray-300 rounded-lg px-3 py-2 text-sm sm:col-span-3" placeholder={t('admin.gamification.descriptionPlaceholder')} value={badgeForm.description} onChange={(e) => setBadgeForm({ ...badgeForm, description: e.target.value })} required />
           <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm" value={badgeForm.criteriaType} onChange={(e) => setBadgeForm({ ...badgeForm, criteriaType: e.target.value })}>
             {Object.entries(CRITERIA_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
@@ -169,7 +174,7 @@ export default function Gamification() {
           {badges.map((badge) => (
             <div key={badge.id} className="py-3 flex items-center justify-between">
               <div>
-                <p className="font-medium">{badge.icon} {badge.name}</p>
+                <p className="font-medium flex items-center gap-1.5"><GamificationIcon name={badge.icon} size={16} />{badge.name}</p>
                 <p className="text-xs text-gray-500">
                   {CRITERIA_LABELS[badge.criteriaType]} ≥ {Number(badge.threshold).toLocaleString('fa-IR')} — {badge.description}
                 </p>

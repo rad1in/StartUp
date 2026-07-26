@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Trophy } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -32,8 +33,8 @@ function BranchComparisonChart({ branches }) {
             <div className="space-y-1.5">
               {sorted.map((b, i) => (
                 <div key={b.venueId} className="flex items-center gap-2">
-                  <span className="text-xs text-gray-600 w-28 truncate shrink-0">
-                    {i === 0 && Number(b[metric.key]) > 0 && '🏆 '}
+                  <span className="text-xs text-gray-600 w-28 truncate shrink-0 inline-flex items-center gap-1">
+                    {i === 0 && Number(b[metric.key]) > 0 && <Trophy size={11} className="text-accent-600 shrink-0" />}
                     {b.venueName}
                   </span>
                   <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">

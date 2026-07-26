@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
-import { CheckCircle, XCircle, Heart, RotateCcw, Gift, CalendarClock, BellRing, Coffee } from 'lucide-react';
+import { CheckCircle, XCircle, Heart, RotateCcw, Gift, CalendarClock, BellRing, Coffee, Zap, Sparkles } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import { useTableSession } from '../../hooks/useTableSession';
@@ -736,7 +736,7 @@ export default function VenueMenuPage() {
 
       {happyHour && !venue.isTemporarilyClosed && (
         <div className="mb-4 rounded-2xl bg-gradient-to-l from-accent-500 to-accent-600 text-white px-4 py-3 flex items-center gap-3 shadow-accent-glow animate-fade-up">
-          <span className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0 text-lg">⚡</span>
+          <span className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0"><Zap size={18} /></span>
           <div>
             <p className="font-extrabold text-sm">{t('menu.happyHourActive')}</p>
             <p className="text-xs text-white/85 mt-0.5">
@@ -758,7 +758,7 @@ export default function VenueMenuPage() {
       {recommendations.length > 0 && (
         <div className="mb-5">
           <p className="text-sm font-bold text-ink mb-2.5 flex items-center gap-1.5">
-            ✨ {t('menu.recommendationsTitle')}
+            <Sparkles size={15} className="text-accent-600" /> {t('menu.recommendationsTitle')}
           </p>
           <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-1">
             {recommendations.map((item) => (

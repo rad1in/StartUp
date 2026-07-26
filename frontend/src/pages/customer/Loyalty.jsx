@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import api from '../../services/api';
 import Card from '../../components/Card';
 import { useLanguage } from '../../context/LanguageContext';
+import { GamificationIcon } from '../../utils/gamificationIcons';
 
 export default function Loyalty() {
   const { t } = useLanguage();
@@ -29,8 +30,9 @@ export default function Loyalty() {
             <div>
               <h3 className="font-semibold text-gray-800">{t('loyalty.tierTitle')}</h3>
               {progress.currentTier ? (
-                <p className="text-lg font-bold text-primary-700 mt-1">
-                  {progress.currentTier.tierIcon} {progress.currentTier.tierName}
+                <p className="text-lg font-bold text-primary-700 mt-1 flex items-center gap-1.5">
+                  <GamificationIcon name={progress.currentTier.tierIcon} size={18} />
+                  {progress.currentTier.tierName}
                 </p>
               ) : (
                 <p className="text-sm text-gray-500 mt-1">{t('loyalty.noTier')}</p>
@@ -53,7 +55,10 @@ export default function Loyalty() {
               return (
                 <div key={tier.id} className={`rounded-lg p-3 border ${isCurrent ? 'border-primary-400 bg-primary-50' : 'border-gray-200'}`}>
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm font-medium">{tier.icon} {tier.name}</span>
+                    <span className="text-sm font-medium flex items-center gap-1.5">
+                      <GamificationIcon name={tier.icon} size={15} />
+                      {tier.name}
+                    </span>
                     {isCurrent && <span className="text-xs bg-primary-600 text-white px-2 py-0.5 rounded-full">{t('loyalty.currentTier')}</span>}
                   </div>
                   {pct < 100 && (
@@ -98,7 +103,7 @@ export default function Loyalty() {
                     earned ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200 opacity-40 grayscale'
                   }`}
                 >
-                  <span className="text-2xl">{badge.icon}</span>
+                  <GamificationIcon name={badge.icon} size={24} className={earned ? 'text-yellow-600' : 'text-gray-400'} />
                   <p className="text-xs font-medium text-gray-700 mt-1 leading-tight">{badge.name}</p>
                   {earned && (
                     <p className="text-[10px] text-green-600 mt-0.5">

@@ -534,9 +534,9 @@ async function main() {
   const [existingTiers] = await pool.query('SELECT id FROM `TierConfig` LIMIT 1');
   if (existingTiers.length === 0) {
     const tierData = [
-      { name: 'برنز', icon: '🥉', minSpend: 0,      minOrders: 0,  pointsMultiplier: 1.00, perks: null,                                                          sortOrder: 1 },
-      { name: 'نقره', icon: '🥈', minSpend: 500000, minOrders: 5,  pointsMultiplier: 1.25, perks: ['تخفیف ۵٪ در سفارش‌های بعدی'],                               sortOrder: 2 },
-      { name: 'طلا',  icon: '🥇', minSpend: 2000000,minOrders: 20, pointsMultiplier: 1.50, perks: ['تخفیف ۱۰٪ در سفارش‌های بعدی', 'اولویت پشتیبانی'],           sortOrder: 3 },
+      { name: 'برنز', icon: 'medal',  minSpend: 0,      minOrders: 0,  pointsMultiplier: 1.00, perks: null,                                                          sortOrder: 1 },
+      { name: 'نقره', icon: 'award',  minSpend: 500000, minOrders: 5,  pointsMultiplier: 1.25, perks: ['تخفیف ۵٪ در سفارش‌های بعدی'],                               sortOrder: 2 },
+      { name: 'طلا',  icon: 'trophy', minSpend: 2000000,minOrders: 20, pointsMultiplier: 1.50, perks: ['تخفیف ۱۰٪ در سفارش‌های بعدی', 'اولویت پشتیبانی'],           sortOrder: 3 },
     ];
     for (const t of tierData) {
       await pool.query(
@@ -550,11 +550,11 @@ async function main() {
   const [existingBadges] = await pool.query('SELECT id FROM `BadgeConfig` LIMIT 1');
   if (existingBadges.length === 0) {
     const badgeData = [
-      { name: 'اولین قدم',     icon: '🎉', description: 'اولین سفارش موفق خود را ثبت کردید!',                 criteriaType: 'TOTAL_ORDERS',        threshold: 1      },
-      { name: 'مشتری وفادار',  icon: '🏅', description: 'بیش از ۱۰ سفارش در یک کافه ثبت کردید.',              criteriaType: 'ORDERS_AT_VENUE',     threshold: 10     },
-      { name: 'کاشف',          icon: '🗺️', description: 'از ۵ کافه مختلف سفارش دادید.',                       criteriaType: 'DISTINCT_VENUES',     threshold: 5      },
-      { name: 'مشتری ماه',     icon: '📅', description: 'اولین سفارش ماه جاری در یک کافه را ثبت کردید.',     criteriaType: 'FIRST_ORDER_OF_MONTH',threshold: 1      },
-      { name: 'ولخرج بزرگ',   icon: '💎', description: 'در مجموع بیش از ۵۰۰,۰۰۰ تومان خرید کردید.',          criteriaType: 'TOTAL_SPEND',         threshold: 500000 },
+      { name: 'اولین قدم',     icon: 'flag',     description: 'اولین سفارش موفق خود را ثبت کردید!',                 criteriaType: 'TOTAL_ORDERS',        threshold: 1      },
+      { name: 'مشتری وفادار',  icon: 'award',    description: 'بیش از ۱۰ سفارش در یک کافه ثبت کردید.',              criteriaType: 'ORDERS_AT_VENUE',     threshold: 10     },
+      { name: 'کاشف',          icon: 'compass',  description: 'از ۵ کافه مختلف سفارش دادید.',                       criteriaType: 'DISTINCT_VENUES',     threshold: 5      },
+      { name: 'مشتری ماه',     icon: 'calendar', description: 'اولین سفارش ماه جاری در یک کافه را ثبت کردید.',     criteriaType: 'FIRST_ORDER_OF_MONTH',threshold: 1      },
+      { name: 'ولخرج بزرگ',   icon: 'gem',      description: 'در مجموع بیش از ۵۰۰,۰۰۰ تومان خرید کردید.',          criteriaType: 'TOTAL_SPEND',         threshold: 500000 },
     ];
     for (const b of badgeData) {
       await pool.query(

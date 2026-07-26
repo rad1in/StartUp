@@ -102,7 +102,7 @@ async function runForVenue(venueId, config) {
     await createNotification(
       candidate.customerId,
       'PROMO',
-      'دلمون برات تنگ شده بود! 🎁',
+      'دلمون برات تنگ شده بود!',
       `کد ${coupon.code} رو استفاده کن و ${discountLabel} تخفیف بگیر — تا ۱۴ روز اعتبار داره.`,
       { couponCode: coupon.code }
     );

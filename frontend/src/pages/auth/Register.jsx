@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { XCircle, Coffee, Mail, Lock, Eye, EyeOff, User, Phone } from 'lucide-react';
+import { XCircle, Coffee, Mail, Lock, Eye, EyeOff, User, Phone, Gift } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useCaptcha } from '../../hooks/useCaptcha';
 import { useLanguage } from '../../context/LanguageContext';
@@ -47,7 +47,7 @@ export default function Register() {
         <h2 className="text-2xl font-black text-ink">{t('register.welcome')}</h2>
         <p className="text-sm text-ink/50 mt-1">{t('register.subtitle')}</p>
         {referralCode && (
-          <p className="mt-3 chip-gold inline-flex">{t('register.referralBadge')}</p>
+          <p className="mt-3 chip-gold inline-flex items-center gap-1.5"><Gift size={14} />{t('register.referralBadge')}</p>
         )}
       </div>
 

@@ -166,7 +166,7 @@ async function createTier(data) {
   const id = randomUUID();
   await pool.query(
     'INSERT INTO `TierConfig` (id, name, icon, minSpend, minOrders, pointsMultiplier, perks, sortOrder) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    [id, data.name, data.icon || '🥉', data.minSpend || 0, data.minOrders || 0, data.pointsMultiplier || 1.0, data.perks ? JSON.stringify(data.perks) : null, data.sortOrder || 0]
+    [id, data.name, data.icon || 'medal', data.minSpend || 0, data.minOrders || 0, data.pointsMultiplier || 1.0, data.perks ? JSON.stringify(data.perks) : null, data.sortOrder || 0]
   );
   const [[row]] = await pool.query('SELECT * FROM `TierConfig` WHERE id = ?', [id]);
   return row;
@@ -195,7 +195,7 @@ async function createBadge(data) {
   const id = randomUUID();
   await pool.query(
     'INSERT INTO `BadgeConfig` (id, name, icon, description, criteriaType, threshold, isActive) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [id, data.name, data.icon || '🏅', data.description, data.criteriaType, data.threshold || 1, data.isActive ?? true]
+    [id, data.name, data.icon || 'award', data.description, data.criteriaType, data.threshold || 1, data.isActive ?? true]
   );
   const [[row]] = await pool.query('SELECT * FROM `BadgeConfig` WHERE id = ?', [id]);
   return row;
