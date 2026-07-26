@@ -16,7 +16,15 @@ let table;
 let createdOrderId;
 
 test.before(async () => {
-  const [items] = await pool.query('SELECT id, price FROM `MenuItem` WHERE venueId = ? LIMIT 1', [VENUE_ID]);
+  // Some seeded items (لاته وانیل، کاپوچینو) have a required "Size" modifier
+  // group attached — pick one without any modifiers so a plain order (no
+  // modifierSelections) is valid, matching what these tests exercise.
+  const [items] = await pool.query(
+    `SELECT mi.id, mi.price FROM \`MenuItem\` mi
+     LEFT JOIN \`MenuItemModifier\` mm ON mm.menuItemId = mi.id
+     WHERE mi.venueId = ? AND mm.menuItemId IS NULL LIMIT 1`,
+    [VENUE_ID]
+  );
   menuItem = items[0];
   const [tables] = await pool.query('SELECT id FROM `VenueTable` WHERE venueId = ? LIMIT 1', [VENUE_ID]);
   table = tables[0];

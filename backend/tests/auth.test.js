@@ -3,11 +3,22 @@ const assert = require('node:assert/strict');
 const request = require('supertest');
 const app = require('../src/app');
 const { pool } = require('../src/lib/db');
+const { getSetting, setSetting } = require('../src/lib/platformSettings');
 
 const TEST_EMAIL = `test-auth-${Date.now()}@et-cafe.test`;
 const TEST_PASSWORD = 'Password123!';
 
+// These are plain auth-flow tests, not captcha tests — force captcha off for
+// the duration regardless of whatever an admin has toggled it to, so this
+// suite's pass/fail never depends on ambient platform config.
+let captchaWasEnabled;
+test.before(async () => {
+  captchaWasEnabled = await getSetting('captcha.enabled', false);
+  if (captchaWasEnabled) await setSetting('captcha.enabled', false);
+});
+
 test.after(async () => {
+  if (captchaWasEnabled) await setSetting('captcha.enabled', true);
   await pool.query('DELETE FROM `User` WHERE email = ?', [TEST_EMAIL]);
   await pool.end();
 });
