@@ -4,6 +4,7 @@ import { CheckCircle, XCircle } from 'lucide-react';
 import api from '../../services/api';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
+import { useLanguage } from '../../context/LanguageContext';
 
 // Where any redirect-style gateway (AqayePardakht, ZarinPal, Zibal — Saman
 // and PayPing POST straight to a backend route instead) sends the customer's
@@ -15,6 +16,7 @@ import Button from '../../components/Button';
 export default function PaymentCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [state, setState] = useState('checking'); // checking | success | failed
   const [order, setOrder] = useState(null);
 
@@ -68,17 +70,17 @@ export default function PaymentCallback() {
   return (
     <div className="max-w-md mx-auto mt-16 px-4">
       <Card className="text-center py-10">
-        {state === 'checking' && <p className="text-gray-500">در حال بررسی نتیجه پرداخت...</p>}
+        {state === 'checking' && <p className="text-gray-500">{t('paymentCallback.checking')}</p>}
 
         {state === 'success' && (
           <>
             <CheckCircle size={48} className="mx-auto text-green-600 mb-4" />
-            <h2 className="font-bold text-ink text-lg mb-2">پرداخت با موفقیت انجام شد</h2>
+            <h2 className="font-bold text-ink text-lg mb-2">{t('menu.paymentSuccess')}</h2>
             <p className="text-sm text-gray-500 mb-6">
-              {order ? 'سفارش شما ثبت و برای کافه ارسال شد.' : 'موجودی حساب شما به‌روز شد.'}
+              {order ? t('paymentCallback.orderSent') : t('paymentCallback.walletUpdated')}
             </p>
             <Button onClick={() => navigate(order ? `/account/orders/${order.id}` : '/')}>
-              {order ? 'مشاهده سفارش' : 'بازگشت به صفحه اصلی'}
+              {order ? t('paymentCallback.viewOrder') : t('menu.backToHome')}
             </Button>
           </>
         )}
@@ -86,10 +88,10 @@ export default function PaymentCallback() {
         {state === 'failed' && (
           <>
             <XCircle size={48} className="mx-auto text-red-600 mb-4" />
-            <h2 className="font-bold text-ink text-lg mb-2">پرداخت ناموفق بود</h2>
-            <p className="text-sm text-gray-500 mb-6">تراکنش تایید نشد یا لغو شد. مبلغی از حساب شما کسر نشده است.</p>
+            <h2 className="font-bold text-ink text-lg mb-2">{t('paymentCallback.failedTitle')}</h2>
+            <p className="text-sm text-gray-500 mb-6">{t('paymentCallback.failedDesc')}</p>
             <Button variant="secondary" onClick={() => navigate('/')}>
-              بازگشت به صفحه اصلی
+              {t('menu.backToHome')}
             </Button>
           </>
         )}

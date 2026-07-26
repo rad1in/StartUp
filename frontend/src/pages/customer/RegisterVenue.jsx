@@ -6,12 +6,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useCity } from '../../context/CityContext';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
-
-const BENEFITS = [
-  { icon: QrCode, text: 'منوی دیجیتال و سفارش با اسکن QR روی هر میز' },
-  { icon: BarChart3, text: 'داشبورد فروش، حسابداری و گزارش لحظه‌ای' },
-  { icon: Sparkles, text: 'دیده‌شدن کافه‌ات توسط مشتری‌های اطراف' },
-];
+import { useLanguage } from '../../context/LanguageContext';
 
 // Self-service cafe registration: the customer fills basic info, the backend
 // creates a PENDING venue and upgrades their role to VENUE_OWNER. Clicking
@@ -20,7 +15,13 @@ export default function RegisterVenue() {
   const { refreshSession } = useAuth();
   const { city } = useCity();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', cuisineType: '', description: '', address: '', neighborhood: '', city: city?.name || 'تهران' });
+  const { t } = useLanguage();
+  const BENEFITS = [
+    { icon: QrCode, text: t('registerVenue.benefitQr') },
+    { icon: BarChart3, text: t('registerVenue.benefitDashboard') },
+    { icon: Sparkles, text: t('registerVenue.benefitVisibility') },
+  ];
+  const [form, setForm] = useState({ name: '', cuisineType: '', description: '', address: '', neighborhood: '', city: city?.name || t('registerVenue.defaultCity') });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [registered, setRegistered] = useState(false);
@@ -38,7 +39,7 @@ export default function RegisterVenue() {
       await api.post('/venues/register', form);
       setRegistered(true);
     } catch (err) {
-      setError(err.response?.data?.message || 'ثبت کافه با خطا مواجه شد.');
+      setError(err.response?.data?.message || t('registerVenue.submitError'));
     } finally {
       setSubmitting(false);
     }
@@ -61,13 +62,12 @@ export default function RegisterVenue() {
           <span className="inline-flex w-16 h-16 rounded-full bg-green-50 border border-green-200 text-green-600 items-center justify-center">
             <CheckCircle size={30} />
           </span>
-          <h2 className="text-2xl font-black text-ink">کافه‌ات ثبت شد!</h2>
+          <h2 className="text-2xl font-black text-ink">{t('registerVenue.successTitle')}</h2>
           <p className="text-sm text-ink/60 leading-relaxed">
-            حساب شما به «مدیر کافه» ارتقا یافت. کافه پس از تأیید تیم پشتیبانی برای مشتریان نمایش داده می‌شود؛
-            تا آن موقع می‌توانی منو، میزها و بقیه تنظیمات را از پنل مدیریت آماده کنی.
+            {t('registerVenue.successDesc')}
           </p>
           <Button className="w-full py-3" onClick={enterPanel} disabled={entering}>
-            {entering ? 'در حال ورود...' : 'ورود به پنل مدیریت کافه'}
+            {entering ? t('registerVenue.entering') : t('registerVenue.enterPanel')}
           </Button>
         </Card>
       </div>
@@ -80,8 +80,8 @@ export default function RegisterVenue() {
         <span className="inline-flex w-14 h-14 rounded-2xl bg-gradient-to-br from-accent-400 to-accent-600 text-white items-center justify-center shadow-accent-glow mb-3">
           <Store size={26} />
         </span>
-        <h2 className="text-2xl font-black text-ink">کافه‌ات رو ثبت کن</h2>
-        <p className="text-sm text-ink/50 mt-1">چند فیلد ساده — بعدش پنل مدیریت کافه در اختیارته</p>
+        <h2 className="text-2xl font-black text-ink">{t('registerVenue.heading')}</h2>
+        <p className="text-sm text-ink/50 mt-1">{t('registerVenue.subheading')}</p>
       </div>
 
       <div className="grid sm:grid-cols-3 gap-3 mb-6">
@@ -99,49 +99,49 @@ export default function RegisterVenue() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-bold text-ink mb-1.5">نام کافه *</label>
+              <label className="block text-sm font-bold text-ink mb-1.5">{t('registerVenue.nameLabel')}</label>
               <div className="icon-field">
                 <Coffee size={17} className="text-ink/35 shrink-0" />
-                <input placeholder="مثلاً کافه بهار" value={form.name} onChange={set('name')} required />
+                <input placeholder={t('registerVenue.namePlaceholder')} value={form.name} onChange={set('name')} required />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-bold text-ink mb-1.5">نوع مجموعه</label>
+              <label className="block text-sm font-bold text-ink mb-1.5">{t('registerVenue.typeLabel')}</label>
               <div className="icon-field">
                 <Store size={17} className="text-ink/35 shrink-0" />
-                <input placeholder="کافه، رستوران، فست‌فود..." value={form.cuisineType} onChange={set('cuisineType')} />
+                <input placeholder={t('registerVenue.typePlaceholder')} value={form.cuisineType} onChange={set('cuisineType')} />
               </div>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-ink mb-1.5">آدرس *</label>
+            <label className="block text-sm font-bold text-ink mb-1.5">{t('registerVenue.addressLabel')}</label>
             <div className="icon-field">
               <MapPin size={17} className="text-ink/35 shrink-0" />
-              <input placeholder="تهران، خیابان..." value={form.address} onChange={set('address')} required />
+              <input placeholder={t('registerVenue.addressPlaceholder')} value={form.address} onChange={set('address')} required />
             </div>
           </div>
 
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-bold text-ink mb-1.5">شهر</label>
+              <label className="block text-sm font-bold text-ink mb-1.5">{t('registerVenue.cityLabel')}</label>
               <div className="icon-field">
-                <input placeholder="تهران" value={form.city} onChange={set('city')} />
+                <input placeholder={t('registerVenue.cityPlaceholder')} value={form.city} onChange={set('city')} />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-bold text-ink mb-1.5">محله</label>
+              <label className="block text-sm font-bold text-ink mb-1.5">{t('registerVenue.neighborhoodLabel')}</label>
               <div className="icon-field">
-                <input placeholder="مثلاً ولیعصر" value={form.neighborhood} onChange={set('neighborhood')} />
+                <input placeholder={t('registerVenue.neighborhoodPlaceholder')} value={form.neighborhood} onChange={set('neighborhood')} />
               </div>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-ink mb-1.5">توضیح کوتاه درباره کافه</label>
+            <label className="block text-sm font-bold text-ink mb-1.5">{t('registerVenue.descLabel')}</label>
             <textarea
               className="glass-input w-full rounded-xl px-4 py-3 text-sm min-h-[90px]"
-              placeholder="فضای کافه، حال‌وهوا، چیزی که کافه‌ات رو خاص می‌کنه..."
+              placeholder={t('registerVenue.descPlaceholder')}
               value={form.description}
               onChange={set('description')}
             />
@@ -155,10 +155,10 @@ export default function RegisterVenue() {
           )}
 
           <Button type="submit" variant="accent" className="w-full py-3" disabled={submitting}>
-            {submitting ? 'در حال ثبت...' : 'ثبت کافه و ارتقای حساب'}
+            {submitting ? t('registerVenue.submitting') : t('registerVenue.submit')}
           </Button>
           <p className="text-xs text-ink/40 text-center">
-            با ثبت کافه، حساب شما به «مدیر کافه» ارتقا می‌یابد و به پنل مدیریت دسترسی خواهید داشت.
+            {t('registerVenue.footerNote')}
           </p>
         </form>
       </Card>

@@ -2,13 +2,8 @@ import { useEffect, useState } from 'react';
 import api from '../../services/api';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
+import { useLanguage } from '../../context/LanguageContext';
 
-const TX_TYPE_LABEL = {
-  TOPUP: 'شارژ',
-  SPEND: 'پرداخت',
-  REFUND: 'استرداد',
-  ADJUSTMENT: 'تنظیم دستی',
-};
 const TX_TYPE_COLOR = {
   TOPUP: 'text-green-600',
   REFUND: 'text-green-600',
@@ -17,6 +12,13 @@ const TX_TYPE_COLOR = {
 };
 
 export default function Wallet() {
+  const { t } = useLanguage();
+  const TX_TYPE_LABEL = {
+    TOPUP: t('wallet.txTopup'),
+    SPEND: t('wallet.txSpend'),
+    REFUND: t('wallet.txRefund'),
+    ADJUSTMENT: t('wallet.txAdjustment'),
+  };
   const [balance, setBalance] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -48,20 +50,20 @@ export default function Wallet() {
   async function handleTopUp(e) {
     e.preventDefault();
     const amount = Number(topUpAmount);
-    if (!amount || amount <= 0) return setMsg({ type: 'error', text: 'مبلغ معتبر وارد کنید.' });
+    if (!amount || amount <= 0) return setMsg({ type: 'error', text: t('wallet.invalidAmount') });
     setTopping(true);
     setMsg(null);
     try {
       const { data } = await api.post('/wallet/topup', { amount, provider: selectedProvider || undefined });
       if (data.success) {
-        setMsg({ type: 'success', text: `کیف پول شما به‌روز شد. موجودی جدید: ${Number(data.balance).toLocaleString('fa-IR')} تومان` });
+        setMsg({ type: 'success', text: `${t('wallet.topUpSuccessPrefix')} ${Number(data.balance).toLocaleString('fa-IR')} ${t('menu.toman')}` });
         setTopUpAmount('');
         await refresh();
       } else if (data.redirectUrl) {
         window.location.href = data.redirectUrl;
       }
     } catch (err) {
-      setMsg({ type: 'error', text: err.response?.data?.message || 'خطا در شارژ کیف پول' });
+      setMsg({ type: 'error', text: err.response?.data?.message || t('wallet.topUpError') });
     } finally {
       setTopping(false);
     }
@@ -73,20 +75,20 @@ export default function Wallet() {
     <div className="space-y-6">
       {/* Balance */}
       <Card className="text-center py-8">
-        <p className="text-sm text-gray-500 mb-1">موجودی کیف پول</p>
+        <p className="text-sm text-gray-500 mb-1">{t('wallet.balanceLabel')}</p>
         {loading ? (
-          <p className="text-gray-400">در حال بارگذاری...</p>
+          <p className="text-gray-400">{t('account.loading')}</p>
         ) : (
           <p className="text-4xl font-bold text-primary-700">
             {Number(balance).toLocaleString('fa-IR')}
-            <span className="text-lg font-normal text-gray-500 mr-2">تومان</span>
+            <span className="text-lg font-normal text-gray-500 mr-2">{t('menu.toman')}</span>
           </p>
         )}
       </Card>
 
       {/* Top-up */}
       <Card>
-        <h2 className="text-base font-semibold text-gray-800 mb-4">شارژ کیف پول</h2>
+        <h2 className="text-base font-semibold text-gray-800 mb-4">{t('wallet.topUpTitle')}</h2>
         <form onSubmit={handleTopUp} className="space-y-4">
           <div className="flex gap-2 flex-wrap">
             {presets.map((p) => (
@@ -100,7 +102,7 @@ export default function Wallet() {
                     : 'border-gray-300 text-gray-600 hover:border-primary-400'
                 }`}
               >
-                {p.toLocaleString('fa-IR')} تومان
+                {p.toLocaleString('fa-IR')} {t('menu.toman')}
               </button>
             ))}
           </div>
@@ -109,18 +111,18 @@ export default function Wallet() {
               type="number"
               min="1000"
               step="1000"
-              placeholder="مبلغ دلخواه (تومان)"
+              placeholder={t('wallet.customAmountPlaceholder')}
               value={topUpAmount}
               onChange={(e) => setTopUpAmount(e.target.value)}
               className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
             />
             <Button type="submit" disabled={topping || !topUpAmount}>
-              {topping ? 'در حال پردازش...' : 'شارژ'}
+              {topping ? t('account.processing') : t('wallet.topUpButton')}
             </Button>
           </div>
           {paymentMethods.length > 1 && (
             <div>
-              <label className="text-xs text-gray-500">روش پرداخت</label>
+              <label className="text-xs text-gray-500">{t('account.paymentMethod')}</label>
               <div className="flex flex-wrap gap-2 mt-1">
                 {paymentMethods.map((m) => (
                   <button
@@ -149,11 +151,11 @@ export default function Wallet() {
 
       {/* Transaction history */}
       <Card>
-        <h2 className="text-base font-semibold text-gray-800 mb-4">تاریخچه تراکنش‌ها</h2>
+        <h2 className="text-base font-semibold text-gray-800 mb-4">{t('wallet.txTitle')}</h2>
         {loading ? (
-          <p className="text-gray-400 text-sm">در حال بارگذاری...</p>
+          <p className="text-gray-400 text-sm">{t('account.loading')}</p>
         ) : transactions.length === 0 ? (
-          <p className="text-gray-500 text-sm">هنوز تراکنشی ثبت نشده است.</p>
+          <p className="text-gray-500 text-sm">{t('wallet.noTx')}</p>
         ) : (
           <div className="divide-y">
             {transactions.map((tx) => (
@@ -169,10 +171,10 @@ export default function Wallet() {
                 </div>
                 <div className="text-right">
                   <p className={`font-semibold text-sm ${TX_TYPE_COLOR[tx.type] || 'text-gray-600'}`}>
-                    {tx.type === 'SPEND' ? '-' : '+'}{Number(tx.amount).toLocaleString('fa-IR')} تومان
+                    {tx.type === 'SPEND' ? '-' : '+'}{Number(tx.amount).toLocaleString('fa-IR')} {t('menu.toman')}
                   </p>
                   <p className="text-xs text-gray-400">
-                    موجودی: {Number(tx.balanceAfter).toLocaleString('fa-IR')}
+                    {t('wallet.balanceAfter')} {Number(tx.balanceAfter).toLocaleString('fa-IR')}
                   </p>
                 </div>
               </div>

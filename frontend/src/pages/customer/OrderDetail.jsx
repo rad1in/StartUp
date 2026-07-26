@@ -8,12 +8,14 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { OrderStatusBadge, PaymentStatusBadge } from '../../components/OrderStatusBadge';
 import OrderProgressTimeline from '../../components/OrderProgressTimeline';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function OrderDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const toast = useToast();
+  const { t } = useLanguage();
   const [order, setOrder] = useState(null);
   const [sendingSms, setSendingSms] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
@@ -37,13 +39,13 @@ export default function OrderDetail() {
   });
 
   async function cancelOrder() {
-    if (!window.confirm('آیا از لغو این سفارش مطمئن هستید؟')) return;
+    if (!window.confirm(t('orderDetail.confirmCancel'))) return;
     try {
       const { data } = await api.post(`/orders/${id}/cancel`);
       setOrder((prev) => ({ ...prev, ...data }));
-      toast.success('سفارش شما لغو شد.');
+      toast.success(t('orderDetail.cancelSuccess'));
     } catch (err) {
-      toast.error(err.response?.data?.message || 'لغو سفارش با خطا مواجه شد.');
+      toast.error(err.response?.data?.message || t('orderDetail.cancelError'));
     }
   }
 
@@ -66,7 +68,7 @@ export default function OrderDetail() {
       window.open(url, '_blank', 'noopener,noreferrer');
       setTimeout(() => window.URL.revokeObjectURL(url), 10000);
     } catch {
-      toast.error('فاکتور رسمی برای این سفارش صادر نشده است.');
+      toast.error(t('orderDetail.taxInvoiceError'));
     }
   }
 
@@ -74,9 +76,9 @@ export default function OrderDetail() {
     setSendingSms(true);
     try {
       await api.post(`/orders/${id}/receipt/sms`);
-      toast.success('فیش سفارش با پیامک ارسال شد.');
+      toast.success(t('orderDetail.smsSuccess'));
     } catch (err) {
-      toast.error(err.response?.data?.message || 'ارسال پیامک ناموفق بود.');
+      toast.error(err.response?.data?.message || t('orderDetail.smsError'));
     } finally {
       setSendingSms(false);
     }
@@ -86,20 +88,20 @@ export default function OrderDetail() {
     setSendingEmail(true);
     try {
       await api.post(`/orders/${id}/receipt/email`);
-      toast.success('فیش سفارش با ایمیل ارسال شد.');
+      toast.success(t('orderDetail.emailSuccess'));
     } catch (err) {
-      toast.error(err.response?.data?.message || 'ارسال ایمیل ناموفق بود.');
+      toast.error(err.response?.data?.message || t('orderDetail.emailError'));
     } finally {
       setSendingEmail(false);
     }
   }
 
-  if (!order) return <p className="text-gray-500">در حال بارگذاری سفارش...</p>;
+  if (!order) return <p className="text-gray-500">{t('orderDetail.loading')}</p>;
 
   return (
     <div className="max-w-lg">
       <Link to="/account" className="text-sm text-primary-700">
-        &rarr; بازگشت به سفارش‌ها
+        &rarr; {t('orderDetail.backToOrders')}
       </Link>
 
       <div className="mt-3">
@@ -115,17 +117,17 @@ export default function OrderDetail() {
           </div>
         </div>
 
-        <p className="text-xs text-gray-500 mb-1">شماره سفارش: {order.id}</p>
-        <p className="text-xs text-gray-500 mb-1">تاریخ ثبت: {new Date(order.createdAt).toLocaleString('fa-IR')}</p>
-        {order.table && <p className="text-xs text-gray-500 mb-3">میز: {order.table.tableNumber}</p>}
+        <p className="text-xs text-gray-500 mb-1">{t('orderDetail.orderNumber')} {order.id}</p>
+        <p className="text-xs text-gray-500 mb-1">{t('orderDetail.orderDate')} {new Date(order.createdAt).toLocaleString('fa-IR')}</p>
+        {order.table && <p className="text-xs text-gray-500 mb-3">{t('orderDetail.tableLabel')} {order.table.tableNumber}</p>}
 
         <ul className="divide-y divide-gray-100 my-3">
           {order.items.map((item) => (
             <li key={item.id} className="py-2 flex items-center justify-between text-sm">
               <span>
-                {item.menuItem.name} — {item.quantity} عدد
+                {item.menuItem.name} — {item.quantity} {t('orderDetail.itemUnitSuffix')}
               </span>
-              <span>{Number(item.subtotal).toLocaleString('fa-IR')} تومان</span>
+              <span>{Number(item.subtotal).toLocaleString('fa-IR')} {t('menu.toman')}</span>
             </li>
           ))}
         </ul>
@@ -133,39 +135,39 @@ export default function OrderDetail() {
         {Number(order.discountAmount) > 0 && (
           <div className="mb-1">
             <div className="flex items-center justify-between text-sm text-ink font-medium">
-              <span>تخفیف</span>
-              <span>-{Number(order.discountAmount).toLocaleString('fa-IR')} تومان</span>
+              <span>{t('account.discount')}</span>
+              <span>-{Number(order.discountAmount).toLocaleString('fa-IR')} {t('menu.toman')}</span>
             </div>
             {order.discountReason && <p className="text-xs text-ink/40 mt-0.5">{order.discountReason}</p>}
           </div>
         )}
         <div className="flex items-center justify-between font-bold mb-4">
-          <span>جمع کل</span>
-          <span>{Number(order.totalAmount).toLocaleString('fa-IR')} تومان</span>
+          <span>{t('account.total')}</span>
+          <span>{Number(order.totalAmount).toLocaleString('fa-IR')} {t('menu.toman')}</span>
         </div>
 
         <div className="flex gap-2 flex-wrap">
-          <Button onClick={handleReorder}>سفارش مجدد</Button>
+          <Button onClick={handleReorder}>{t('account.reorder')}</Button>
           <Button variant="secondary" onClick={downloadReceipt}>
-            دریافت فاکتور
+            {t('account.downloadReceipt')}
           </Button>
           <Button variant="secondary" onClick={downloadTaxInvoice}>
-            دریافت فاکتور رسمی مالیاتی
+            {t('orderDetail.taxInvoice')}
           </Button>
           <Button variant="secondary" onClick={sendReceiptSms} disabled={sendingSms}>
-            {sendingSms ? 'در حال ارسال...' : 'ارسال فیش با پیامک'}
+            {sendingSms ? t('account.sending') : t('orderDetail.sendSms')}
           </Button>
           <Button variant="secondary" onClick={sendReceiptEmail} disabled={sendingEmail}>
-            {sendingEmail ? 'در حال ارسال...' : 'ارسال فیش با ایمیل'}
+            {sendingEmail ? t('account.sending') : t('orderDetail.sendEmail')}
           </Button>
           {order.status === 'PENDING' && (
             <Button variant="danger" onClick={cancelOrder}>
-              لغو سفارش
+              {t('orderDetail.cancelOrder')}
             </Button>
           )}
           {order.status === 'SERVED' && (
             <Link to={`/account/reviews?orderId=${order.id}&venueId=${order.venueId}`}>
-              <Button variant="ghost">ثبت نظر</Button>
+              <Button variant="ghost">{t('orderDetail.writeReview')}</Button>
             </Link>
           )}
         </div>

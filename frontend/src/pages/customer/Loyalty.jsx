@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import api from '../../services/api';
 import Card from '../../components/Card';
-
-const TX_LABELS = { EARN: 'کسب امتیاز', REDEEM: 'استفاده از امتیاز', ADJUST: 'اصلاح دستی' };
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function Loyalty() {
+  const { t } = useLanguage();
+  const TX_LABELS = { EARN: t('loyalty.txEarn'), REDEEM: t('loyalty.txRedeem'), ADJUST: t('loyalty.txAdjust') };
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
   const [coupons, setCoupons] = useState([]);
@@ -26,18 +27,18 @@ export default function Loyalty() {
         <Card>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="font-semibold text-gray-800">سطح وفاداری</h3>
+              <h3 className="font-semibold text-gray-800">{t('loyalty.tierTitle')}</h3>
               {progress.currentTier ? (
                 <p className="text-lg font-bold text-primary-700 mt-1">
                   {progress.currentTier.tierIcon} {progress.currentTier.tierName}
                 </p>
               ) : (
-                <p className="text-sm text-gray-500 mt-1">هنوز سطحی کسب نشده است.</p>
+                <p className="text-sm text-gray-500 mt-1">{t('loyalty.noTier')}</p>
               )}
             </div>
             <div className="text-right text-sm text-gray-600">
-              <p>{Number(progress.stats.totalOrders).toLocaleString('fa-IR')} سفارش</p>
-              <p>{Number(progress.stats.totalSpend).toLocaleString('fa-IR')} تومان</p>
+              <p>{Number(progress.stats.totalOrders).toLocaleString('fa-IR')} {t('loyalty.ordersSuffix')}</p>
+              <p>{Number(progress.stats.totalSpend).toLocaleString('fa-IR')} {t('menu.toman')}</p>
             </div>
           </div>
 
@@ -53,14 +54,14 @@ export default function Loyalty() {
                 <div key={tier.id} className={`rounded-lg p-3 border ${isCurrent ? 'border-primary-400 bg-primary-50' : 'border-gray-200'}`}>
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-sm font-medium">{tier.icon} {tier.name}</span>
-                    {isCurrent && <span className="text-xs bg-primary-600 text-white px-2 py-0.5 rounded-full">سطح فعلی</span>}
+                    {isCurrent && <span className="text-xs bg-primary-600 text-white px-2 py-0.5 rounded-full">{t('loyalty.currentTier')}</span>}
                   </div>
                   {pct < 100 && (
                     <>
                       <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
                         <div className="h-full bg-primary-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
                       </div>
-                      <p className="text-xs text-gray-400 mt-1">{Math.round(pct)}٪ تا این سطح</p>
+                      <p className="text-xs text-gray-400 mt-1">{Math.round(pct)}٪ {t('loyalty.untilThisTierSuffix')}</p>
                     </>
                   )}
                 </div>
@@ -70,7 +71,7 @@ export default function Loyalty() {
 
           {progress.currentTier?.perks && (
             <div className="mt-3 pt-3 border-t text-sm text-gray-600">
-              <p className="font-medium mb-1">مزایای سطح فعلی:</p>
+              <p className="font-medium mb-1">{t('loyalty.currentTierPerks')}</p>
               <ul className="list-disc list-inside space-y-0.5 text-xs text-gray-500">
                 {(Array.isArray(progress.currentTier.perks)
                   ? progress.currentTier.perks
@@ -85,7 +86,7 @@ export default function Loyalty() {
       {/* Badge collection */}
       {progress && (
         <Card>
-          <h3 className="font-semibold text-gray-800 mb-3">مجموعه نشان‌ها</h3>
+          <h3 className="font-semibold text-gray-800 mb-3">{t('loyalty.badgeCollection')}</h3>
           <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
             {progress.allBadges.map((badge) => {
               const earned = earnedBadgeIds.has(badge.id);
@@ -115,14 +116,14 @@ export default function Loyalty() {
 
       {/* Loyalty points */}
       <Card>
-        <h3 className="font-semibold text-gray-800">کیف پول امتیاز وفاداری</h3>
-        <p className="text-2xl font-bold text-primary-700 mt-2">{balance.toLocaleString('fa-IR')} امتیاز</p>
-        <p className="text-xs text-gray-500 mt-1">هر امتیاز معادل ۱٬۰۰۰ تومان تخفیف در پرداخت سفارش‌های بعدی است.</p>
+        <h3 className="font-semibold text-gray-800">{t('loyalty.pointsWallet')}</h3>
+        <p className="text-2xl font-bold text-primary-700 mt-2">{balance.toLocaleString('fa-IR')} {t('loyalty.pointsSuffix')}</p>
+        <p className="text-xs text-gray-500 mt-1">{t('loyalty.pointValueNote')}</p>
       </Card>
 
       <div>
-        <h3 className="font-semibold text-gray-800 mb-2">تاریخچه امتیاز</h3>
-        {transactions.length === 0 && <p className="text-gray-500 text-sm">هنوز تراکنش امتیازی ثبت نشده است.</p>}
+        <h3 className="font-semibold text-gray-800 mb-2">{t('loyalty.pointsHistory')}</h3>
+        {transactions.length === 0 && <p className="text-gray-500 text-sm">{t('loyalty.noTransactions')}</p>}
         <div className="space-y-2">
           {transactions.map((tx) => (
             <Card key={tx.id} className="flex items-center justify-between">
@@ -139,24 +140,24 @@ export default function Loyalty() {
       </div>
 
       <div>
-        <h3 className="font-semibold text-gray-800 mb-2">کدهای تخفیف فعال</h3>
-        {coupons.length === 0 && <p className="text-gray-500 text-sm">در حال حاضر کد تخفیفی موجود نیست.</p>}
+        <h3 className="font-semibold text-gray-800 mb-2">{t('loyalty.activeCoupons')}</h3>
+        {coupons.length === 0 && <p className="text-gray-500 text-sm">{t('loyalty.noCoupons')}</p>}
         <div className="grid sm:grid-cols-2 gap-3">
           {coupons.map((coupon) => (
             <Card key={coupon.id}>
               <p className="font-bold text-primary-700">{coupon.code}</p>
               <p className="text-sm text-gray-600 mt-1">
                 {coupon.discountType === 'PERCENT'
-                  ? `${coupon.discountValue}٪ تخفیف`
-                  : `${Number(coupon.discountValue).toLocaleString('fa-IR')} تومان تخفیف`}
+                  ? `${coupon.discountValue}٪ ${t('loyalty.percentDiscountSuffix')}`
+                  : `${Number(coupon.discountValue).toLocaleString('fa-IR')} ${t('menu.toman')} ${t('loyalty.percentDiscountSuffix')}`}
               </p>
               {coupon.minOrderAmount && (
                 <p className="text-xs text-gray-400 mt-1">
-                  حداقل سفارش: {Number(coupon.minOrderAmount).toLocaleString('fa-IR')} تومان
+                  {t('loyalty.minOrderPrefix')} {Number(coupon.minOrderAmount).toLocaleString('fa-IR')} {t('menu.toman')}
                 </p>
               )}
               {coupon.expiresAt && (
-                <p className="text-xs text-gray-400">انقضا: {new Date(coupon.expiresAt).toLocaleDateString('fa-IR')}</p>
+                <p className="text-xs text-gray-400">{t('loyalty.expiresPrefix')} {new Date(coupon.expiresAt).toLocaleDateString('fa-IR')}</p>
               )}
             </Card>
           ))}

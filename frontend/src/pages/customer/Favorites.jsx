@@ -5,6 +5,7 @@ import api from '../../services/api';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { resolveImageUrl } from '../../components/VenueCards';
+import { useLanguage } from '../../context/LanguageContext';
 
 function Thumb({ src }) {
   return (
@@ -16,6 +17,7 @@ function Thumb({ src }) {
 
 export default function Favorites() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [venues, setVenues] = useState([]);
   const [items, setItems] = useState([]);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
@@ -60,8 +62,8 @@ export default function Favorites() {
   return (
     <div className="space-y-8">
       <section>
-        <h3 className="font-semibold text-gray-800 mb-3">مجموعه‌های موردعلاقه</h3>
-        {venues.length === 0 && <p className="text-gray-500 text-sm">هنوز مجموعه‌ای را موردعلاقه نکرده‌اید.</p>}
+        <h3 className="font-semibold text-gray-800 mb-3">{t('favorites.favoriteVenues')}</h3>
+        {venues.length === 0 && <p className="text-gray-500 text-sm">{t('favorites.noVenues')}</p>}
         <div className="grid sm:grid-cols-2 gap-3">
           {venues.map((venue) => (
             <Card key={venue.id} className="flex items-center justify-between">
@@ -73,7 +75,7 @@ export default function Favorites() {
                 </div>
               </div>
               <Button variant="ghost" onClick={() => removeVenue(venue.id)}>
-                حذف
+                {t('account.delete')}
               </Button>
             </Card>
           ))}
@@ -81,8 +83,8 @@ export default function Favorites() {
       </section>
 
       <section>
-        <h3 className="font-semibold text-gray-800 mb-3">آیتم‌های موردعلاقه</h3>
-        {items.length === 0 && <p className="text-gray-500 text-sm">هنوز آیتمی را موردعلاقه نکرده‌اید.</p>}
+        <h3 className="font-semibold text-gray-800 mb-3">{t('favorites.favoriteItems')}</h3>
+        {items.length === 0 && <p className="text-gray-500 text-sm">{t('favorites.noItems')}</p>}
         <div className="grid sm:grid-cols-2 gap-3">
           {items.map((item) => (
             <Card key={item.id}>
@@ -94,20 +96,20 @@ export default function Favorites() {
                   {item.nickname && (
                     <p className="text-xs text-primary-700 font-medium mt-0.5">{item.nickname}</p>
                   )}
-                  <p className="text-xs text-gray-500 mt-0.5">{Number(item.price).toLocaleString('fa-IR')} تومان</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{Number(item.price).toLocaleString('fa-IR')} {t('menu.toman')}</p>
                   {item.savedCustomization && item.savedCustomization.length > 0 && (
                     <p className="text-xs text-gray-400 mt-0.5">
-                      {item.savedCustomization.flatMap((s) => s.optionIds || []).length} گزینه سفارشی ذخیره شده
+                      {item.savedCustomization.flatMap((s) => s.optionIds || []).length} {t('favorites.savedOptionsSuffix')}
                     </p>
                   )}
                 </div>
                 </div>
                 <div className="flex flex-col gap-1">
                   <Button variant="secondary" onClick={() => reorderItem(item)}>
-                    سفارش یک‌کلیک
+                    {t('favorites.oneClickOrder')}
                   </Button>
                   <Button variant="ghost" onClick={() => removeItem(item.id)}>
-                    حذف
+                    {t('account.delete')}
                   </Button>
                 </div>
               </div>
@@ -117,8 +119,8 @@ export default function Favorites() {
       </section>
 
       <section>
-        <h3 className="font-semibold text-gray-800 mb-3">بازدیدهای اخیر</h3>
-        {recentlyViewed.length === 0 && <p className="text-gray-500 text-sm">هنوز مجموعه‌ای مشاهده نکرده‌اید.</p>}
+        <h3 className="font-semibold text-gray-800 mb-3">{t('favorites.recentlyViewed')}</h3>
+        {recentlyViewed.length === 0 && <p className="text-gray-500 text-sm">{t('favorites.noRecentlyViewed')}</p>}
         <div className="flex gap-3 overflow-x-auto pb-2">
           {recentlyViewed.map((venue) => (
             <Card

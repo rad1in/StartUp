@@ -7,17 +7,18 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { OrderStatusBadge, PaymentStatusBadge } from '../../components/OrderStatusBadge';
 import { useToast } from '../../context/ToastContext';
-
-const STATUS_OPTIONS = [
-  { value: '', label: 'همه وضعیت‌ها' },
-  { value: 'PENDING', label: 'در انتظار' },
-  { value: 'PREPARING', label: 'در حال آماده‌سازی' },
-  { value: 'SERVED', label: 'سرو شده' },
-  { value: 'CANCELLED', label: 'لغو شده' },
-];
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function OrderHistory() {
   const { user } = useAuth();
+  const { t } = useLanguage();
+  const STATUS_OPTIONS = [
+    { value: '', label: t('orderHistory.statusAll') },
+    { value: 'PENDING', label: t('orderHistory.statusPending') },
+    { value: 'PREPARING', label: t('orderHistory.statusPreparing') },
+    { value: 'SERVED', label: t('orderHistory.statusServed') },
+    { value: 'CANCELLED', label: t('orderHistory.statusCancelled') },
+  ];
   const [orders, setOrders] = useState([]);
   const [venues, setVenues] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,7 +53,7 @@ export default function OrderHistory() {
             value={filters.venueId}
             onChange={(e) => setFilters({ ...filters, venueId: e.target.value })}
           >
-            <option value="">همه مجموعه‌ها</option>
+            <option value="">{t('orderHistory.allVenues')}</option>
             {venues.map((v) => (
               <option key={v.id} value={v.id}>
                 {v.name}
@@ -85,8 +86,8 @@ export default function OrderHistory() {
         </div>
       </Card>
 
-      {loading && <p className="text-gray-500">در حال بارگذاری سفارش‌ها...</p>}
-      {!loading && orders.length === 0 && <p className="text-gray-500">سفارشی با این فیلترها یافت نشد.</p>}
+      {loading && <p className="text-gray-500">{t('orderHistory.loading')}</p>}
+      {!loading && orders.length === 0 && <p className="text-gray-500">{t('orderHistory.noOrders')}</p>}
 
       <div className="space-y-3">
         {orders.map((order) => (
@@ -100,6 +101,7 @@ export default function OrderHistory() {
 function OrderRow({ order }) {
   const navigate = useNavigate();
   const toast = useToast();
+  const { t } = useLanguage();
 
   async function downloadReceipt() {
     const { data } = await api.get(`/orders/${order.id}/receipt.pdf`, { responseType: 'blob' });
@@ -113,7 +115,7 @@ function OrderRow({ order }) {
       const { data } = await api.post(`/orders/${order.id}/reorder`);
       navigate(`/menu/${data.venueId}`, { state: { reorderItems: data.items } });
     } catch (err) {
-      toast.error(err.response?.data?.message || 'خطا در سفارش مجدد');
+      toast.error(err.response?.data?.message || t('orderHistory.reorderError'));
     }
   }
 
@@ -123,7 +125,7 @@ function OrderRow({ order }) {
         <div>
           <p className="font-medium text-gray-800">{order.venue?.name}</p>
           <p className="text-xs text-gray-500 mt-1">
-            {new Date(order.createdAt).toLocaleDateString('fa-IR')} — {order.items.length} قلم
+            {new Date(order.createdAt).toLocaleDateString('fa-IR')} — {order.items.length} {t('orderHistory.itemsCountSuffix')}
           </p>
         </div>
         <div className="flex flex-col items-end gap-2">
@@ -131,18 +133,18 @@ function OrderRow({ order }) {
             <OrderStatusBadge status={order.status} />
             <PaymentStatusBadge status={order.paymentStatus} />
           </div>
-          <p className="font-bold text-primary-700">{Number(order.totalAmount).toLocaleString('fa-IR')} تومان</p>
+          <p className="font-bold text-primary-700">{Number(order.totalAmount).toLocaleString('fa-IR')} {t('menu.toman')}</p>
         </div>
       </div>
       <div className="flex gap-2 mt-3 flex-wrap">
         <Link to={`/account/orders/${order.id}`}>
-          <Button variant="secondary">مشاهده جزئیات</Button>
+          <Button variant="secondary">{t('account.viewDetails')}</Button>
         </Link>
         <Button variant="ghost" onClick={downloadReceipt}>
-          دریافت فاکتور
+          {t('account.downloadReceipt')}
         </Button>
         <Button variant="ghost" onClick={reorder}>
-          سفارش مجدد
+          {t('account.reorder')}
         </Button>
       </div>
     </Card>

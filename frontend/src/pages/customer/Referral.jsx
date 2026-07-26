@@ -3,9 +3,11 @@ import { Gift, Copy, Check } from 'lucide-react';
 import api from '../../services/api';
 import Card from '../../components/Card';
 import { useToast } from '../../context/ToastContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function Referral() {
   const toast = useToast();
+  const { t } = useLanguage();
   const [info, setInfo] = useState(null);
   const [copied, setCopied] = useState(false);
 
@@ -22,7 +24,7 @@ export default function Referral() {
   function copyLink() {
     navigator.clipboard?.writeText(link);
     setCopied(true);
-    toast.success('لینک دعوت کپی شد.');
+    toast.success(t('referral.linkCopied'));
     setTimeout(() => setCopied(false), 2000);
   }
 
@@ -32,10 +34,10 @@ export default function Referral() {
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent-400 to-accent-600 text-white flex items-center justify-center mx-auto mb-4 shadow-accent-glow">
           <Gift size={28} />
         </div>
-        <h2 className="text-lg font-black text-ink mb-1">دوستاتو دعوت کن</h2>
+        <h2 className="text-lg font-black text-ink mb-1">{t('referral.inviteTitle')}</h2>
         <p className="text-sm text-ink/50 max-w-xs mx-auto">
-          به ازای هر دوستی که با لینک تو ثبت‌نام کنه و اولین سفارشش رو ثبت کنه، هر دوتون{' '}
-          <b className="text-ink">{Number(info.rewardAmount).toLocaleString('fa-IR')} تومان</b> به کیف پولتون اضافه می‌شه.
+          {t('referral.descPrefix')}{' '}
+          <b className="text-ink">{Number(info.rewardAmount).toLocaleString('fa-IR')} {t('menu.toman')}</b> {t('referral.descSuffix')}
         </p>
 
         <div className="mt-6 flex items-center gap-2 max-w-sm mx-auto">
@@ -53,17 +55,17 @@ export default function Referral() {
       <div className="grid sm:grid-cols-2 gap-3">
         <Card className="text-center py-5">
           <p className="text-2xl font-black text-accent-600">{info.completedCount.toLocaleString('fa-IR')}</p>
-          <p className="text-xs text-ink/50 mt-1">دوست دعوت‌شده موفق</p>
+          <p className="text-xs text-ink/50 mt-1">{t('referral.successfulInvites')}</p>
         </Card>
         <Card className="text-center py-5">
-          <p className="text-2xl font-black text-accent-600">{info.totalEarned.toLocaleString('fa-IR')} ت</p>
-          <p className="text-xs text-ink/50 mt-1">مجموع پاداش دریافتی</p>
+          <p className="text-2xl font-black text-accent-600">{info.totalEarned.toLocaleString('fa-IR')} {t('referral.tomanShort')}</p>
+          <p className="text-xs text-ink/50 mt-1">{t('referral.totalEarned')}</p>
         </Card>
       </div>
 
       {info.referrals.length > 0 && (
         <Card>
-          <h3 className="font-bold text-ink text-sm mb-3">دوستان دعوت‌شده</h3>
+          <h3 className="font-bold text-ink text-sm mb-3">{t('referral.invitedFriends')}</h3>
           <div className="space-y-2">
             {info.referrals.map((r, i) => (
               <div key={i} className="flex items-center justify-between text-sm border-b border-ink/5 last:border-0 pb-2">
@@ -73,7 +75,7 @@ export default function Referral() {
                     r.status === 'COMPLETED' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'
                   }`}
                 >
-                  {r.status === 'COMPLETED' ? 'تکمیل‌شده' : 'در انتظار اولین سفارش'}
+                  {r.status === 'COMPLETED' ? t('referral.statusCompleted') : t('referral.statusPending')}
                 </span>
               </div>
             ))}

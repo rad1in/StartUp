@@ -16,54 +16,59 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import PanelNav from '../../components/PanelNav';
+import { useLanguage } from '../../context/LanguageContext';
 
 // customerOnly tabs disappear for owners/staff/admins — those roles only get
 // the universal account pages (profile, notifications, sessions, support).
-const groups = [
-  {
-    title: 'سفارش',
-    customerOnly: true,
-    tabs: [
-      { to: '/account', label: 'سفارش‌ها', icon: ClipboardList, end: true },
-      { to: '/account/reviews', label: 'نظرات من', icon: Star },
-    ],
-  },
-  {
-    title: 'مالی',
-    customerOnly: true,
-    tabs: [
-      { to: '/account/wallet', label: 'کیف پول', icon: Wallet },
-      { to: '/account/loyalty', label: 'امتیازها و نشان‌ها', icon: Award },
-      { to: '/account/subscription', label: 'اشتراک تخفیف', icon: Sparkles },
-      { to: '/account/referral', label: 'دعوت از دوستان', icon: Gift },
-    ],
-  },
-  {
-    title: 'شخصی',
-    tabs: [
-      { to: '/account/favorites', label: 'موردعلاقه‌ها', icon: Heart, customerOnly: true },
-      { to: '/account/notifications', label: 'اعلان‌ها', icon: Bell },
-      { to: '/account/profile', label: 'پروفایل', icon: UserRound },
-    ],
-  },
-  {
-    title: 'کسب‌وکار',
-    customerOnly: true,
-    tabs: [{ to: '/account/register-venue', label: 'ثبت کافه من', icon: Store }],
-  },
-  {
-    title: 'سایر',
-    tabs: [
-      { to: '/account/sessions', label: 'نشست‌ها', icon: MonitorSmartphone },
-      { to: '/account/support', label: 'پشتیبانی', icon: LifeBuoy },
-      { to: '/account/danger-zone', label: 'حریم خصوصی', icon: ShieldAlert, customerOnly: true },
-    ],
-  },
-];
+function buildGroups(t) {
+  return [
+    {
+      title: t('account.groupOrder'),
+      customerOnly: true,
+      tabs: [
+        { to: '/account', label: t('account.navOrders'), icon: ClipboardList, end: true },
+        { to: '/account/reviews', label: t('account.navReviews'), icon: Star },
+      ],
+    },
+    {
+      title: t('account.groupFinance'),
+      customerOnly: true,
+      tabs: [
+        { to: '/account/wallet', label: t('account.navWallet'), icon: Wallet },
+        { to: '/account/loyalty', label: t('account.navLoyalty'), icon: Award },
+        { to: '/account/subscription', label: t('account.navSubscription'), icon: Sparkles },
+        { to: '/account/referral', label: t('account.navReferral'), icon: Gift },
+      ],
+    },
+    {
+      title: t('account.groupPersonal'),
+      tabs: [
+        { to: '/account/favorites', label: t('account.navFavorites'), icon: Heart, customerOnly: true },
+        { to: '/account/notifications', label: t('account.navNotifications'), icon: Bell },
+        { to: '/account/profile', label: t('account.navProfile'), icon: UserRound },
+      ],
+    },
+    {
+      title: t('account.groupBusiness'),
+      customerOnly: true,
+      tabs: [{ to: '/account/register-venue', label: t('account.navRegisterVenue'), icon: Store }],
+    },
+    {
+      title: t('account.groupOther'),
+      tabs: [
+        { to: '/account/sessions', label: t('account.navSessions'), icon: MonitorSmartphone },
+        { to: '/account/support', label: t('account.navSupport'), icon: LifeBuoy },
+        { to: '/account/danger-zone', label: t('account.navPrivacy'), icon: ShieldAlert, customerOnly: true },
+      ],
+    },
+  ];
+}
 
 export default function AccountLayout() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const isCustomer = user?.role === 'CUSTOMER';
+  const groups = buildGroups(t);
 
   const visibleGroups = groups
     .filter((group) => isCustomer || !group.customerOnly)
@@ -75,7 +80,7 @@ export default function AccountLayout() {
 
   return (
     <div className="animate-fade-up">
-      <h1 className="text-xl font-black text-ink mb-4">حساب کاربری</h1>
+      <h1 className="text-xl font-black text-ink mb-4">{t('account.title')}</h1>
       <PanelNav groups={visibleGroups} />
       <Outlet />
     </div>

@@ -5,6 +5,7 @@ import api from '../../services/api';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { resolveImageUrl } from '../../components/VenueCards';
+import { useLanguage } from '../../context/LanguageContext';
 
 function StarPicker({ value, onChange }) {
   return (
@@ -24,6 +25,7 @@ function StarPicker({ value, onChange }) {
 }
 
 export default function Reviews() {
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const orderId = searchParams.get('orderId');
   const venueId = searchParams.get('venueId');
@@ -76,23 +78,23 @@ export default function Reviews() {
     <div className="space-y-6 max-w-lg">
       {showCreateForm && (
         <Card>
-          <h3 className="font-semibold text-gray-800 mb-3">ثبت نظر برای این سفارش</h3>
+          <h3 className="font-semibold text-gray-800 mb-3">{t('reviews.writeForOrder')}</h3>
           <form onSubmit={submitReview} className="space-y-3">
             <StarPicker value={newRating} onChange={setNewRating} />
             <textarea
               className="w-full border border-gray-300 rounded-lg px-3 py-2"
-              placeholder="نظر شما (اختیاری)"
+              placeholder={t('reviews.commentPlaceholder')}
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
             />
-            <Button type="submit">ثبت نظر</Button>
+            <Button type="submit">{t('reviews.submit')}</Button>
           </form>
         </Card>
       )}
 
       <div>
-        <h3 className="font-semibold text-gray-800 mb-3">نظرات ثبت‌شده من</h3>
-        {reviews.length === 0 && <p className="text-gray-500 text-sm">هنوز نظری ثبت نکرده‌اید.</p>}
+        <h3 className="font-semibold text-gray-800 mb-3">{t('reviews.myReviews')}</h3>
+        {reviews.length === 0 && <p className="text-gray-500 text-sm">{t('reviews.none')}</p>}
         <div className="space-y-3">
           {reviews.map((review) => (
             <Card key={review.id}>
@@ -105,9 +107,9 @@ export default function Reviews() {
                     onChange={(e) => setEditComment(e.target.value)}
                   />
                   <div className="flex gap-2">
-                    <Button onClick={() => saveEdit(review.id)}>ذخیره</Button>
+                    <Button onClick={() => saveEdit(review.id)}>{t('account.save')}</Button>
                     <Button variant="ghost" onClick={() => setEditingId(null)}>
-                      انصراف
+                      {t('account.cancel')}
                     </Button>
                   </div>
                 </div>
@@ -130,11 +132,11 @@ export default function Reviews() {
                     </Link>
                     <div className="min-w-0">
                       <Link to={`/menu/${review.venueId}`} className="font-bold text-ink text-sm hover:underline">
-                        {review.venueName || 'کافه حذف‌شده'}
+                        {review.venueName || t('reviews.deletedVenue')}
                       </Link>
                       {review.orderCreatedAt && (
                         <p className="text-xs text-gray-400 mt-0.5">
-                          سفارش {new Date(review.orderCreatedAt).toLocaleDateString('fa-IR')}
+                          {t('reviews.orderPrefix')} {new Date(review.orderCreatedAt).toLocaleDateString('fa-IR')}
                         </p>
                       )}
                     </div>
@@ -158,10 +160,10 @@ export default function Reviews() {
                     </div>
                     <div className="flex gap-2">
                       <Button variant="ghost" onClick={() => startEdit(review)}>
-                        ویرایش
+                        {t('account.edit')}
                       </Button>
                       <Button variant="danger" onClick={() => removeReview(review.id)}>
-                        حذف
+                        {t('account.delete')}
                       </Button>
                     </div>
                   </div>

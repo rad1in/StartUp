@@ -7,10 +7,12 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 import HCaptcha from '../../components/HCaptcha';
 import { resolveImageUrl } from '../../components/VenueCards';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function Profile() {
   const { user, refreshUser } = useAuth();
   const captcha = useCaptcha();
+  const { t } = useLanguage();
   const [form, setForm] = useState({
     name: user?.name || '',
     username: user?.username || '',
@@ -51,7 +53,7 @@ export default function Profile() {
       await refreshUser();
       setSaved(true);
     } catch (err) {
-      setError(err.response?.data?.message || 'ذخیره تغییرات ناموفق بود.');
+      setError(err.response?.data?.message || t('profile.saveError'));
     }
   }
 
@@ -86,7 +88,7 @@ export default function Profile() {
   async function requestOtp() {
     setOtpMessage('');
     if (captcha.enabled && !captcha.token) {
-      setOtpMessage('لطفاً کپچا را تکمیل کنید.');
+      setOtpMessage(t('profile.captchaRequired'));
       return;
     }
     await api.post('/auth/otp/request', { phone, captchaToken: captcha.token });
@@ -99,11 +101,11 @@ export default function Profile() {
     try {
       await api.post('/auth/otp/verify', { phone, code: otpCode });
       await refreshUser();
-      setOtpMessage('شماره موبایل با موفقیت تایید شد.');
+      setOtpMessage(t('profile.phoneVerified'));
       setOtpSent(false);
       setOtpCode('');
     } catch (err) {
-      setOtpMessage(err.response?.data?.message || 'کد تایید نامعتبر است.');
+      setOtpMessage(err.response?.data?.message || t('profile.invalidOtp'));
     }
   }
 
@@ -112,10 +114,10 @@ export default function Profile() {
     setPasswordMessage('');
     try {
       await api.post('/auth/change-password', passwordForm);
-      setPasswordMessage('رمز عبور با موفقیت تغییر یافت.');
+      setPasswordMessage(t('profile.passwordChanged'));
       setPasswordForm({ currentPassword: '', newPassword: '' });
     } catch (err) {
-      setPasswordMessage(err.response?.data?.message || 'تغییر رمز عبور ناموفق بود.');
+      setPasswordMessage(err.response?.data?.message || t('profile.passwordChangeError'));
     }
   }
 
@@ -124,7 +126,7 @@ export default function Profile() {
       <div className="flex items-start gap-2 text-xs text-ink/45 bg-primary-50/50 border border-dashed border-primary-200 rounded-xl px-3 py-2.5">
         <Sparkles size={14} className="text-accent-600 shrink-0 mt-0.5" />
         <span>
-          این بخش رو کامل‌تر کردیم چون یه ایده‌ی سوشال برای آپدیت‌های بعدی داریم (بایو، نام کاربری، پروفایل عمومی و...) — فعلاً همینا رو آماده کردیم، بقیه‌ش رو می‌گیریم برای بعد تا وقتتو نگیریم.
+          {t('profile.socialNote')}
         </span>
       </div>
 
@@ -143,42 +145,42 @@ export default function Profile() {
           />
           {!user?.avatarUrl && (
             <div className="absolute -bottom-8 right-5 w-20 h-20 rounded-2xl border-4 border-white bg-gray-200 shadow-lg flex items-center justify-center text-gray-400 text-xs">
-              بدون تصویر
+              {t('profile.noImage')}
             </div>
           )}
         </div>
         <div className="pt-10 px-4 pb-4 grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs text-gray-500 mb-1 block">تصویر پروفایل</label>
+            <label className="text-xs text-gray-500 mb-1 block">{t('profile.avatarLabel')}</label>
             <input type="file" accept="image/*" onChange={(e) => setAvatarFile(e.target.files[0])} className="text-xs w-full" />
             <Button className="mt-2 w-full text-xs px-3 py-1.5" onClick={handleAvatarUpload} disabled={!avatarFile || avatarUploading}>
-              {avatarUploading ? 'در حال آپلود...' : 'آپلود'}
+              {avatarUploading ? t('account.uploading') : t('account.upload')}
             </Button>
           </div>
           <div>
-            <label className="text-xs text-gray-500 mb-1 block">تصویر کاور</label>
+            <label className="text-xs text-gray-500 mb-1 block">{t('profile.coverLabel')}</label>
             <input type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files[0])} className="text-xs w-full" />
             <Button variant="secondary" className="mt-2 w-full text-xs px-3 py-1.5" onClick={handleCoverUpload} disabled={!coverFile || coverUploading}>
-              {coverUploading ? 'در حال آپلود...' : 'آپلود'}
+              {coverUploading ? t('account.uploading') : t('account.upload')}
             </Button>
           </div>
         </div>
       </Card>
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-4">اطلاعات پروفایل</h3>
+        <h3 className="font-semibold text-gray-800 mb-4">{t('profile.infoTitle')}</h3>
         <form onSubmit={handleProfileSubmit} className="space-y-3">
           <div>
-            <label className="text-xs text-gray-500 mb-1 block">نام و نام خانوادگی</label>
+            <label className="text-xs text-gray-500 mb-1 block">{t('profile.nameLabel')}</label>
             <input
               className="w-full border border-gray-300 rounded-lg px-3 py-2"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="نام و نام خانوادگی"
+              placeholder={t('profile.nameLabel')}
             />
           </div>
           <div>
-            <label className="text-xs text-gray-500 mb-1 block">نام کاربری</label>
+            <label className="text-xs text-gray-500 mb-1 block">{t('profile.usernameLabel')}</label>
             <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
               <span className="px-3 text-gray-400 bg-gray-50 self-stretch flex items-center">@</span>
               <input
@@ -189,17 +191,17 @@ export default function Profile() {
                 dir="ltr"
               />
             </div>
-            <p className="text-xs text-gray-400 mt-1">فقط حروف انگلیسی کوچک، عدد و _ — بین ۳ تا ۳۰ کاراکتر.</p>
+            <p className="text-xs text-gray-400 mt-1">{t('profile.usernameHint')}</p>
           </div>
           <div>
-            <label className="text-xs text-gray-500 mb-1 block">بایو</label>
+            <label className="text-xs text-gray-500 mb-1 block">{t('profile.bioLabel')}</label>
             <textarea
               className="w-full border border-gray-300 rounded-lg px-3 py-2"
               rows={3}
               maxLength={280}
               value={form.bio}
               onChange={(e) => setForm({ ...form, bio: e.target.value })}
-              placeholder="چند خط درباره خودت..."
+              placeholder={t('profile.bioPlaceholder')}
             />
             <p className="text-xs text-gray-400 mt-1 text-left">{form.bio.length}/280</p>
           </div>
@@ -209,7 +211,7 @@ export default function Profile() {
             disabled
           />
           <label className="flex items-center justify-between text-sm">
-            <span>پروفایل عمومی باشد</span>
+            <span>{t('profile.publicProfile')}</span>
             <input
               type="checkbox"
               checked={form.isProfilePublic}
@@ -217,7 +219,7 @@ export default function Profile() {
             />
           </label>
           <label className="flex items-center justify-between text-sm">
-            <span>دریافت پیامک تبلیغاتی از کافه‌ها</span>
+            <span>{t('profile.smsMarketing')}</span>
             <input
               type="checkbox"
               checked={!form.smsMarketingOptOut}
@@ -225,30 +227,30 @@ export default function Profile() {
             />
           </label>
           <label className="flex items-center justify-between text-sm">
-            <span>دریافت ایمیل تبلیغاتی از کافه‌ها</span>
+            <span>{t('profile.emailMarketing')}</span>
             <input
               type="checkbox"
               checked={!form.emailMarketingOptOut}
               onChange={(e) => setForm({ ...form, emailMarketingOptOut: !e.target.checked })}
             />
           </label>
-          {saved && <p className="flex items-center gap-1 text-ink font-medium text-sm"><CheckCircle size={14} />تغییرات با موفقیت ذخیره شد.</p>}
+          {saved && <p className="flex items-center gap-1 text-ink font-medium text-sm"><CheckCircle size={14} />{t('profile.saveSuccess')}</p>}
           {error && <p className="text-sm text-red-600">{error}</p>}
-          <Button type="submit">ذخیره تغییرات</Button>
+          <Button type="submit">{t('profile.saveButton')}</Button>
         </form>
       </Card>
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-4">تایید شماره موبایل</h3>
+        <h3 className="font-semibold text-gray-800 mb-4">{t('profile.verifyPhoneTitle')}</h3>
         {user?.phoneVerifiedAt && user?.phone === phone ? (
-          <p className="flex items-center gap-1 text-ink font-medium text-sm mb-3"><CheckCircle size={14} />شماره موبایل شما تایید شده است: {user.phone}</p>
+          <p className="flex items-center gap-1 text-ink font-medium text-sm mb-3"><CheckCircle size={14} />{t('profile.phoneVerifiedPrefix')} {user.phone}</p>
         ) : (
-          <p className="text-gray-500 text-sm mb-3">شماره موبایل شما هنوز تایید نشده است.</p>
+          <p className="text-gray-500 text-sm mb-3">{t('profile.phoneNotVerified')}</p>
         )}
         <div className="space-y-3">
           <input
             className="w-full border border-gray-300 rounded-lg px-3 py-2"
-            placeholder="شماره موبایل"
+            placeholder={t('profile.phonePlaceholder')}
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
           />
@@ -258,18 +260,18 @@ export default function Profile() {
                 <HCaptcha siteKey={captcha.siteKey} onVerify={captcha.setToken} onExpire={captcha.reset} />
               )}
               <Button variant="secondary" onClick={requestOtp} disabled={!phone}>
-                ارسال کد تایید
+                {t('profile.sendOtp')}
               </Button>
             </>
           ) : (
             <form onSubmit={verifyOtp} className="space-y-2">
               <input
                 className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                placeholder="کد تایید"
+                placeholder={t('profile.otpPlaceholder')}
                 value={otpCode}
                 onChange={(e) => setOtpCode(e.target.value)}
               />
-              <Button type="submit">تایید کد</Button>
+              <Button type="submit">{t('profile.verifyOtp')}</Button>
             </form>
           )}
           {otpMessage && <p className="text-sm text-gray-600">{otpMessage}</p>}
@@ -277,24 +279,24 @@ export default function Profile() {
       </Card>
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-4">تغییر رمز عبور</h3>
+        <h3 className="font-semibold text-gray-800 mb-4">{t('profile.changePasswordTitle')}</h3>
         <form onSubmit={handleChangePassword} className="space-y-3">
           <input
             type="password"
             className="w-full border border-gray-300 rounded-lg px-3 py-2"
-            placeholder="رمز عبور فعلی"
+            placeholder={t('profile.currentPasswordPlaceholder')}
             value={passwordForm.currentPassword}
             onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
           />
           <input
             type="password"
             className="w-full border border-gray-300 rounded-lg px-3 py-2"
-            placeholder="رمز عبور جدید"
+            placeholder={t('profile.newPasswordPlaceholder')}
             value={passwordForm.newPassword}
             onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
           />
           {passwordMessage && <p className="text-sm text-gray-600">{passwordMessage}</p>}
-          <Button type="submit">تغییر رمز عبور</Button>
+          <Button type="submit">{t('profile.changePasswordButton')}</Button>
         </form>
       </Card>
     </div>

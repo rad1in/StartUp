@@ -7,8 +7,8 @@ import { useCustomerSocket } from '../../hooks/useCustomerSocket';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import PushNotificationToggle from '../../components/PushNotificationToggle';
+import { useLanguage } from '../../context/LanguageContext';
 
-const TYPE_LABELS = { ORDER_STATUS: 'وضعیت سفارش', PROMO: 'تخفیف و کمپین', LOYALTY: 'امتیاز وفاداری', SYSTEM: 'سیستمی' };
 const CUSTOMER_CATEGORIES = ['ORDER_STATUS', 'PROMO', 'LOYALTY', 'SYSTEM'];
 const TYPE_META = {
   ORDER_STATUS: { icon: ShoppingBag, color: 'text-accent-600 bg-accent-50' },
@@ -26,6 +26,13 @@ function isToday(dateStr) {
 export default function Notifications() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
+  const TYPE_LABELS = {
+    ORDER_STATUS: t('notif.typeOrderStatus'),
+    PROMO: t('notif.typePromo'),
+    LOYALTY: t('notif.typeLoyalty'),
+    SYSTEM: t('notif.typeSystem'),
+  };
   const [notifications, setNotifications] = useState([]);
   const [preferences, setPreferences] = useState([]);
 
@@ -73,7 +80,7 @@ export default function Notifications() {
       <PushNotificationToggle />
 
       <Card>
-        <h3 className="font-semibold text-gray-800 mb-3">تنظیمات اعلان‌ها</h3>
+        <h3 className="font-semibold text-gray-800 mb-3">{t('notif.settingsTitle')}</h3>
         <div className="space-y-2">
           {preferences.map((pref) => (
             <label key={pref.category} className="flex items-center justify-between text-sm">
@@ -90,19 +97,19 @@ export default function Notifications() {
 
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-gray-800">اعلان‌ها</h3>
+          <h3 className="font-semibold text-gray-800">{t('notif.title')}</h3>
           <Button variant="ghost" onClick={markAllRead}>
-            علامت‌گذاری همه به‌عنوان خوانده‌شده
+            {t('notif.markAllRead')}
           </Button>
         </div>
-        {notifications.length === 0 && <p className="text-gray-500 text-sm">اعلانی وجود ندارد.</p>}
+        {notifications.length === 0 && <p className="text-gray-500 text-sm">{t('notif.empty')}</p>}
 
         {['today', 'earlier'].map((group) => {
           const groupItems = notifications.filter((n) => (group === 'today' ? isToday(n.createdAt) : !isToday(n.createdAt)));
           if (groupItems.length === 0) return null;
           return (
             <div key={group} className="mb-4">
-              <p className="text-xs font-bold text-primary-700 mb-2">{group === 'today' ? 'امروز' : 'قبل‌تر'}</p>
+              <p className="text-xs font-bold text-primary-700 mb-2">{group === 'today' ? t('notif.today') : t('notif.earlier')}</p>
               <div className="space-y-2">
                 {groupItems.map((n) => {
                   const meta = TYPE_META[n.type] || TYPE_META.SYSTEM;
