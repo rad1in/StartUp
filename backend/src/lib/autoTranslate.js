@@ -7,9 +7,11 @@ const TARGET_LANGS = ['en', 'ar', 'tr'];
 // the venue owner) and merges the result into the row's `translations` JSON
 // column. Never throws — errors are only logged, since this is a silent
 // background enhancement. The venue owner's save request must never wait on
-// this or be able to fail because of it.
+// this or be able to fail because of it. Returns the underlying promise so
+// callers that need to know when it settles (e.g. the self-heal path below)
+// can await/finally it — callers that don't care can simply ignore it.
 function scheduleTranslation(table, id, fields) {
-  translateFields(fields, TARGET_LANGS)
+  return translateFields(fields, TARGET_LANGS)
     .then(async (translations) => {
       if (Object.keys(translations).length === 0) return;
       const [rows] = await pool.query(`SELECT translations FROM \`${table}\` WHERE id = ?`, [id]);
@@ -30,33 +32,66 @@ function scheduleTranslation(table, id, fields) {
     });
 }
 
+// Rows missing a translation currently being generated, so concurrent
+// requests for the same row (e.g. several customers viewing a popular venue
+// at once) don't each fire their own duplicate GapGPT call.
+const healInFlight = new Set();
+
+// Self-heals rows that were never translated — demo/seed data inserted
+// directly via SQL (bypassing scheduleTranslation entirely), content saved
+// before GAPGPT_API_KEY was configured, or a past translation call that
+// failed and was only logged. Rather than requiring a one-off backfill to be
+// remembered and re-run, the first customer request for a language a row
+// doesn't have yet quietly kicks off translation from the row's own current
+// text, so the next viewer (in any target language) gets it.
+function scheduleHeal(table, row, lang, fields) {
+  if (!table || !TARGET_LANGS.includes(lang)) return;
+  const key = `${table}:${row.id}`;
+  if (healInFlight.has(key)) return;
+  const source = {};
+  for (const field of fields) {
+    if (row[field]) source[field] = row[field];
+  }
+  if (Object.keys(source).length === 0) return;
+  healInFlight.add(key);
+  scheduleTranslation(table, row.id, source).finally(() => healInFlight.delete(key));
+}
+
 // Applies a stored translation onto a row for display, and always strips the
 // raw `translations` JSON blob from what's returned to any client (owner or
 // customer) — it's an internal implementation detail, never something either
 // side should see. `lang` is the viewer's selected UI language; 'fa' (or
-// unset) returns the original venue-owner-entered text untouched.
-function applyTranslation(row, lang, fields) {
+// unset) returns the original venue-owner-entered text untouched. Pass
+// `table` (the row's own table name) to enable the self-heal behavior above
+// for viewer-facing reads; omit it for internal/management reads that
+// shouldn't trigger background translation work.
+function applyTranslation(row, lang, fields, table) {
   if (!row) return row;
   const out = { ...row };
   delete out.translations;
-  if (!lang || lang === 'fa' || !row.translations) return out;
+  if (!lang || lang === 'fa') return out;
 
-  let translations;
-  try {
-    translations = typeof row.translations === 'string' ? JSON.parse(row.translations) : row.translations;
-  } catch {
+  let translations = {};
+  if (row.translations) {
+    try {
+      translations = typeof row.translations === 'string' ? JSON.parse(row.translations) : row.translations;
+    } catch {
+      translations = {};
+    }
+  }
+  const t = translations[lang];
+  if (!t) {
+    scheduleHeal(table, row, lang, fields);
     return out;
   }
-  const t = translations && translations[lang];
-  if (!t) return out;
   for (const field of fields) {
     if (t[field]) out[field] = t[field];
   }
   return out;
 }
 
-function applyTranslationToList(rows, lang, fields) {
-  return rows.map((row) => applyTranslation(row, lang, fields));
+function applyTranslationToList(rows, lang, fields, table) {
+  return rows.map((row) => applyTranslation(row, lang, fields, table));
 }
 
 // A venue's own owner/staff (or platform admin staff) must always see their

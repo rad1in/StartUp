@@ -104,7 +104,7 @@ async function listVenues({ publicOnly = true, lang } = {}) {
   const [rows] = await pool.query(query);
   const withStats = await attachStats(rows);
   const withOccupancy = await attachOccupancy(withStats);
-  return applyTranslationToList(withOccupancy, lang, ['name', 'description']);
+  return applyTranslationToList(withOccupancy, lang, ['name', 'description'], 'Venue');
 }
 
 async function getVenue(id, lang) {
@@ -120,9 +120,9 @@ async function getVenue(id, lang) {
   const [tables] = await pool.query('SELECT * FROM `VenueTable` WHERE venueId = ?', [id]);
   const [withStats] = await attachStats([venue]);
   const [withOccupancy] = await attachOccupancy([withStats]);
-  const translatedVenue = applyTranslation(withOccupancy, lang, ['name', 'description']);
-  const translatedCategories = applyTranslationToList(categories, lang, ['name']);
-  const translatedItems = applyTranslationToList(menuItems, lang, ['name', 'description', 'tags']);
+  const translatedVenue = applyTranslation(withOccupancy, lang, ['name', 'description'], 'Venue');
+  const translatedCategories = applyTranslationToList(categories, lang, ['name'], 'Category');
+  const translatedItems = applyTranslationToList(menuItems, lang, ['name', 'description', 'tags'], 'MenuItem');
 
   return { ...translatedVenue, categories: translatedCategories, menuItems: translatedItems, tables };
 }

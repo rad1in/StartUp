@@ -5,7 +5,7 @@ const { scheduleTranslation, applyTranslation, applyTranslationToList } = requir
 
 async function listCategories(venueId, lang) {
   const [rows] = await pool.query('SELECT * FROM `Category` WHERE venueId = ? ORDER BY sortOrder ASC', [venueId]);
-  return applyTranslationToList(rows, lang, ['name']);
+  return applyTranslationToList(rows, lang, ['name'], 'Category');
 }
 
 async function createCategory(venueId, { name, sortOrder }) {
@@ -46,7 +46,7 @@ function isWithinSchedule(item, now = new Date()) {
 
 async function listMenuItems(venueId, { publicOnly = false, lang } = {}) {
   const [allRows] = await pool.query('SELECT * FROM `MenuItem` WHERE venueId = ?', [venueId]);
-  const rows = applyTranslationToList(allRows, lang, ['name', 'description', 'tags']);
+  const rows = applyTranslationToList(allRows, lang, ['name', 'description', 'tags'], 'MenuItem');
   const items = publicOnly ? rows.filter((item) => item.isAvailable && isWithinSchedule(item)) : rows;
   if (items.length === 0) return [];
 
