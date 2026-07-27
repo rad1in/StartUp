@@ -62,7 +62,9 @@ class MelipayamakSmsProvider extends SmsProvider {
     const token = await this.getToken();
     const parsed = await this.postJson(`/api/send/otp/${token}`, { to: phone });
     if (!parsed.code) {
-      throw new Error(parsed.status || 'ارسال پیامک با خطا مواجه شد.');
+      const err = new Error(parsed.status || 'ارسال پیامک با خطا مواجه شد.');
+      err.status = 502;
+      throw err;
     }
     return { sent: true, code: String(parsed.code) };
   }
@@ -74,7 +76,9 @@ class MelipayamakSmsProvider extends SmsProvider {
     const from = await this.getFrom();
     const parsed = await this.postJson(`/api/send/simple/${token}`, { from, to: phone, text: message });
     if (!parsed.recId) {
-      throw new Error(parsed.status || 'ارسال پیامک با خطا مواجه شد.');
+      const err = new Error(parsed.status || 'ارسال پیامک با خطا مواجه شد.');
+      err.status = 502;
+      throw err;
     }
     return { sent: true, recId: parsed.recId };
   }
@@ -86,7 +90,9 @@ class MelipayamakSmsProvider extends SmsProvider {
     const from = await this.getFrom();
     const parsed = await this.postJson(`/api/send/advanced/${token}`, { from, to: phones, text: message, udh: '' });
     if (!Array.isArray(parsed.recIds)) {
-      throw new Error(parsed.status || 'ارسال پیامک با خطا مواجه شد.');
+      const err = new Error(parsed.status || 'ارسال پیامک با خطا مواجه شد.');
+      err.status = 502;
+      throw err;
     }
     return { sent: true, recIds: parsed.recIds };
   }
@@ -98,7 +104,9 @@ class MelipayamakSmsProvider extends SmsProvider {
     const from = await this.getFrom();
     const parsed = await this.postJson(`/api/send/multiple/${token}`, { from, to: phones, text: texts, udh: '' });
     if (!Array.isArray(parsed.recIds)) {
-      throw new Error(parsed.status || 'ارسال پیامک با خطا مواجه شد.');
+      const err = new Error(parsed.status || 'ارسال پیامک با خطا مواجه شد.');
+      err.status = 502;
+      throw err;
     }
     return { sent: true, recIds: parsed.recIds, success: parsed.success || [] };
   }
@@ -114,7 +122,9 @@ class MelipayamakSmsProvider extends SmsProvider {
       period: period || undefined,
     });
     if (!parsed.id) {
-      throw new Error(parsed.status || 'زمان‌بندی پیامک با خطا مواجه شد.');
+      const err = new Error(parsed.status || 'زمان‌بندی پیامک با خطا مواجه شد.');
+      err.status = 502;
+      throw err;
     }
     return { sent: true, id: parsed.id };
   }
@@ -125,7 +135,9 @@ class MelipayamakSmsProvider extends SmsProvider {
     const token = await this.getToken();
     const parsed = await this.postJson(`/api/send/shared/${token}`, { bodyId, to: phone, args: args || [] });
     if (!parsed.recId) {
-      throw new Error(parsed.status || 'ارسال پیامک با خطا مواجه شد.');
+      const err = new Error(parsed.status || 'ارسال پیامک با خطا مواجه شد.');
+      err.status = 502;
+      throw err;
     }
     return { sent: true, recId: parsed.recId };
   }

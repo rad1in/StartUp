@@ -10,6 +10,14 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   decimalNumbers: true,
+  // Without TCP keep-alive, an idle pooled connection can be silently
+  // dropped (by the OS, a NAT, or MySQL's own wait_timeout) without either
+  // side noticing — the next query on that connection then fails with
+  // ECONNRESET instead of transparently reconnecting. This affected both
+  // background cron jobs (processDueBroadcasts, checkMarginAlerts, etc.)
+  // and real request handlers hitting a long-idle connection from the pool.
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 10000,
 });
 
 module.exports = { pool };
