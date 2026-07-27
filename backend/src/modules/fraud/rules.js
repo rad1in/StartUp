@@ -86,7 +86,8 @@ async function detectFailedPaymentSurge() {
        u.id AS entityId, u.name AS entityName, u.email,
        COUNT(p.id) AS failedAttempts
      FROM \`User\` u
-     JOIN \`Payment\` p ON p.customerId = u.id
+     JOIN \`Order\` o ON o.customerId = u.id
+     JOIN \`Payment\` p ON p.orderId = o.id
      WHERE p.status = 'FAILED'
        AND p.createdAt >= DATE_SUB(NOW(), INTERVAL 7 DAY)
      GROUP BY u.id

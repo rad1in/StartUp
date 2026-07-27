@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const { config } = require('./config/config');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 const { apiRateLimiter } = require('./middleware/rateLimit');
+const { ipBlocklistMiddleware } = require('./middleware/ipBlocklist');
 const { renderStatusPage, sendStatus } = require('./lib/statusPage');
 const { getSystemStatus } = require('./lib/systemStatus');
 
@@ -85,6 +86,7 @@ app.use(
   })
 );
 app.use(cors({ origin: config.corsOrigin, credentials: true }));
+app.use(ipBlocklistMiddleware);
 app.use(express.json({ limit: '1mb' }));
 // Payment gateways (e.g. Saman/SEP) POST their callback as a standard HTML
 // form submission, not JSON — needed to read req.body.RefNum/State/etc.

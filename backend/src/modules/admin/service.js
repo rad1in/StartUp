@@ -7,6 +7,7 @@ const { commissionRateForTier } = require('../../utils/commission');
 const { logActivity, listActivity } = require('../../lib/activityLog');
 const { emitToAdmins, emitToCustomer, getConnectedClientCount } = require('../../sockets');
 const { getSetting, setSetting } = require('../../lib/platformSettings');
+const { normalizeIp } = require('../../middleware/ipBlocklist');
 
 async function listUsers() {
   const [rows] = await pool.query('SELECT * FROM `User` ORDER BY createdAt DESC');
@@ -316,6 +317,33 @@ async function listUserSessions(userId) {
   return rows;
 }
 
+async function listBlockedIps() {
+  const [rows] = await pool.query(
+    `SELECT b.*, u.name AS createdByName FROM \`BlockedIp\` b
+     LEFT JOIN \`User\` u ON u.id = b.createdBy
+     WHERE b.expiresAt IS NULL OR b.expiresAt > NOW()
+     ORDER BY b.createdAt DESC`
+  );
+  return rows;
+}
+
+async function blockIp({ ip, reason, expiresAt }, actingUserId) {
+  const normalized = normalizeIp(ip);
+  await pool.query(
+    `INSERT INTO \`BlockedIp\` (id, ip, reason, source, createdBy, expiresAt)
+     VALUES (?, ?, ?, 'MANUAL', ?, ?)
+     ON DUPLICATE KEY UPDATE reason = VALUES(reason), source = 'MANUAL', createdBy = VALUES(createdBy), expiresAt = VALUES(expiresAt)`,
+    [randomUUID(), normalized, reason, actingUserId, expiresAt || null]
+  );
+  await logActivity(null, actingUserId, 'IP_BLOCKED', 'BlockedIp', normalized, { reason, expiresAt });
+}
+
+async function unblockIp(id, actingUserId) {
+  const [[row]] = await pool.query('SELECT ip FROM `BlockedIp` WHERE id = ?', [id]);
+  await pool.query('DELETE FROM `BlockedIp` WHERE id = ?', [id]);
+  await logActivity(null, actingUserId, 'IP_UNBLOCKED', 'BlockedIp', row?.ip || id, null);
+}
+
 // Global command-palette search across venues and customers. Returns a small,
 // typed result set for quick navigation. Uses a parameterized LIKE so it is
 // injection-safe; the `%` wildcards are bound as data, not concatenated in.
@@ -547,6 +575,9 @@ module.exports = {
   platformActivityLog,
   forceLogout,
   listUserSessions,
+  listBlockedIps,
+  blockIp,
+  unblockIp,
   systemHealth,
   listRecentApiErrors,
   impersonateVenueOwner,

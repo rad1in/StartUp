@@ -60,6 +60,9 @@ const securityManage = requirePlatformPermission('security.manage');
 router.get('/activity-log', securityManage, controller.activityLog);
 router.post('/users/:userId/force-logout', securityManage, controller.forceLogout);
 router.get('/users/:userId/sessions', securityManage, controller.listUserSessions);
+router.get('/blocked-ips', securityManage, controller.listBlockedIps);
+router.post('/blocked-ips', securityManage, controller.blockIp);
+router.delete('/blocked-ips/:id', securityManage, controller.unblockIp);
 router.get('/system-health', securityManage, controller.systemHealth);
 router.get('/recent-api-errors', securityManage, controller.recentApiErrors);
 

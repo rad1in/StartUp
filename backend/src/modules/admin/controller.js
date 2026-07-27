@@ -220,6 +220,32 @@ async function listUserSessions(req, res, next) {
   }
 }
 
+async function listBlockedIps(req, res, next) {
+  try {
+    res.json(await service.listBlockedIps());
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function blockIp(req, res, next) {
+  try {
+    await service.blockIp(req.body, req.user.id);
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function unblockIp(req, res, next) {
+  try {
+    await service.unblockIp(req.params.id, req.user.id);
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function systemHealth(req, res, next) {
   try {
     res.json(await service.systemHealth());
@@ -345,6 +371,9 @@ module.exports = {
   activityLog,
   forceLogout,
   listUserSessions,
+  listBlockedIps,
+  blockIp,
+  unblockIp,
   systemHealth,
   recentApiErrors,
   impersonateVenueOwner,
