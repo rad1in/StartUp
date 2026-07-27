@@ -5,6 +5,7 @@ import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import { useTableSession } from '../../hooks/useTableSession';
 import { resolveImageUrl } from '../../components/VenueCards';
+import { GATEWAY_LOGOS } from '../../utils/paymentGatewayLogos';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import MenuItemCard from '../../components/MenuItemCard';
@@ -1021,12 +1022,19 @@ export default function VenueMenuPage() {
                       key={m.name}
                       type="button"
                       onClick={() => setSelectedProvider(m.name)}
-                      className={`px-3 py-1.5 rounded-lg text-xs border font-bold ${
+                      className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs border font-bold ${
                         selectedProvider === m.name
                           ? 'border-primary-800 bg-primary-800 text-white'
                           : 'border-gray-300 bg-white text-gray-700'
                       }`}
                     >
+                      {GATEWAY_LOGOS[m.name] && (
+                        <img
+                          src={GATEWAY_LOGOS[m.name]}
+                          alt=""
+                          className={`h-5 object-contain ${selectedProvider === m.name ? 'brightness-0 invert' : ''}`}
+                        />
+                      )}
                       {m.label}
                     </button>
                   ))}

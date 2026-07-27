@@ -6,6 +6,7 @@ import { Button, Card, Chip, EmptyState, GoldCard, Input, Loading, Muted, Row, T
 import { useToast } from '../context/ToastContext';
 import { useI18n } from '../i18n';
 import { colors, fonts } from '../theme';
+import { GATEWAY_LOGOS } from '../utils/paymentGatewayLogos';
 
 export default function WalletScreen() {
   const { t, money, date } = useI18n();
@@ -90,7 +91,8 @@ export default function WalletScreen() {
             {paymentMethods.map((m) => (
               <Chip
                 key={m.name}
-                icon="credit-card"
+                icon={GATEWAY_LOGOS[m.name] ? undefined : 'credit-card'}
+                image={GATEWAY_LOGOS[m.name]}
                 label={m.label}
                 active={selectedProvider === m.name}
                 onPress={() => setSelectedProvider(m.name)}

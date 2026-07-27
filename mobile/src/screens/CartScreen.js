@@ -9,6 +9,7 @@ import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { useI18n } from '../i18n';
 import { colors, fonts, radius } from '../theme';
+import { GATEWAY_LOGOS } from '../utils/paymentGatewayLogos';
 
 export default function CartScreen() {
   const router = useRouter();
@@ -271,7 +272,8 @@ export default function CartScreen() {
               {paymentMethods.map((m) => (
                 <Chip
                   key={m.name}
-                  icon="credit-card"
+                  icon={GATEWAY_LOGOS[m.name] ? undefined : 'credit-card'}
+                  image={GATEWAY_LOGOS[m.name]}
                   label={m.label}
                   active={selectedProvider === m.name}
                   onPress={() => setSelectedProvider(m.name)}

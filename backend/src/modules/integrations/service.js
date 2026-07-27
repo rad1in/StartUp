@@ -4,7 +4,6 @@ const { logActivity } = require('../../lib/activityLog');
 const { AVAILABLE_PROVIDERS, PROVIDER_LABELS } = require('../../payments');
 
 async function getStatus() {
-  const mockOutcome = await getSetting('payment.mockOutcome', process.env.MOCK_PAYMENT_OUTCOME || 'success');
   const smsProvider = await getSetting('sms.provider', config.smsProvider);
   const melipayamakApiKey = await getSetting('sms.melipayamak.apiKey', '');
   const melipayamakFrom = await getSetting('sms.melipayamak.from', '');
@@ -17,7 +16,6 @@ async function getStatus() {
 
   return {
     payment: {
-      mockOutcome,
       availableProviders: AVAILABLE_PROVIDERS,
       providerLabels: PROVIDER_LABELS,
       // Never echo real secrets back to the browser once set — only whether
@@ -88,7 +86,6 @@ async function getStatus() {
 
 async function updatePaymentSettings(
   {
-    mockOutcome,
     aqayepardakhtEnabled, aqayepardakhtPin, aqayepardakhtSandbox,
     samanEnabled, samanTerminalId,
     zarinpalEnabled, zarinpalMerchantId, zarinpalSandbox,
@@ -97,8 +94,6 @@ async function updatePaymentSettings(
   },
   actingUserId
 ) {
-  if (mockOutcome !== undefined) await setSetting('payment.mockOutcome', mockOutcome);
-
   if (aqayepardakhtEnabled !== undefined) await setSetting('payment.aqayepardakht.enabled', Boolean(aqayepardakhtEnabled));
   if (aqayepardakhtPin !== undefined) await setSetting('payment.aqayepardakht.pin', aqayepardakhtPin);
   if (aqayepardakhtSandbox !== undefined) await setSetting('payment.aqayepardakht.sandbox', Boolean(aqayepardakhtSandbox));
@@ -117,7 +112,6 @@ async function updatePaymentSettings(
   if (paypingAccessToken !== undefined) await setSetting('payment.payping.accessToken', paypingAccessToken);
 
   await logActivity(null, actingUserId, 'INTEGRATION_PAYMENT_UPDATED', 'PlatformSetting', null, {
-    mockOutcome,
     aqayepardakhtEnabled, aqayepardakhtPinChanged: aqayepardakhtPin !== undefined, aqayepardakhtSandbox,
     samanEnabled, samanTerminalIdChanged: samanTerminalId !== undefined,
     zarinpalEnabled, zarinpalMerchantIdChanged: zarinpalMerchantId !== undefined, zarinpalSandbox,

@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Animated, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Feather from '@expo/vector-icons/Feather';
 import { colors, fonts, radius } from '../theme';
@@ -148,7 +148,7 @@ export function Input({ style, ...rest }) {
   );
 }
 
-export function Chip({ label, active, onPress, icon }) {
+export function Chip({ label, active, onPress, icon, image }) {
   const { isRTL } = useI18n();
   return (
     <Pressable
@@ -159,7 +159,9 @@ export function Chip({ label, active, onPress, icon }) {
         active && { backgroundColor: colors.gold300 },
       ]}
     >
-      {icon ? (
+      {image ? (
+        <Image source={image} style={{ width: 36, height: 14, marginEnd: 5, resizeMode: 'contain' }} />
+      ) : icon ? (
         <Icon name={icon} size={12} color={active ? colors.charcoal : colors.inkMuted} style={{ marginEnd: 5 }} />
       ) : null}
       <T style={[styles.chipText, { textAlign: 'center' }, active && { color: colors.charcoal, fontFamily: fonts.bold }]}>

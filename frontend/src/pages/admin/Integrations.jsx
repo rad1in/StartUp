@@ -31,7 +31,6 @@ function EnableToggle({ enabled, onToggle }) {
 export default function Integrations() {
   const { t } = useLanguage();
   const PROVIDER_LABELS = {
-    mock: t('admin.integrations.providerMock'),
     aqayepardakht: t('admin.integrations.providerAqayepardakht'),
     saman: t('admin.integrations.providerSaman'),
     zarinpal: t('admin.integrations.providerZarinpal'),
@@ -149,25 +148,6 @@ export default function Integrations() {
         </p>
 
         <div className="space-y-4">
-          {/* Mock */}
-          <div className="border border-gray-100 rounded-lg p-3">
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <span className="font-bold text-sm text-gray-800">{PROVIDER_LABELS.mock}</span>
-              <span className="text-xs text-gray-500">{t('admin.integrations.alwaysOnDevOnly')}</span>
-            </div>
-            <div className="mt-3">
-              <label className="block text-xs text-gray-500 mb-1">{t('admin.integrations.mockOutcomeLabel')}</label>
-              <select
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-64"
-                value={p.mockOutcome}
-                onChange={(e) => patchPayment({ mockOutcome: e.target.value })}
-              >
-                <option value="success">{t('admin.integrations.outcomeSuccess')}</option>
-                <option value="failure">{t('admin.integrations.outcomeFailure')}</option>
-              </select>
-            </div>
-          </div>
-
           {/* AqayePardakht */}
           <div className="border border-gray-100 rounded-lg p-3">
             <div className="flex items-center justify-between gap-3 flex-wrap">

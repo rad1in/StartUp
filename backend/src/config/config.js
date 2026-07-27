@@ -79,7 +79,6 @@ const config = {
   // that POST their callback straight to a server endpoint rather than
   // redirecting the browser to a frontend page (AqayePardakht's flow).
   apiUrl: process.env.API_URL || `http://localhost:${parseInt(process.env.PORT || '4000', 10)}/api`,
-  paymentProvider: process.env.PAYMENT_PROVIDER || 'mock',
   smsProvider: process.env.SMS_PROVIDER || 'mock',
   sms: {
     melipayamakOtpToken: process.env.MELIPAYAMAK_OTP_TOKEN || '',

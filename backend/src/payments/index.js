@@ -1,5 +1,4 @@
 const { getSetting } = require('../lib/platformSettings');
-const MockPaymentProvider = require('./MockPaymentProvider');
 const { AqayePardakhtProvider, buildCallbackUrl } = require('./AqayePardakhtProvider');
 const { SamanProvider, buildSamanCallbackUrl } = require('./SamanProvider');
 const { ZarinpalProvider, buildZarinpalCallbackUrl } = require('./ZarinpalProvider');
@@ -8,11 +7,12 @@ const { PaypingProvider, buildPaypingCallbackUrl } = require('./PaypingProvider'
 
 // Each real gateway is independently enabled/disabled (payment.<name>.enabled)
 // rather than there being one global "active provider" — the customer picks
-// which one to pay with at checkout (see GET /payments/methods). "mock" is
-// always available so checkout never fully breaks in a dev environment with
-// nothing configured yet.
+// which one to pay with at checkout (see GET /payments/methods). No mock/
+// simulated provider exists here on purpose — production must never be able
+// to silently fall back to a fake payment outcome. For local dev testing,
+// enable a real gateway in sandbox mode via the admin Integrations page
+// instead (ZarinPal and AqayePardakht both support a sandbox toggle).
 const PROVIDER_LABELS = {
-  mock: 'شبیه‌سازی (Mock)',
   aqayepardakht: 'آقای پرداخت',
   saman: 'سامان (SEP)',
   zarinpal: 'زرین‌پال',
@@ -46,16 +46,15 @@ async function buildProvider(name) {
       const accessToken = await getSetting('payment.payping.accessToken', '');
       return new PaypingProvider({ accessToken, callbackUrl: buildPaypingCallbackUrl() });
     }
-    case 'mock':
     default: {
-      const mockOutcome = await getSetting('payment.mockOutcome', process.env.MOCK_PAYMENT_OUTCOME || 'success');
-      return new MockPaymentProvider(mockOutcome);
+      const err = new Error('روش پرداخت نامعتبر است.');
+      err.status = 400;
+      throw err;
     }
   }
 }
 
 async function isProviderEnabled(name) {
-  if (name === 'mock') return true;
   if (!AVAILABLE_PROVIDERS.includes(name)) return false;
   return Boolean(await getSetting(`payment.${name}.enabled`, false));
 }
@@ -71,23 +70,29 @@ async function listEnabledPaymentMethods() {
 
 // Used when STARTING a new payment (checkout / wallet top-up) — throws if
 // the customer's chosen provider isn't actually enabled (covers both
-// "unknown name" and "admin turned it off since the page loaded").
+// "unknown name" and "admin turned it off since the page loaded"), and also
+// if no provider name was given at all (there is no default to fall back to
+// anymore).
 async function getPaymentProviderByName(name) {
-  const providerName = name && AVAILABLE_PROVIDERS.includes(name) ? name : 'mock';
-  if (!(await isProviderEnabled(providerName))) {
+  if (!name || !AVAILABLE_PROVIDERS.includes(name) || !(await isProviderEnabled(name))) {
     const err = new Error('این روش پرداخت در حال حاضر فعال نیست.');
     err.status = 400;
     throw err;
   }
-  return { provider: await buildProvider(providerName), providerName };
+  return { provider: await buildProvider(name), providerName: name };
 }
 
 // Used when VERIFYING a payment already in flight — deliberately skips the
 // enabled check, since an admin toggling a gateway off mid-transaction
-// shouldn't strand a customer's already-created payment unverifiable.
+// shouldn't strand a customer's already-created payment unverifiable. Still
+// requires a real, known provider name, since there is nothing to fall back to.
 async function getPaymentProviderForVerification(name) {
-  const providerName = name && AVAILABLE_PROVIDERS.includes(name) ? name : 'mock';
-  return { provider: await buildProvider(providerName), providerName };
+  if (!name || !AVAILABLE_PROVIDERS.includes(name)) {
+    const err = new Error('روش پرداخت نامعتبر است.');
+    err.status = 400;
+    throw err;
+  }
+  return { provider: await buildProvider(name), providerName: name };
 }
 
 module.exports = {

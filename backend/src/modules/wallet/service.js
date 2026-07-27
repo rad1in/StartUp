@@ -39,7 +39,7 @@ async function initiateTopUp(userId, amount, providerName) {
   const wallet = await getOrCreateWallet(userId);
 
   if (result.status === 'SUCCESS') {
-    // Mock provider succeeds immediately — credit right away
+    // A provider that confirms payment synchronously — credit right away
     const newBalance = Number(wallet.balance) + Number(amount);
     await pool.query('UPDATE `Wallet` SET balance = ? WHERE userId = ?', [newBalance, userId]);
     await pool.query(
