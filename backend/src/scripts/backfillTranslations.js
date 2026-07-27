@@ -55,16 +55,24 @@ async function processTarget({ table, fields }) {
       skippedEmpty++;
       continue;
     }
-    // scheduleTranslation swallows its own errors (by design, for its
-    // fire-and-forget call sites elsewhere) — it always resolves, so success
-    // is checked by re-reading the row rather than by catching a rejection.
-    await scheduleTranslation(table, row.id, source);
-    const [[after]] = await pool.query(`SELECT translations FROM \`${table}\` WHERE id = ?`, [row.id]);
-    if (isFullyTranslated(after?.translations)) {
-      translated++;
-    } else {
+    try {
+      // scheduleTranslation swallows its own errors (by design, for its
+      // fire-and-forget call sites elsewhere) — it always resolves, so
+      // success is checked by re-reading the row rather than catching a
+      // rejection. The re-check query itself can still throw on a transient
+      // connection drop over a long run, hence the try/catch around both —
+      // one bad row must not abort every row after it.
+      await scheduleTranslation(table, row.id, source);
+      const [[after]] = await pool.query(`SELECT translations FROM \`${table}\` WHERE id = ?`, [row.id]);
+      if (isFullyTranslated(after?.translations)) {
+        translated++;
+      } else {
+        failed++;
+        console.error(`  ✗ ${table} id=${row.id}: translation did not complete (see [autoTranslate] log above)`);
+      }
+    } catch (err) {
       failed++;
-      console.error(`  ✗ ${table} id=${row.id}: translation did not complete (see [autoTranslate] log above)`);
+      console.error(`  ✗ ${table} id=${row.id}: ${err.message}`);
     }
   }
 
