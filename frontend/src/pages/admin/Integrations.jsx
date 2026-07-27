@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Check, X } from 'lucide-react';
+import { Check, X, Shield } from 'lucide-react';
 import api from '../../services/api';
 import Card from '../../components/Card';
 import { useLanguage } from '../../context/LanguageContext';
@@ -562,6 +562,38 @@ export default function Integrations() {
           {t('admin.integrations.envVarsHint')}
         </p>
       </Card>
+
+      {status.cdn.configured && (
+        <Card>
+          <h3 className="font-semibold text-gray-800 mb-1 flex items-center gap-1.5">
+            <Shield size={16} />
+            {t('admin.integrations.cdnProtection')}
+          </h3>
+          <p className="text-xs text-gray-500 mb-4">{t('admin.integrations.cdnProtectionHint')}</p>
+          {status.cdn.error ? (
+            <p className="text-sm text-red-600">{status.cdn.error}</p>
+          ) : (
+            <div className="grid sm:grid-cols-3 gap-3 text-sm">
+              <div className="border border-gray-100 rounded-lg p-3">
+                <p className="text-xs text-gray-500 mb-1">{t('admin.integrations.ddosProtection')}</p>
+                <p className="font-bold text-gray-800">
+                  {status.cdn.ddosAction === 'none' ? t('admin.integrations.disabledClickToEnable') : status.cdn.ddosAction}
+                </p>
+              </div>
+              <div className="border border-gray-100 rounded-lg p-3">
+                <p className="text-xs text-gray-500 mb-1">{t('admin.integrations.ipReputation')}</p>
+                <ConfiguredBadge configured={status.cdn.ipReputationEnabled} />
+              </div>
+              <div className="border border-gray-100 rounded-lg p-3">
+                <p className="text-xs text-gray-500 mb-1">{t('admin.integrations.wafRules')}</p>
+                <p className="font-bold text-gray-800">
+                  {status.cdn.wafRulesActive} / {status.cdn.wafRulesTotal}
+                </p>
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
     </div>
   );
 }

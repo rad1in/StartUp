@@ -104,6 +104,11 @@ const config = {
   // Crash/error monitoring (Sentry) — entirely optional, only active when a DSN
   // is set, so local dev never sends anything anywhere by default.
   sentryDsn: process.env.SENTRY_DSN || '',
+  // CDN/WAF (Parspack) — powers lib/parspackCdn.js. Blank disables it entirely.
+  parspackCdn: {
+    apiKey: process.env.PARSPACK_CDN_API_KEY || '',
+    zoneUuid: process.env.PARSPACK_CDN_ZONE_UUID || '',
+  },
   loyalty: {
     // Points earned per 10,000 Toman spent when a venue doesn't set its own rate.
     defaultPointsRate: parseFloat(process.env.LOYALTY_DEFAULT_POINTS_RATE || '1'),

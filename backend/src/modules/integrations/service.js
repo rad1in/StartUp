@@ -2,6 +2,7 @@ const { config } = require('../../config/config');
 const { getSetting, setSetting } = require('../../lib/platformSettings');
 const { logActivity } = require('../../lib/activityLog');
 const { AVAILABLE_PROVIDERS, PROVIDER_LABELS } = require('../../payments');
+const parspackCdn = require('../../lib/parspackCdn');
 
 async function getStatus() {
   const smsProvider = await getSetting('sms.provider', config.smsProvider);
@@ -81,7 +82,22 @@ async function getStatus() {
     neshan: {
       configured: Boolean(config.neshanApiKey),
     },
+    cdn: await getCdnStatus(),
   };
+}
+
+// Read-only status only — deliberately no CRUD here. The actual DDoS/IP
+// reputation/WAF configuration was a one-time decision made with the user
+// (see scripts/configureCdnSecurity.js); this just answers "is it still on"
+// without duplicating Parspack's own dashboard inside this admin panel.
+async function getCdnStatus() {
+  if (!parspackCdn.isConfigured()) return { configured: false };
+  try {
+    const status = await parspackCdn.getSecurityStatus();
+    return { configured: true, ...status };
+  } catch (err) {
+    return { configured: true, error: err.message };
+  }
 }
 
 async function updatePaymentSettings(

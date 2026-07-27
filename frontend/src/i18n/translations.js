@@ -1764,6 +1764,11 @@ const translations = {
     "venue.menuManagement.modifierGroupsInfoLink": "customization groups page",
     "venue.menuManagement.modifierGroupsInfoSuffix": "and attach the desired groups.",
     "venue.menuManagement.optionsCount": "options",
+    "admin.integrations.cdnProtection": "CDN protection (Parspack)",
+    "admin.integrations.cdnProtectionHint": "Read-only status — DDoS/WAF settings for this domain are managed via the configureCdnSecurity script, not here.",
+    "admin.integrations.ddosProtection": "DDoS protection",
+    "admin.integrations.ipReputation": "IP reputation filtering",
+    "admin.integrations.wafRules": "WAF rules active",
   },
   fa: {
     "nav.cafes": "کافه‌ها",
@@ -3516,6 +3521,11 @@ const translations = {
     "venue.menuManagement.modifierGroupsInfoLink": "صفحه گروه‌های سفارشی‌سازی",
     "venue.menuManagement.modifierGroupsInfoSuffix": "بروید و گروه‌های مورد نظر را متصل کنید.",
     "venue.menuManagement.optionsCount": "گزینه",
+    "admin.integrations.cdnProtection": "محافظت CDN (Parspack)",
+    "admin.integrations.cdnProtectionHint": "فقط نمایش وضعیت — تنظیمات DDoS/WAF این دامنه از طریق اسکریپت configureCdnSecurity مدیریت می‌شود، نه از اینجا.",
+    "admin.integrations.ddosProtection": "محافظت DDoS",
+    "admin.integrations.ipReputation": "فیلتر اعتبار IP",
+    "admin.integrations.wafRules": "قوانین فعال WAF",
   },
   ar: {
     "nav.cafes": "المقاهي",
@@ -5268,6 +5278,11 @@ const translations = {
     "venue.menuManagement.modifierGroupsInfoLink": "صفحة مجموعات التخصيص",
     "venue.menuManagement.modifierGroupsInfoSuffix": "وقم بإرفاق المجموعات المطلوبة.",
     "venue.menuManagement.optionsCount": "خيارات",
+    "admin.integrations.cdnProtection": "حماية CDN (Parspack)",
+    "admin.integrations.cdnProtectionHint": "حالة للقراءة فقط — تُدار إعدادات DDoS/WAF لهذا النطاق عبر سكربت configureCdnSecurity، وليس من هنا.",
+    "admin.integrations.ddosProtection": "الحماية من DDoS",
+    "admin.integrations.ipReputation": "تصفية سمعة IP",
+    "admin.integrations.wafRules": "قواعد WAF المفعّلة",
   },
   tr: {
     "nav.cafes": "Kafeler",
@@ -7020,6 +7035,11 @@ const translations = {
     "venue.menuManagement.modifierGroupsInfoLink": "özelleştirme grupları sayfasına",
     "venue.menuManagement.modifierGroupsInfoSuffix": "gidin ve istediğiniz grupları ekleyin.",
     "venue.menuManagement.optionsCount": "seçenek",
+    "admin.integrations.cdnProtection": "CDN koruması (Parspack)",
+    "admin.integrations.cdnProtectionHint": "Salt okunur durum — bu alan adının DDoS/WAF ayarları buradan değil configureCdnSecurity betiği üzerinden yönetilir.",
+    "admin.integrations.ddosProtection": "DDoS koruması",
+    "admin.integrations.ipReputation": "IP itibar filtreleme",
+    "admin.integrations.wafRules": "Aktif WAF kuralları",
   },
 };
 
