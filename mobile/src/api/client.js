@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import { getCurrentLang } from '../i18n';
 
 // In Expo Go the Metro host (hostUri) is the dev machine's LAN IP — the same
 // machine that runs the backend on :4000, so the API base can be derived
@@ -36,8 +37,16 @@ export function setUnauthorizedHandler(fn) {
   onUnauthorized = fn;
 }
 
+// Attaches the app's current language to every GET request so the backend's
+// AI-translated venue/menu content (see backend lib/autoTranslate.js) is
+// served in the right language automatically — mirrors the web client's
+// same interceptor in services/api.js. Venue-owner/admin screens are
+// unaffected — the backend already ignores `lang` in that context.
 api.interceptors.request.use((config) => {
   if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
+  if (config.method === 'get' && !config.params?.lang) {
+    config.params = { ...config.params, lang: getCurrentLang() };
+  }
   return config;
 });
 

@@ -2633,6 +2633,17 @@ const translations = {
 
 const I18nContext = createContext(null);
 
+// Mirrors the web app's localStorage-backed lang read in services/api.js —
+// the axios interceptor in api/client.js runs outside React and needs a
+// synchronous way to read the current language to attach it to GET requests
+// (so AI-translated venue/menu content — see backend lib/autoTranslate.js —
+// is served in the right language). AsyncStorage is async, so this
+// module-level variable is kept in sync with it instead.
+let currentLang = 'en';
+export function getCurrentLang() {
+  return currentLang;
+}
+
 export function LanguageProvider({ children }) {
   const [lang, setLangState] = useState('en');
   const [ready, setReady] = useState(false);
@@ -2640,7 +2651,10 @@ export function LanguageProvider({ children }) {
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
       .then((saved) => {
-        if (LANGUAGES.some((l) => l.code === saved)) setLangState(saved);
+        if (LANGUAGES.some((l) => l.code === saved)) {
+          setLangState(saved);
+          currentLang = saved;
+        }
       })
       .finally(() => setReady(true));
   }, []);
@@ -2648,6 +2662,7 @@ export function LanguageProvider({ children }) {
   function setLang(next) {
     if (!LANGUAGES.some((l) => l.code === next)) return;
     setLangState(next);
+    currentLang = next;
     AsyncStorage.setItem(STORAGE_KEY, next).catch(() => {});
   }
 
