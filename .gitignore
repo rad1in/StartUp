@@ -3,6 +3,7 @@ node_modules/
 
 # Env files with real secrets
 .env
+.env.production
 .env.local
 *.env.local
 
