@@ -36,3 +36,6 @@ mysql_start.log
 mobile_backup_*/
 .DS_Store
 .claude/
+
+# Deployment packages (contain SSL private key + production secrets)
+deploy/
