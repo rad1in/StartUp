@@ -8,23 +8,23 @@ node_modules/
 *.env.local
 
 # Backend
-backend/dist/
-backend/uploads/*
-!backend/uploads/.gitkeep
-backend/backups/
+Backend/dist/
+Backend/uploads/*
+!Backend/uploads/.gitkeep
+Backend/backups/
 backend_dev.log
 
 # Frontend
-frontend/dist/
+FrontEnd/dist/
 
 # Mobile / Expo
-mobile/.expo/
-mobile/dist/
-mobile/web-build/
-mobile/expo-env.d.ts
-mobile/.git.bak/
-mobile/ios/
-mobile/android/
+Mobile/.expo/
+Mobile/dist/
+Mobile/web-build/
+Mobile/expo-env.d.ts
+Mobile/.git.bak/
+Mobile/ios/
+Mobile/android/
 *.jks
 *.p8
 *.p12

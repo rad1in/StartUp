@@ -1,0 +1,25 @@
+# This is a single-page app (React Router handles routing client-side) —
+# without this, requesting any path other than "/" directly (a reload, a
+# bookmark, a shared link) makes Apache look for a literal file/folder at
+# that path, find nothing, and 404. Route everything that isn't a real file
+# or directory back to index.html so React Router can take over.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Let real files/directories (assets, icons, manifest, sw.js, etc.) serve normally.
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Everything else falls back to the SPA shell.
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# Long-lived caching for hashed, immutable build assets (index-*.js/css,
+# fonts) — filenames change on every rebuild, so this is always safe.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|css|woff2?)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+</IfModule>

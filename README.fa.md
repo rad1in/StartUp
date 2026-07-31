@@ -6,9 +6,9 @@
 
 این ریپازیتوری شامل سه پروژه مستقل است:
 
-- `/backend` — Express + mysql2 (SQL خام، بدون ORM) + MySQL + Socket.IO
-- `/frontend` — React + Vite + Tailwind CSS (چندزبانه: فارسی/انگلیسی/عربی/ترکی، فونت Vazirmatn)
-- `/mobile` — React Native + Expo Router (اپ موبایل مشتری، صاحب مجموعه و مدیر پلتفرم)
+- `/Backend` — Express + mysql2 (SQL خام، بدون ORM) + MySQL + Socket.IO
+- `/FrontEnd` — React + Vite + Tailwind CSS (چندزبانه: فارسی/انگلیسی/عربی/ترکی، فونت Vazirmatn)
+- `/Mobile` — React Native + Expo Router (اپ موبایل مشتری، صاحب مجموعه و مدیر پلتفرم)
 
 ---
 
@@ -28,7 +28,7 @@ git clone <repo-url>
 cd StartUp
 
 # 2. تنظیم متغیرهای محیطی بک‌اند
-cd backend
+cd Backend
 cp .env.example .env
 # مقادیر DB_HOST/DB_USER/DB_PASSWORD/DB_NAME و JWT secrets را در .env ویرایش کنید
 # دیتابیس MySQL با همین نام (مثلاً qr_ordering) باید از قبل در سرور MySQL ساخته شده باشد
@@ -44,7 +44,7 @@ npm run dev
 
 ```bash
 # 5. در یک ترمینال جدید — تنظیم و اجرای فرانت‌اند
-cd frontend
+cd FrontEnd
 cp .env.example .env
 # مقادیر VITE_API_URL و VITE_NESHAN_API_KEY را در صورت نیاز ویرایش کنید
 
@@ -54,7 +54,7 @@ npm run dev
 
 ```bash
 # 6. (اختیاری) اپ موبایل
-cd mobile
+cd Mobile
 cp .env.example .env
 npm install
 npm start
@@ -77,7 +77,7 @@ npm start
 
 ### متغیرهای محیطی
 
-هر سه پروژه یک فایل `.env.example` کامل و مستندسازی‌شده دارند (`backend/.env.example`، `frontend/.env.example`، `mobile/.env.example`) — برای فهرست کامل متغیرها و توضیح هرکدام به همان فایل‌ها مراجعه کنید.
+هر سه پروژه یک فایل `.env.example` کامل و مستندسازی‌شده دارند (`Backend/.env.example`، `FrontEnd/.env.example`، `Mobile/.env.example`) — برای فهرست کامل متغیرها و توضیح هرکدام به همان فایل‌ها مراجعه کنید.
 
 ---
 
@@ -86,7 +86,7 @@ npm start
 ### دستورات توسعه
 
 ```bash
-cd frontend
+cd FrontEnd
 npm install
 npm run dev        # اجرای سرور توسعه Vite روی پورت 5173
 npm run build       # بیلد نسخه Production در پوشه dist/
@@ -107,7 +107,7 @@ npm run preview     # پیش‌نمایش بیلد Production
 ### دستورات توسعه
 
 ```bash
-cd backend
+cd Backend
 npm install
 npm run dev          # اجرای سرور با nodemon روی پورت 5000
 ```
@@ -126,7 +126,7 @@ npm run db:seed        # پر کردن دیتابیس با داده‌های ن�
 ### اجرا در Production
 
 ```bash
-cd backend
+cd Backend
 npm install --production
 npm run db:migrate
 npm start
@@ -145,7 +145,7 @@ npm run go-live   # یک‌بار مصرف: پاک‌سازی داده‌های 
 اپ موبایل (React Native + Expo Router SDK 54) شامل سه پنل مجزا بر اساس نقش کاربر است: مشتری (اسکن QR، سفارش، کیف پول، وفاداری)، صاحب مجموعه (سفارش‌های زنده، منو، تنظیمات، بازاریابی) و مدیر پلتفرم.
 
 ```bash
-cd mobile
+cd Mobile
 npm install
 npm start          # اجرای Expo dev server — با Expo Go یا شبیه‌ساز اسکن کنید
 ```

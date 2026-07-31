@@ -1,0 +1,665 @@
+/* font-display: optional (not the package default of "swap") — see
+   scripts/regen-font-optional.js for why: this is what fixed the ~0.15 CLS
+   Lighthouse was flagging on font load. */
+@import './vazirmatn-optional.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Theme tokens — light values by default, overridden under html.dark.
+   Triples are "R G B" (no commas) per Tailwind's rgb(var(..) / <alpha-value>)
+   convention. Only structural surface/text/border tokens flip; brand colors
+   (gold accent, charcoal "primary" buttons) stay constant across themes. */
+:root {
+  --color-ink: 29 27 22;
+  --color-surface-0: 243 240 233;
+  --color-surface-1: 251 250 246;
+  --color-surface-2: 254 253 250;
+  --color-surface-3: 237 233 223;
+  --color-gray-50: 243 240 233;
+  --color-gray-100: 236 232 222;
+  --color-gray-200: 221 216 203;
+  --color-gray-300: 196 191 176;
+  --color-gray-400: 152 148 138;
+  --color-gray-500: 108 105 96;
+  --color-gray-600: 83 80 74;
+  --color-gray-700: 60 58 52;
+  --color-gray-800: 38 36 31;
+  --color-gray-900: 29 27 22;
+}
+
+html.dark {
+  --color-ink: 240 236 227;
+  --color-surface-0: 21 19 16;
+  --color-surface-1: 30 28 23;
+  --color-surface-2: 38 35 29;
+  --color-surface-3: 46 43 35;
+  --color-gray-50: 30 28 23;
+  --color-gray-100: 40 37 31;
+  --color-gray-200: 58 54 45;
+  --color-gray-300: 82 77 65;
+  --color-gray-400: 128 122 106;
+  --color-gray-500: 162 155 138;
+  --color-gray-600: 190 183 164;
+  --color-gray-700: 214 207 188;
+  --color-gray-800: 232 227 212;
+  --color-gray-900: 245 242 235;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+  /* Direction is NOT hardcoded here — it comes from the <html dir> attribute,
+     which LanguageContext keeps in sync with the chosen language (and an
+     inline script in index.html sets before first paint). Hardcoding
+     `direction: rtl` here used to override that attribute for the whole app,
+     so English/Turkish rendered with RTL punctuation and mirrored layout
+     ("place your order right here." came out as ".place your order right here",
+     "Cafes in تهران" as "تهران Cafes in", nav/footer flipped). */
+  color: rgb(var(--color-ink));
+  background-color: rgb(var(--color-surface-0));
+  /* Layered warm "aurora" fixed to the viewport: soft white light from the top,
+     a faint champagne-gold glow on one side, gentle shadow pooling at the
+     bottom. Gives the glass panels depth without ever leaving the warm theme. */
+  background-image:
+    radial-gradient(60rem 40rem at 8% -8%, rgba(255, 255, 255, 0.95), transparent 60%),
+    radial-gradient(44rem 36rem at 96% 4%, rgba(201, 146, 47, 0.1), transparent 58%),
+    radial-gradient(50rem 42rem at 55% 118%, rgba(20, 18, 16, 0.055), transparent 52%),
+    radial-gradient(28rem 28rem at 12% 82%, rgba(201, 146, 47, 0.07), transparent 60%),
+    radial-gradient(30rem 30rem at 85% 90%, rgba(255, 255, 255, 0.8), transparent 60%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+html.dark body {
+  /* Same layered-glow structure, re-tuned for a dark ground: the "white light"
+     glows become faint, the gold glows stay (brand signature), and a soft
+     black vignette replaces the light-mode shadow pooling. */
+  background-image:
+    radial-gradient(60rem 40rem at 8% -8%, rgba(255, 255, 255, 0.05), transparent 60%),
+    radial-gradient(44rem 36rem at 96% 4%, rgba(201, 146, 47, 0.14), transparent 58%),
+    radial-gradient(50rem 42rem at 55% 118%, rgba(0, 0, 0, 0.5), transparent 52%),
+    radial-gradient(28rem 28rem at 12% 82%, rgba(201, 146, 47, 0.09), transparent 60%),
+    radial-gradient(30rem 30rem at 85% 90%, rgba(255, 255, 255, 0.03), transparent 60%);
+}
+
+::selection {
+  background: rgba(201, 146, 47, 0.25);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(29, 27, 22, 0.15);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(29, 27, 22, 0.3);
+}
+html.dark ::-webkit-scrollbar-thumb {
+  background: rgba(240, 236, 227, 0.15);
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(240, 236, 227, 0.28);
+}
+
+/* Keyboard focus — one consistent warm ring everywhere. */
+:focus-visible {
+  outline: 2px solid rgba(201, 146, 47, 0.7);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@layer components {
+  /* Frosted-glass surface — translucent cream + blur + a fine top highlight so
+     the edge catches light like real glass. Background stays visible through it. */
+  .glass {
+    background-color: rgba(253, 252, 248, 0.6);
+    backdrop-filter: blur(22px) saturate(150%);
+    -webkit-backdrop-filter: blur(22px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.75),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+  html.dark .glass {
+    background-color: rgba(30, 28, 23, 0.6);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.06),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  }
+
+  /* More opaque glass — for cards sitting over photos or where text needs contrast. */
+  .glass-strong {
+    background-color: rgba(253, 252, 248, 0.82);
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+  }
+  html.dark .glass-strong {
+    background-color: rgba(30, 28, 23, 0.88);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  }
+
+  /* Very translucent — for round action buttons where the aurora should clearly
+     show through. */
+  .glass-clear {
+    background-color: rgba(255, 255, 255, 0.32);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+  }
+  html.dark .glass-clear {
+    background-color: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  }
+
+  /* Glassy form control base — pill inputs/selects that match the surfaces. */
+  .glass-input {
+    background-color: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(29, 27, 22, 0.1);
+    color: rgb(var(--color-ink));
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+  }
+  .glass-input::placeholder {
+    color: rgba(29, 27, 22, 0.38);
+  }
+  .glass-input:focus {
+    outline: none;
+    background-color: rgba(255, 255, 255, 0.92);
+    border-color: rgba(201, 146, 47, 0.55);
+    box-shadow: 0 0 0 4px rgba(201, 146, 47, 0.12);
+  }
+  html.dark .glass-input {
+    background-color: rgba(0, 0, 0, 0.22);
+    border-color: rgba(240, 236, 227, 0.12);
+  }
+  html.dark .glass-input::placeholder {
+    color: rgba(240, 236, 227, 0.35);
+  }
+  html.dark .glass-input:focus {
+    background-color: rgba(0, 0, 0, 0.35);
+  }
+
+  /* Skeleton shimmer — warm placeholder block for loading states. */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgba(29, 27, 22, 0.06) 25%,
+      rgba(29, 27, 22, 0.11) 50%,
+      rgba(29, 27, 22, 0.06) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.8s linear infinite;
+    border-radius: 0.75rem;
+  }
+  html.dark .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgba(240, 236, 227, 0.06) 25%,
+      rgba(240, 236, 227, 0.12) 50%,
+      rgba(240, 236, 227, 0.06) 75%
+    );
+    background-size: 200% 100%;
+  }
+
+  /* Headline flourish — gold gradient text for the one highlighted word. */
+  .text-gradient-accent {
+    background: linear-gradient(120deg, #c9922f 0%, #e5c476 45%, #8c5f1e 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Animated golden sheen text — for hero numbers / premium badges. The
+     highlight band slowly sweeps across the letters like light on metal.
+     Two ramps: on dark grounds the band can go pale (#f4e3b2) and still read;
+     on the cream light theme that same pale band nearly vanishes, so light
+     mode uses a deeper ramp to keep the headline legible. */
+  .text-gold-sheen {
+    background: linear-gradient(110deg, #7f5518 0%, #a8761f 28%, #d9ab4b 50%, #a8761f 72%, #7f5518 100%);
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer 4.5s linear infinite;
+  }
+  html.dark .text-gold-sheen {
+    background: linear-gradient(110deg, #8c5f1e 0%, #c9922f 28%, #f4e3b2 50%, #c9922f 72%, #8c5f1e 100%);
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+
+  /* Small gold tick used before section titles. */
+  .section-tick {
+    display: inline-block;
+    width: 0.5rem;
+    height: 1.5rem;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #e5c476, #ac7825);
+    box-shadow: 0 2px 8px rgba(201, 146, 47, 0.4);
+  }
+
+  /* Luxury card — cream glass with a hair-thin gold gradient border drawn via
+     a masked pseudo-element, so the border itself carries a metallic gradient.
+     Radius/elevation deliberately generous: on the bolder direction a card
+     should read as a distinct raised object, not a faint tint of the page. */
+  .card-luxe {
+    position: relative;
+    background: linear-gradient(165deg, rgba(255, 255, 255, 0.92), rgba(252, 248, 238, 0.78));
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border-radius: 1.75rem;
+    box-shadow:
+      0 1px 2px rgba(20, 18, 16, 0.04),
+      0 20px 56px -18px rgba(20, 18, 16, 0.22);
+  }
+  html.dark .card-luxe {
+    background: linear-gradient(165deg, rgba(38, 35, 29, 0.92), rgba(30, 28, 23, 0.85));
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.24),
+      0 20px 56px -18px rgba(0, 0, 0, 0.65);
+  }
+
+  /* Shared hover interaction for anything clickable and card-like. Kept as one
+     class so every surface lifts by the same amount on the same curve. */
+  .hover-lift {
+    transition:
+      transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .hover-lift:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 28px 60px -18px rgba(20, 18, 16, 0.28);
+  }
+  html.dark .hover-lift:hover {
+    box-shadow: 0 28px 60px -18px rgba(0, 0, 0, 0.7);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hover-lift {
+      transition: none;
+    }
+    .hover-lift:hover {
+      transform: none;
+    }
+  }
+
+  /* Oversized section heading — the main typographic voice of the redesign. */
+  .heading-display {
+    font-weight: 900;
+    letter-spacing: -0.025em;
+    line-height: 1.08;
+  }
+
+  /* Eyebrow label above section headings — small, spaced, gold. */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #ac7825;
+  }
+  html.dark .eyebrow {
+    color: #e5c476;
+  }
+  .card-luxe::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      160deg,
+      rgba(229, 196, 118, 0.9),
+      rgba(255, 255, 255, 0.4) 30%,
+      rgba(201, 146, 47, 0.35) 65%,
+      rgba(229, 196, 118, 0.75)
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+  html.dark .card-luxe::before {
+    background: linear-gradient(
+      160deg,
+      rgba(229, 196, 118, 0.55),
+      rgba(255, 255, 255, 0.08) 30%,
+      rgba(201, 146, 47, 0.3) 65%,
+      rgba(229, 196, 118, 0.45)
+    );
+  }
+
+  /* Dark "noir" luxury panel — near-black surface with a soft gold rim light.
+     Used for premium stats, the KDS screen and admin live-ops tiles. */
+  .card-noir {
+    position: relative;
+    background:
+      radial-gradient(120% 90% at 85% -10%, rgba(201, 146, 47, 0.22), transparent 55%),
+      linear-gradient(170deg, #26241f 0%, #141210 70%);
+    color: #fdfcf8;
+    border-radius: 1.5rem;
+    border: 1px solid rgba(229, 196, 118, 0.22);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 18px 50px -18px rgba(20, 18, 16, 0.55);
+  }
+
+  /* Thin gold divider with a bright center — separates luxe sections. */
+  .divider-gold {
+    height: 1px;
+    border: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(201, 146, 47, 0.55) 30%,
+      rgba(244, 227, 178, 0.9) 50%,
+      rgba(201, 146, 47, 0.55) 70%,
+      transparent
+    );
+  }
+
+  /* Gold chip — small premium badge (plan names, "دسترسی کامل", VIP). */
+  .chip-gold {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #6f4b1c;
+    background: linear-gradient(160deg, #f8eed5, #f0dca8);
+    border: 1px solid rgba(201, 146, 47, 0.45);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 2px 8px rgba(201, 146, 47, 0.25);
+  }
+
+  /* Pill search field — icon + input + clear, one soft capsule. */
+  .search-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 48px;
+    padding: 0 18px;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(29, 27, 22, 0.08);
+    border-radius: 999px;
+    box-shadow:
+      0 1px 1px rgba(20, 18, 16, 0.03),
+      0 18px 36px -22px rgba(20, 18, 16, 0.18);
+    transition: border-color 220ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+    cursor: text;
+  }
+  .search-pill:focus-within {
+    border-color: rgba(201, 146, 47, 0.6);
+    box-shadow:
+      0 0 0 3px rgba(201, 146, 47, 0.16),
+      0 18px 36px -22px rgba(20, 18, 16, 0.2);
+  }
+  .search-pill input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 14px;
+    color: rgb(var(--color-ink));
+  }
+  .search-pill input::placeholder {
+    color: rgba(29, 27, 22, 0.35);
+  }
+  .search-pill input::-webkit-search-cancel-button {
+    display: none;
+  }
+  html.dark .search-pill {
+    background: rgba(30, 28, 23, 0.75);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  html.dark .search-pill input::placeholder {
+    color: rgba(240, 236, 227, 0.35);
+  }
+
+  /* Checkout/pay button — dark capsule; on hover a white circle sweeps across
+     with mix-blend-difference so the label inverts as it passes. */
+  .btn-pay {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #26241f, #141210);
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(20, 18, 16, 0.22);
+    transition: transform 0.2s, box-shadow 0.3s, opacity 0.2s;
+  }
+  .btn-pay::before {
+    content: '';
+    position: absolute;
+    width: 140%;
+    aspect-ratio: 1/1;
+    background-color: #fff;
+    border-radius: 50%;
+    right: -150%;
+    top: 50%;
+    transform: translateY(-50%);
+    mix-blend-mode: difference;
+    transition: right 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+  .btn-pay:hover:not(:disabled)::before {
+    right: 110%;
+  }
+  .btn-pay:hover:not(:disabled) {
+    box-shadow: 0 10px 30px rgba(20, 18, 16, 0.32);
+  }
+  .btn-pay:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+  .btn-pay:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  /* Gold call-to-action — metallic gradient capsule for premium actions. */
+  .btn-gold {
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #d9ab4b 0%, #c9922f 55%, #ac7825 100%);
+    color: #fdfcf8;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.45),
+      0 8px 24px rgba(201, 146, 47, 0.4);
+    transition: transform 0.2s, box-shadow 0.3s, filter 0.2s;
+  }
+  .btn-gold:hover:not(:disabled) {
+    filter: brightness(1.06);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.45),
+      0 12px 32px rgba(201, 146, 47, 0.5);
+  }
+  .btn-gold:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+  .btn-gold:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  /* Icon-input row for auth forms — bordered field with a leading icon. */
+  .icon-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 50px;
+    padding: 0 14px;
+    background: rgba(255, 255, 255, 0.75);
+    border: 1.5px solid rgba(29, 27, 22, 0.1);
+    border-radius: 14px;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+  .icon-field:focus-within {
+    border-color: rgba(201, 146, 47, 0.65);
+    box-shadow: 0 0 0 3px rgba(201, 146, 47, 0.12);
+  }
+  .icon-field input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 14px;
+    color: rgb(var(--color-ink));
+  }
+  .icon-field input::placeholder {
+    color: rgba(29, 27, 22, 0.35);
+  }
+  html.dark .icon-field {
+    background: rgba(30, 28, 23, 0.65);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  html.dark .icon-field input::placeholder {
+    color: rgba(240, 236, 227, 0.35);
+  }
+
+  /* Hide scrollbars on horizontal pill navs while keeping them scrollable. */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Word-by-word loader: rotating gold halo + Persian words that breathe.
+   (Words, not letters — Persian is cursive; splitting letters breaks joining.) */
+.loader-halo {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  animation: loader-rotate 2.2s linear infinite;
+}
+@keyframes loader-rotate {
+  0% {
+    transform: rotate(90deg);
+    box-shadow:
+      0 8px 18px 0 rgba(255, 255, 255, 0.9) inset,
+      0 18px 28px 0 rgba(229, 196, 118, 0.55) inset,
+      0 50px 55px 0 rgba(140, 95, 30, 0.35) inset;
+  }
+  50% {
+    transform: rotate(270deg);
+    box-shadow:
+      0 8px 18px 0 rgba(255, 255, 255, 0.9) inset,
+      0 18px 12px 0 rgba(201, 146, 47, 0.6) inset,
+      0 36px 55px 0 rgba(38, 36, 31, 0.3) inset;
+  }
+  100% {
+    transform: rotate(450deg);
+    box-shadow:
+      0 8px 18px 0 rgba(255, 255, 255, 0.9) inset,
+      0 18px 28px 0 rgba(229, 196, 118, 0.55) inset,
+      0 50px 55px 0 rgba(140, 95, 30, 0.35) inset;
+  }
+}
+.loader-word {
+  display: inline-block;
+  opacity: 0.35;
+  animation: loader-word-anim 1.8s infinite;
+}
+@keyframes loader-word-anim {
+  0%, 100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+  50% {
+    opacity: 0.65;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
+.animate-float-slow {
+  animation: float-slow 9s ease-in-out infinite;
+}
+
+/* Warm styling for native range sliders (distance filter etc.). */
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(201, 146, 47, 0.5), rgba(29, 27, 22, 0.12));
+  cursor: pointer;
+}
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #1d1b16;
+  border: 3px solid #fdfcf8;
+  box-shadow: 0 2px 8px rgba(20, 18, 16, 0.35);
+  transition: transform 0.15s;
+}
+input[type='range']::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+input[type='range']:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Checkboxes pick up the gold accent. */
+input[type='checkbox'] {
+  accent-color: #ac7825;
+}

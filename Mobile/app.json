@@ -1,0 +1,89 @@
+{
+  "expo": {
+    "name": "ET-Cafe",
+    "slug": "etcafe",
+    "scheme": "etcafe",
+    "version": "1.0.0",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "backgroundColor": "#0D0C0A",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0D0C0A"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.etcafe.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "برای اسکن QR کد میز به دوربین نیاز داریم.",
+        "NSLocationWhenInUseUsageDescription": "برای نمایش کافه‌های نزدیک شما به موقعیت مکانی نیاز داریم.",
+        "NSFaceIDUsageDescription": "برای ورود سریع و امن با شناسه چهره."
+      }
+    },
+    "android": {
+      "package": "com.etcafe.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0D0C0A"
+      },
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "CAMERA",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-font",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "برای اسکن QR کد میز به دوربین نیاز داریم."
+        }
+      ],
+      "expo-localization",
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "برای نمایش کافه‌های نزدیک شما به موقعیت مکانی نیاز داریم."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#E5C476"
+        }
+      ],
+      "@react-native-community/datetimepicker",
+      "expo-web-browser",
+      "@sentry/react-native",
+      "@maplibre/maplibre-react-native"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c1c03c1d-c99e-4dec-be48-cd93aa65aa7b"
+      }
+    },
+    "owner": "radin_001",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/c1c03c1d-c99e-4dec-be48-cd93aa65aa7b"
+    }
+  }
+}

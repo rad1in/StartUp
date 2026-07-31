@@ -1,0 +1,173 @@
+import { useEffect, useState } from 'react';
+import api from '../../services/api';
+import Card from '../../components/Card';
+import { useLanguage } from '../../context/LanguageContext';
+import { GamificationIcon } from '../../utils/gamificationIcons';
+
+export default function Loyalty() {
+  const { t, n, date, dateShort } = useLanguage();
+  const TX_LABELS = { EARN: t('loyalty.txEarn'), REDEEM: t('loyalty.txRedeem'), ADJUST: t('loyalty.txAdjust') };
+  const [balance, setBalance] = useState(0);
+  const [transactions, setTransactions] = useState([]);
+  const [coupons, setCoupons] = useState([]);
+  const [progress, setProgress] = useState(null);
+
+  useEffect(() => {
+    api.get('/loyalty/balance').then(({ data }) => setBalance(data.balance));
+    api.get('/loyalty/transactions').then(({ data }) => setTransactions(data));
+    api.get('/customers/coupons').then(({ data }) => setCoupons(data));
+    api.get('/gamification/me').then(({ data }) => setProgress(data)).catch(() => {});
+  }, []);
+
+  const earnedBadgeIds = new Set((progress?.earnedBadges || []).map((b) => b.badgeConfigId || b.id));
+
+  return (
+    <div className="space-y-6">
+      {/* Tier card */}
+      {progress && (
+        <Card>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="font-semibold text-gray-800">{t('loyalty.tierTitle')}</h3>
+              {progress.currentTier ? (
+                <p className="text-lg font-bold text-primary-700 mt-1 flex items-center gap-1.5">
+                  <GamificationIcon name={progress.currentTier.tierIcon} size={18} />
+                  {progress.currentTier.tierName}
+                </p>
+              ) : (
+                <p className="text-sm text-gray-500 mt-1">{t('loyalty.noTier')}</p>
+              )}
+            </div>
+            <div className="text-right text-sm text-gray-600">
+              <p>{n(Number(progress.stats.totalOrders))} {t('loyalty.ordersSuffix')}</p>
+              <p>{n(Number(progress.stats.totalSpend))} {t('menu.toman')}</p>
+            </div>
+          </div>
+
+          {/* Tier progress ladder */}
+          <div className="space-y-2">
+            {progress.tiers.map((tier) => {
+              const isActive = progress.currentTier?.tierConfigId === tier.id || progress.currentTier?.tierConfig === tier.id;
+              const isCurrent = progress.currentTier && (progress.currentTier.tierConfigId === tier.id);
+              const spendPct = Math.min(100, (progress.stats.totalSpend / Math.max(1, Number(tier.minSpend))) * 100);
+              const orderPct = Math.min(100, (progress.stats.totalOrders / Math.max(1, Number(tier.minOrders))) * 100);
+              const pct = Number(tier.minSpend) === 0 && Number(tier.minOrders) === 0 ? 100 : Math.min(spendPct, orderPct);
+              return (
+                <div key={tier.id} className={`rounded-lg p-3 border ${isCurrent ? 'border-primary-400 bg-primary-50' : 'border-gray-200'}`}>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm font-medium flex items-center gap-1.5">
+                      <GamificationIcon name={tier.icon} size={15} />
+                      {tier.name}
+                    </span>
+                    {isCurrent && <span className="text-xs bg-primary-600 text-white px-2 py-0.5 rounded-full">{t('loyalty.currentTier')}</span>}
+                  </div>
+                  {pct < 100 && (
+                    <>
+                      <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="h-full bg-primary-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                      </div>
+                      <p className="text-xs text-gray-400 mt-1">{Math.round(pct)}٪ {t('loyalty.untilThisTierSuffix')}</p>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {progress.currentTier?.perks && (
+            <div className="mt-3 pt-3 border-t text-sm text-gray-600">
+              <p className="font-medium mb-1">{t('loyalty.currentTierPerks')}</p>
+              <ul className="list-disc list-inside space-y-0.5 text-xs text-gray-500">
+                {(Array.isArray(progress.currentTier.perks)
+                  ? progress.currentTier.perks
+                  : JSON.parse(progress.currentTier.perks || '[]')
+                ).map((perk, i) => <li key={i}>{perk}</li>)}
+              </ul>
+            </div>
+          )}
+        </Card>
+      )}
+
+      {/* Badge collection */}
+      {progress && (
+        <Card>
+          <h3 className="font-semibold text-gray-800 mb-3">{t('loyalty.badgeCollection')}</h3>
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+            {progress.allBadges.map((badge) => {
+              const earned = earnedBadgeIds.has(badge.id);
+              return (
+                <div
+                  key={badge.id}
+                  title={badge.description}
+                  className={`flex flex-col items-center p-2 rounded-lg border text-center transition-opacity ${
+                    earned ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200 opacity-40 grayscale'
+                  }`}
+                >
+                  <GamificationIcon name={badge.icon} size={24} className={earned ? 'text-yellow-600' : 'text-gray-400'} />
+                  <p className="text-xs font-medium text-gray-700 mt-1 leading-tight">{badge.name}</p>
+                  {earned && (
+                    <p className="text-[10px] text-green-600 mt-0.5">
+                      {dateShort(
+                        progress.earnedBadges.find((b) => b.id === badge.id)?.earnedAt || ''
+                      )}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
+      {/* Loyalty points */}
+      <Card>
+        <h3 className="font-semibold text-gray-800">{t('loyalty.pointsWallet')}</h3>
+        <p className="text-2xl font-bold text-primary-700 mt-2">{n(balance)} {t('loyalty.pointsSuffix')}</p>
+        <p className="text-xs text-gray-500 mt-1">{t('loyalty.pointValueNote')}</p>
+      </Card>
+
+      <div>
+        <h3 className="font-semibold text-gray-800 mb-2">{t('loyalty.pointsHistory')}</h3>
+        {transactions.length === 0 && <p className="text-gray-500 text-sm">{t('loyalty.noTransactions')}</p>}
+        <div className="space-y-2">
+          {transactions.map((tx) => (
+            <Card key={tx.id} className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-800">{TX_LABELS[tx.type] || tx.type}</p>
+                <p className="text-xs text-gray-500">{date(tx.createdAt)}</p>
+              </div>
+              <p className={`font-bold ${tx.points >= 0 ? 'text-ink' : 'text-ink/50'}`}>
+                {tx.points >= 0 ? '+' : ''}{tx.points}
+              </p>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h3 className="font-semibold text-gray-800 mb-2">{t('loyalty.activeCoupons')}</h3>
+        {coupons.length === 0 && <p className="text-gray-500 text-sm">{t('loyalty.noCoupons')}</p>}
+        <div className="grid sm:grid-cols-2 gap-3">
+          {coupons.map((coupon) => (
+            <Card key={coupon.id}>
+              <p className="font-bold text-primary-700">{coupon.code}</p>
+              <p className="text-sm text-gray-600 mt-1">
+                {coupon.discountType === 'PERCENT'
+                  ? `${coupon.discountValue}٪ ${t('loyalty.percentDiscountSuffix')}`
+                  : `${n(Number(coupon.discountValue))} ${t('menu.toman')} ${t('loyalty.percentDiscountSuffix')}`}
+              </p>
+              {coupon.minOrderAmount && (
+                <p className="text-xs text-gray-400 mt-1">
+                  {t('loyalty.minOrderPrefix')} {n(Number(coupon.minOrderAmount))} {t('menu.toman')}
+                </p>
+              )}
+              {coupon.expiresAt && (
+                <p className="text-xs text-gray-400">{t('loyalty.expiresPrefix')} {dateShort(coupon.expiresAt)}</p>
+              )}
+            </Card>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

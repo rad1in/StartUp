@@ -1,0 +1,45 @@
+{
+  "cli": {
+    "version": ">= 13.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "channel": "development",
+      "env": {
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "channel": "preview",
+      "env": {
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "EXPO_PUBLIC_API_URL": "https://api.et-cafe.com/api",
+        "EXPO_PUBLIC_UPLOADS_URL": "https://api.et-cafe.com",
+        "EXPO_PUBLIC_WEB_URL": "https://et-cafe.com"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "channel": "production",
+      "env": {
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "EXPO_PUBLIC_API_URL": "https://api.et-cafe.com/api",
+        "EXPO_PUBLIC_UPLOADS_URL": "https://api.et-cafe.com",
+        "EXPO_PUBLIC_WEB_URL": "https://et-cafe.com"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

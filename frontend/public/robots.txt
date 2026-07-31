@@ -1,8 +1,0 @@
-User-agent: *
-Allow: /
-
-# sitemap.xml is generated dynamically by the backend (see
-# backend/src/app.js) from the live list of active venues. In production,
-# make sure requests to /sitemap.xml on this domain are reverse-proxied to
-# the backend service (same as /api and /uploads).
-Sitemap: /sitemap.xml

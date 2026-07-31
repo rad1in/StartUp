@@ -6,9 +6,9 @@ A platform for restaurants and cafes that replaces the traditional "scan the men
 
 This repository contains three independent projects:
 
-- `/backend` — Express + mysql2 (raw SQL, no ORM) + MySQL + Socket.IO
-- `/frontend` — React + Vite + Tailwind CSS (multilingual: Persian/English/Arabic/Turkish, Vazirmatn font)
-- `/mobile` — React Native + Expo Router (customer, venue-owner, and platform-admin apps in one)
+- `/Backend` — Express + mysql2 (raw SQL, no ORM) + MySQL + Socket.IO
+- `/FrontEnd` — React + Vite + Tailwind CSS (multilingual: Persian/English/Arabic/Turkish, Vazirmatn font)
+- `/Mobile` — React Native + Expo Router (customer, venue-owner, and platform-admin apps in one)
 
 ---
 
@@ -28,7 +28,7 @@ git clone <repo-url>
 cd StartUp
 
 # 2. Configure backend environment variables
-cd backend
+cd Backend
 cp .env.example .env
 # Edit DB_HOST/DB_USER/DB_PASSWORD/DB_NAME and the JWT secrets in .env
 # The MySQL database (e.g. qr_ordering) must already exist on your MySQL server
@@ -44,7 +44,7 @@ npm run dev
 
 ```bash
 # 5. In a new terminal — configure and run the frontend
-cd frontend
+cd FrontEnd
 cp .env.example .env
 # Edit VITE_API_URL and VITE_NESHAN_API_KEY if needed
 
@@ -54,7 +54,7 @@ npm run dev
 
 ```bash
 # 6. (Optional) Mobile app
-cd mobile
+cd Mobile
 cp .env.example .env
 npm install
 npm start
@@ -77,7 +77,7 @@ Sample table QR token: `demo-qr-token-0001` (testable via the "Scan QR" button o
 
 ### Environment variables
 
-All three projects ship a fully documented `.env.example` file (`backend/.env.example`, `frontend/.env.example`, `mobile/.env.example`) — see those files for the complete list of variables and what each one does.
+All three projects ship a fully documented `.env.example` file (`Backend/.env.example`, `FrontEnd/.env.example`, `Mobile/.env.example`) — see those files for the complete list of variables and what each one does.
 
 ---
 
@@ -86,7 +86,7 @@ All three projects ship a fully documented `.env.example` file (`backend/.env.ex
 ### Development commands
 
 ```bash
-cd frontend
+cd FrontEnd
 npm install
 npm run dev        # Vite dev server on port 5173
 npm run build       # Production build into dist/
@@ -107,7 +107,7 @@ npm run preview     # Preview the production build
 ### Development commands
 
 ```bash
-cd backend
+cd Backend
 npm install
 npm run dev          # nodemon server on port 5000
 ```
@@ -126,7 +126,7 @@ npm run db:seed        # Populate the database with sample data (dev only)
 ### Running in production
 
 ```bash
-cd backend
+cd Backend
 npm install --production
 npm run db:migrate
 npm start
@@ -145,7 +145,7 @@ npm run go-live   # One-time, single-use: wipes demo data + creates the real adm
 The mobile app (React Native + Expo Router, SDK 54) bundles three role-based experiences: customer (QR scan, ordering, wallet, loyalty), venue owner (live orders, menu, settings, marketing), and platform admin.
 
 ```bash
-cd mobile
+cd Mobile
 npm install
 npm start          # Starts the Expo dev server — scan with Expo Go or a simulator
 ```
